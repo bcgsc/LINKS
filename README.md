@@ -200,14 +200,15 @@ This script will run ALL of the above examples.
 
 Additional info:
 
-The file: 
+The file:
 LINKSrecipe_pglaucaPG29-WS77111.sh
 is provided to show the re-scaffolding recipe used to produce a re-scaffolded white spruce (P. glauca) genome assembly.
 
-Likewise:
-LINKSrecipe_ecoliRawR7-3.sh
-is provided to show the process of scaffolding iteratively the E.coli assembly (Table 1H in Warren et al. 2015 manuscript).
-30 iterations were done for the paper.
+The file:
+LINKSrecipe_athaliana_ectools.sh
+and
+LINKSrecipe_athaliana_raw.sh
+are provided to show the re-scaffolding of the A. thaliana high-quality genome draft using ECTools-corrected or raw Pacific Biosciences reads.
 
 
 How it works
