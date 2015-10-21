@@ -1,6 +1,6 @@
 # LINKS
 Long Interval Nucleotide K-mer Scaffolder
-LINKS v1.5 Rene L. Warren, 2014-2015
+LINKS v1.5.2 Rene L. Warren, 2014-2015
 email: rwarren at bcgsc.ca
 
 Name
@@ -13,6 +13,19 @@ Description
 -----------
 
 LINKS is a genomics application for scaffolding genome assemblies with imperfect, long reads, such as those produced by Oxford Nanopore Technologies Ltd.
+
+What's new in v1.5.2 ?
+---------------------
+
+LINKS outputs a scaffold graph in gv format, with highlighted merges and edge attributes
+
+
+What's new in v1.5.1 ?
+---------------------
+
+Fixed a bug that prevented the creation of Bloom filters with a different false positive rate (FPR) than default.
+Using lower FPR does not influence scaffolding itself, only run time.
+For large genomes (>1Gbp), using a higher FPR is recommended when compute memory (RAM) is limiting.
 
 
 What's new in v1.5 ?
@@ -55,8 +68,8 @@ Install
 
 Download the tar ball, gunzip and extract the files on your system using:
 
-gunzip links_v1-5.tar.gz
-tar -xvf links_v1-5.tar
+gunzip links_v1-5-2.tar.gz
+tar -xvf links_v1-5-2.tar
 
 The Bloom::Faster PERL library was built against various version of PERL
 
@@ -106,7 +119,7 @@ Running LINKS
 
 e.g. /usr/bin/time -v -o timeLINKS_ECK12singleTIG.txt ../LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ../LINKS [v1.5]
+Usage: ../LINKS [v1.5.2]
 -f  sequences to scaffold (Multi-FASTA format, required)
 -s  file-of-filenames, full path to long sequence reads (Multi-FASTA/fastq format, required)
 -d  distance between k-mer pairs (eg. target distance to re-scaffold on. default -d 4000, optional)
