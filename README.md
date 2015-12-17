@@ -120,27 +120,44 @@ Running LINKS
 e.g. /usr/bin/time -v -o timeLINKS_ECK12singleTIG.txt ../LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
 Usage: ../LINKS [v1.5.2]
+
 -f  sequences to scaffold (Multi-FASTA format, required)
+
 -s  file-of-filenames, full path to long sequence reads (Multi-FASTA/fastq format, required)
+
 -d  distance between k-mer pairs (eg. target distance to re-scaffold on. default -d 4000, optional)
+
 -k  k-mer value (default -k 15, optional)
+
 -t  step of sliding window when extracting k-mer pairs from long reads (default -t 2, optional)
+
 -o  offset position for extracting k-mer pairs (default -o 0, optional)
+
 -e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10% (default -e 0.1, optional)
+
 -l  minimum number of links (k-mer pairs) to compute scaffold (default -l 5, optional)
+
 -a  maximum link ratio between two best contig pairs (default -a 0.3, optional)
     *higher values lead to least accurate scaffolding*
+
 -b  base name for your output files (optional)
+
 -r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)
     NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE
     IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)
+
 -p  Bloom filter false positive rate (default -p 0.0001, optional; increase to prevent memory allocation errors)
+
 -x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)
+
 -v  Runs in verbose mode (-v 1 = yes, default = no, optional)
 
 Notes:
+
 -s K12_F2D.fof specifies a file-of-filenames (text file) listing: K12_full2dONT_longread.fa (see ./test folder)
+
 -x When turned on (-x 1), LINKS will run with a behaviour equivalent to v1.3 (no Bloom filters).  
+
 This may be useful for large genome assembly drafts and when long reads are extremely high quality.
 
 
@@ -171,6 +188,7 @@ Go to ./test
 run:
 -------------------------------------
 ./runme_EcoliK12single.sh
+
 -rwxr-xr-x 1 rwarren users 1.2K Feb 26 07:41 runme_ScerevisiaeW303iterative.sh
 
 The script will download the baseline E. coli abyss scaffold assembly and full 2D ONT reads (Quick et al 2014) and used the latter to re-scaffold the former, with default parameters (Table 1D in paper). 
@@ -214,13 +232,19 @@ This script will run ALL of the above examples.
 Additional info:
 
 The file:
+
 LINKSrecipe_pglaucaPG29-WS77111.sh
+
 is provided to show the re-scaffolding recipe used to produce a re-scaffolded white spruce (P. glauca) genome assembly.
 
 The file:
+
 LINKSrecipe_athaliana_ectools.sh
+
 and
+
 LINKSrecipe_athaliana_raw.sh
+
 are provided to show the re-scaffolding of the A. thaliana high-quality genome draft using ECTools-corrected or raw Pacific Biosciences reads.
 
 
