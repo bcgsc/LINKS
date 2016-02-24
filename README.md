@@ -110,8 +110,8 @@ http://www.swig.org/
 TO BUILD a Perl5 module (run in swig/):
 ```
 preinst-swig -Wall -c++ -perl5 BloomFilter.i
-g++ -c BloomFilter_wrap.cxx -I/usr/lib64/perl5/CORE -fPIC -Dbool=char
-g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so
+g++ -c BloomFilter_wrap.cxx -I/usr/lib64/perl5/CORE -fPIC -Dbool=char -O3
+g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so -O3
 ```
 
 TO COMPILE, swig needs the following Perl5 headers:
