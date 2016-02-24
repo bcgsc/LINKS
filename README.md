@@ -1,6 +1,5 @@
-# LINKS
-Long Interval Nucleotide K-mer Scaffolder
-LINKS v1.5.2 Rene L. Warren, 2014-2015
+
+LINKS v1.6 Rene L. Warren, 2014-2016
 email: rwarren at bcgsc.ca
 
 Name
@@ -12,19 +11,34 @@ LINKS: Long Interval Nucleotide K-mer Scaffolder
 Description
 -----------
 
-LINKS is a genomics application for scaffolding genome assemblies with imperfect, long reads, such as those produced by Oxford Nanopore Technologies Ltd.
+LINKS is a genomics application for scaffolding genome assemblies with long
+reads, such as those produced by Oxford Nanopore Technologies Ltd.
+It can be used to scaffold high-quality draft genome assemblies with any long
+sequences (eg. ONT reads, PacBio reads, another draft genomes, etc)
+
+
+What's new in v1.6 ?
+---------------------
+
+Incorporation of the BC Genome Sciences Centre custom Bloom filter with
+the rolling hash function.  This new data structure supports the creation of
+Bloom filters from large genome assemblies (tested on assemblies of 3 Gbp human
+[writeBloom.pl ~3:30h @ 26GB RAM] and 20 Gbp white spruce [writeBloom.pl ~20h @ 178GB RAM]).
+The data structure swap in v1.6 offers a 5-fold speed-up compared to v1.5.2, while supporting the
+creation of filters from large genome assembly drafts.
+
 
 What's new in v1.5.2 ?
 ---------------------
 
-LINKS outputs a scaffold graph in gv format, with highlighted merges and edge attributes
+LINKS outputs a scaffold graph in gv format, with highlighted merges and edge attributes  
 
 
 What's new in v1.5.1 ?
 ---------------------
 
 Fixed a bug that prevented the creation of Bloom filters with a different false positive rate (FPR) than default.
-Using lower FPR does not influence scaffolding itself, only run time.
+Using lower FPR does not influence scaffolding itself, only run time. 
 For large genomes (>1Gbp), using a higher FPR is recommended when compute memory (RAM) is limiting.
 
 
@@ -60,6 +74,7 @@ Implementation and requirements
 -------------------------------
 
 LINKS is implemented in PERL and runs on any OS where PERL is installed.
+In v1.6, there is a single dependency to the BloomFilter.pm (included) - BC Genome Sciences Centre's common Bloom filter
 In v1.5, there is a single dependency to Bloom::Faster - an extension for the c library libbloom.
 
 
@@ -68,28 +83,57 @@ Install
 
 Download the tar ball, gunzip and extract the files on your system using:
 
-gunzip links_v1-5-2.tar.gz
-tar -xvf links_v1-5-2.tar
+gunzip links_v1-6.tar.gz
+tar -xvf links_v1-6.tar
 
-The Bloom::Faster PERL library was built against various version of PERL
+In v1.6, the use of the Bloom::Faster PERL library is deprecated
 
-./lib/Bloom-Faster-1.7/
-bloom5-10-0
-bloom5-16-0
-bloom5-16-3
-bloom5-18-1
+=================================================
+INSTRUCTIONS TO BUILD THE BloomFilter PERL module
 
-To re-build against YOUR PERL version, follow these easy steps:
+1. DOWNLOAD the BC Genome Sciences Centre's BloomFilter: The BTL C/C++ Common
+Bloom filters for bioinformatics projects, as well as any APIs created for
+other programming languages.
 
-1. cd ./lib/Bloom-Faster-1.7
-2. /gsc/software/linux-x86_64/perl-5.10.0/bin/perl Makefile.PL PREFIX=./bloom5-10-0
-(perl at YOUR favourite location)
-3. make
-4. make install
-5. change line 30 in LINKS to reflect the location of the Bloom library
-5. test: /gsc/software/linux-x86_64/perl-5.10.0/bin/perl ../../LINKS
+cd ./links_v1.6/lib
+git clone git://github.com/bcgsc/bloomfilter.git
+cd swig
 
-Or change the shebang line of LINKS to point to the version of perl installed on your system and you're good to go.
+
+2. BUILD a PERL5 module
+
+Make sure you have swig installed and included in your path.
+
+http://www.swig.org/
+
+
+TO BUILD a Perl5 module (run in swig/):
+```
+preinst-swig -Wall -c++ -perl5 BloomFilter.i
+g++ -c BloomFilter_wrap.cxx -I/usr/lib64/perl5/CORE -fPIC -Dbool=char
+g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so
+```
+
+TO COMPILE, swig needs the following Perl5 headers:
+```C++
+#include "Extern.h"
+#include "perl.h"
+#include "XSUB.h"
+```
+If they are not located in /usr/lib64/perl5, you can run "perl -e 'use Config; print $Config{archlib};" to locate them.
+
+
+3. VERIFY your install
+
+[swig]$ ./test.pl
+
+
+4. CHANGE the path to BloomFilter.pm in LINKS/writeBloom.pl/testBloom.pl
+
+You only need to change if you have re-built in a relative directory different
+from:
+use lib "$FindBin::Bin/./lib/bloomfilter/swig"; (for LINKS)
+use lib "$FindBin::Bin/../lib/bloomfilter/swig"; (for writeBloom.pl/testBloom.pl)
 
 
 Documentation
@@ -105,13 +149,30 @@ rwarren at bcgsc.ca
 Citing LINKS
 ------------
 
+Rene L. Warren, Chen Yang, Benjamin P. Vandervalk, Bahar Behsaz,
+Albert Lagman, Steven J. M. Jones and Inanç Birol. 2015. LINKS: Scalable,
+alignment-free scaffolding of draft genomes with long reads. GigaScience 4:35
+DOI: 10.1186/s13742-015-0076-3©  Warren et al. 2015
+
 Thank you for using, developing and promoting this free software.
 
-René L. Warren*, Benjamin P. Vandervalk, Steven JM Jones and Inanç Birol
-LINKS: Scaffolding genome assemblies with kilobase-long nanopore reads
-doi: http://dx.doi.org/10.1101/016519
-*rwarren@bcgsc.ca
-http://biorxiv.org/content/early/2015/03/20/016519
+
+Credits
+-------
+
+LINKS
+Rene Warren
+
+SWIG/BloomFilter.pm
+Sarah Yeo
+Justin Chu
+
+https://github.com/bcgsc/bloomfilter
+Justin Chu
+Ben Vandervalk
+Hamid Mohamadi (rolling/ntHash)
+Sarah Yeo
+Golnaz Jahesh
 
 
 Running LINKS
@@ -119,11 +180,11 @@ Running LINKS
 
 e.g. /usr/bin/time -v -o timeLINKS_ECK12singleTIG.txt ../LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ../LINKS [v1.5.2]
+Usage: ./LINKS [v1.6]
 -f  sequences to scaffold (Multi-FASTA format, required)
 -s  file-of-filenames, full path to long sequence reads (Multi-FASTA/fastq format, required)
 -d  distance between k-mer pairs (eg. target distance to re-scaffold on. default -d 4000, optional)
--k  k-mer value (default -k 15, optional)
+-k  k-mer value (default -k 15, optional) 
 -t  step of sliding window when extracting k-mer pairs from long reads (default -t 2, optional)
 -o  offset position for extracting k-mer pairs (default -o 0, optional)
 -e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10% (default -e 0.1, optional)
@@ -167,11 +228,12 @@ Test data
 ---------
 
 Go to ./test
+(cd test)
+
 
 run:
 -------------------------------------
 ./runme_EcoliK12single.sh
--rwxr-xr-x 1 rwarren users 1.2K Feb 26 07:41 runme_ScerevisiaeW303iterative.sh
 
 The script will download the baseline E. coli abyss scaffold assembly and full 2D ONT reads (Quick et al 2014) and used the latter to re-scaffold the former, with default parameters (Table 1D in paper). 
 NEED ~8GB RAM WITH CURRENT PARAMETERS. Increase (-t) to use less RAM.
@@ -213,7 +275,7 @@ This script will run ALL of the above examples.
 
 Additional info:
 
-The file:
+The file: 
 LINKSrecipe_pglaucaPG29-WS77111.sh
 is provided to show the re-scaffolding recipe used to produce a re-scaffolded white spruce (P. glauca) genome assembly.
 
@@ -222,6 +284,26 @@ LINKSrecipe_athaliana_ectools.sh
 and
 LINKSrecipe_athaliana_raw.sh
 are provided to show the re-scaffolding of the A. thaliana high-quality genome draft using ECTools-corrected or raw Pacific Biosciences reads.
+
+
+Testing the Bloom filters
+-------------------------
+
+# To test insertions:
+cd tools
+./writeBloom.pl
+Usage: ./writeBloom.pl
+-f  sequences to scaffold (Multi-FASTA format, required)
+-k  k-mer value (default -k 15, optional)
+-p  Bloom filter false positive rate (default -p 0.0001, optional - increase to prevent memory allocation errors)
+
+# To test queries:
+cd tools
+./testBloom.pl
+Usage: ./testBloom.pl
+-f  sequences to test (Multi-FASTA format, required)
+-k  k-mer value (default -k 15, optional)
+-r  Bloom filter file
 
 
 How it works
@@ -293,7 +375,7 @@ License
 
 LINKS Copyright (c) 2014-2015 Canada's Michael Smith Genome Science Centre.  All rights reserved.
 
-LINKS is released under the GNU General Public License - GPL
+LINKS is released under the GNU General Public License
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
