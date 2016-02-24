@@ -22,9 +22,10 @@ What's new in v1.6 ?
 
 Incorporation of the BC Genome Sciences Centre custom Bloom filter with
 the rolling hash function.  This new data structure supports the creation of
-Bloom filters from large genome assemblies (tested on assemblies of 3 Gbp human
-[writeBloom.pl ~3:30h @ 26GB RAM] and 20 Gbp white spruce [writeBloom.pl ~20h @ 178GB RAM]).
-The data structure swap in v1.6 offers a 5-fold speed-up compared to v1.5.2, while supporting the
+Bloom filters from large genome assemblies (tested on assemblies of 3 Gbp human and 20 Gbp white spruce).
+
+The Bloom filter data structure swap in v1.6 offers a ~30-fold kmer insert
+speed-up (~6x query speed-up) over v1.5.2, while supporting the
 creation of filters from large genome assembly drafts.
 
 
