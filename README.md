@@ -1,5 +1,5 @@
 
-LINKS v1.6 Rene L. Warren, 2014-2016
+LINKS v1.7 Rene L. Warren, 2014-2016
 email: rwarren at bcgsc.ca
 
 Name
@@ -17,14 +17,32 @@ It can be used to scaffold high-quality draft genome assemblies with any long
 sequences (eg. ONT reads, PacBio reads, another draft genomes, etc)
 
 
+What's new in v1.7 ?
+---------------------
+
+Support for scaffolding with MPET (jumping library) reads
+Support for reading compressed long sequence [reads] and assembly files
+Implemented mid-scaffolding checkpoint to:
+-more quickly test certain parameters (-l min. links / -a min. links ratio)
+-quickly recover from crash
+-explore very large kmer spaces
+
+
+What's new in v1.6.1 ?
+---------------------
+
+Added a new output file, .assembly_correspondence.tsv 
+This human-readable correspondence file lists the scaffold ID, contig ID, original assembly contig name, orientation, #linking kmer pairs, links ratio, gap or overlap
+
+
 What's new in v1.6 ?
 ---------------------
 
 Incorporation of the BC Genome Sciences Centre custom Bloom filter with
-the rolling hash function.  This new data structure supports the creation of
+the fast ntHash recursive nucleotide hash function.  This new data structure supports the creation of
 Bloom filters from large genome assemblies (tested on assemblies of 3 Gbp human and 20 Gbp white spruce).
 
-The Bloom filter data structure swap in v1.6 offers a ~30-fold kmer insert
+The Bloom filter data structure swap in v1.6+ offers a ~30-fold kmer insert
 speed-up (~6x query speed-up) over v1.5.2, while supporting the
 creation of filters from large genome assembly drafts.
 
@@ -84,10 +102,10 @@ Install
 
 Download the tar ball, gunzip and extract the files on your system using:
 
-gunzip links_v1-6.tar.gz
-tar -xvf links_v1-6.tar
+gunzip links_v1-7.tar.gz
+tar -xvf links_v1-7.tar
 
-In v1.6, the use of the Bloom::Faster PERL library is deprecated
+In v1.6+, the use of the Bloom::Faster PERL library is deprecated
 
 =================================================
 INSTRUCTIONS TO BUILD THE BloomFilter PERL module
@@ -96,7 +114,7 @@ INSTRUCTIONS TO BUILD THE BloomFilter PERL module
 Bloom filters for bioinformatics projects, as well as any APIs created for
 other programming languages.
 
-cd ./links_v1.6/lib
+cd ./links_v1.7/lib
 git clone git://github.com/bcgsc/bloomfilter.git
 cd swig
 
@@ -140,7 +158,7 @@ use lib "$FindBin::Bin/../lib/bloomfilter/swig"; (for writeBloom.pl/testBloom.pl
 Documentation
 -------------
 
-Refer to the LINKS.readme file on how to run LINKS and the LINKS web site for information about the software and its performance 
+Refer to the LINKS-readme.txt/LINKS-readme.pdf file on how to run LINKS and the LINKS web site for information about the software and its performance 
 www.bcgsc.ca/bioinfo/software/links
 
 Questions or comments?  We would love to hear from you!
@@ -171,7 +189,7 @@ Justin Chu
 https://github.com/bcgsc/bloomfilter
 Justin Chu
 Ben Vandervalk
-Hamid Mohamadi (rolling/ntHash)
+Hamid Mohamadi (recursive/ntHash)
 Sarah Yeo
 Golnaz Jahesh
 
@@ -181,21 +199,26 @@ Running LINKS
 
 e.g. /usr/bin/time -v -o timeLINKS_ECK12singleTIG.txt ../LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ./LINKS [v1.6]
+Usage: ./LINKS [v1.7]
 -f  sequences to scaffold (Multi-FASTA format, required)
--s  file-of-filenames, full path to long sequence reads (Multi-FASTA/fastq format, required)
+-s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
+-m  MPET read length (default -m 0, optional)
+	! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s
+	! Paired MPET reads in their original outward orientation <- -> must be separated by ":"
+	  >template_name
+	  ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC
 -d  distance between k-mer pairs (eg. target distance to re-scaffold on. default -d 4000, optional)
--k  k-mer value (default -k 15, optional) 
+-k  k-mer value (default -k 15, optional)
 -t  step of sliding window when extracting k-mer pairs from long reads (default -t 2, optional)
 -o  offset position for extracting k-mer pairs (default -o 0, optional)
 -e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10% (default -e 0.1, optional)
 -l  minimum number of links (k-mer pairs) to compute scaffold (default -l 5, optional)
 -a  maximum link ratio between two best contig pairs (default -a 0.3, optional)
-    *higher values lead to least accurate scaffolding*
+	 *higher values lead to least accurate scaffolding*
 -b  base name for your output files (optional)
 -r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)
-    NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE
-    IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)
+	 NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE
+	 IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)
 -p  Bloom filter false positive rate (default -p 0.0001, optional; increase to prevent memory allocation errors)
 -x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)
 -v  Runs in verbose mode (-v 1 = yes, default = no, optional)
@@ -216,13 +239,13 @@ The largest dataset used for scaffolding by our group was a draft assembly of th
 Because you want want to start with a low -d for scaffolding, you have to estimate how many minimum links (-l) would fit in a -d window +/- error -e given sliding window -t.
 For instance, it may not make sense to use -t 200, -d 500 at low coverages BUT if you have at least 10-fold coverage it might since, in principle, you should be able to derive sufficient k-mer pairs within same locus if there's no bias in genome sequencing.
 
-For re-scaffolding white spruce, only 1X coverage was available (since the re-scaffolding used a draft assembly instead of long reads), but even -t 200 -d 5000 (1st iteration) did merge scaffolds even though, in theory, the -e parameter will play an important role limiting linkages outside of the target range -d (+/-) -e %. 
+For re-scaffolding white spruce, only 1X coverage was available (since the re-scaffolding used a draft assembly instead of long reads), but even -t 200 -d 5000 (1st iteration) did merge scaffolds even though, in theory, the -e parameter will play an important role limiting linkages outside of the target range -d (+/-) -e %. This is especially true when using raw MPET for scaffolding, to limit spurious linkages by contaminating PETs.
 
 On the data side of things, reducing the coverage (using less long reads), and limiting to only the highest quality reads would help decrease RAM usage.
 
 In v1.5, LINKS builds a Bloom filter that comprises all k-mer of a supplied (-f) genome draft and uses it to only hash k-mer pairs from longreads having an equivalent in the Bloom filter. When LINKS runs iteratively, the bloom filter built at the first iteration is re-used thus saving execution time.
 
-These are the best tips I can offer at the moment, until we address it further programatically using even more efficient data structures & code.
+These are the best tips I can offer at the moment, until we address it further programmatically using even more efficient data structures & code.
 
 
 Test data
@@ -238,6 +261,9 @@ run:
 
 The script will download the baseline E. coli abyss scaffold assembly and full 2D ONT reads (Quick et al 2014) and used the latter to re-scaffold the former, with default parameters (Table 1D in paper). 
 NEED ~8GB RAM WITH CURRENT PARAMETERS. Increase (-t) to use less RAM.
+
+./runme_EcoliK12singleMPET.sh will scaffold using E. coli K12 MPET reads
+(~42-90GB RAM for trimmed vs raw MPET)
 
 -------------------------------------
 ./runme_EcoliK12iterative.sh
@@ -310,7 +336,7 @@ Usage: ./testBloom.pl
 How it works
 ------------
 
-Process: nanopore reads are supplied as input (-s option, fasta format) and k-mer pairs are extracted using user-defined k-mer length (-k) and distance between the 5’-end of each pairs (-d) over a sliding window (-t). Unique k-mer pairs at set distance are hashed. Fasta sequences to scaffold are sup-plied as input (-f), and are shredded to k-mers on both strands, tracking the [contig] sequence of origin, k-mer positions and frequencies of observation. 
+Process: nanopore/long reads are supplied as input (-s option, fasta/fastq format) and k-mer pairs are extracted using user-defined k-mer length (-k) and distance between the 5’-end of each pairs (-d) over a sliding window (-t). Unique k-mer pairs at set distance are hashed. Fasta sequences to scaffold are sup-plied as input (-f), and are shredded to k-mers on both strands, tracking the [contig] sequence of origin, k-mer positions and frequencies of observation. 
 
 Algorithm: LINKS has two main stages, a contig pairing and a scaffold layout phase. Cycling through each k-mer pair, k-mers that are uniquely placed on contigs are identified, and putative contig pairs are formed if k-mers are placed on different contigs. Contig pairs are only considered if the calculated distances between them satisfy the mean distance provided (-d) while allowing for a deviation (-e). Contig pairs having a valid gap or over-lap are allowed to proceed to the scaffolding stage. Contigs in pairs may be ambiguous: a given contig may link to multiple contigs. To mitigate, the number of spanning k-mer pairs (links) between any given contig pair is recorded, along with a mean putative gap or overlap. Once pairing between contigs is complete, the scaffolds are built using contigs as seeds. Contigs are used in turn until all have been incorporated into a scaffold. Scaffolding is controlled by merging sequences only when a minimum number of links (-l) join two contig pairs, and when links are dominant compared to that of another possible pairing (-a). The predecessor of LINKS is the unpublished scaffolding engine in the widely-used SSAKE assembler (Warren et al. 2007), and foundation of the SSPACE-LongRead scaffolder (Boetzer and Pirovano, 2014).
 
@@ -347,12 +373,96 @@ Accurate scaffolding depends on many factors.  Number and nature of repeats in y
 
 NOTE: IT IS ADVISED TO RUN LINKS WITH SMALLER DISTANCES (-d) FIRST, ESPECIALLY WHEN ASSEMBLIES ARE VERY FRAGMENTED.
 
-.log                      :: text file; Logs execution time / errors / pairing stats
-.pairing_distribution.csv :: comma-separated file; 1st column is the calculated distance for each pair (template) with reads that assembled logically within the same contig.  2nd column is the number of pairs at that distance
-.pairing_issues           :: text file; Lists all pairing issues encountered between contig pairs and illogical/out-of-bounds pairing
-.scaffolds                :: comma-separated file; see below
-.scaffolds.fa             :: fasta file of the new scaffold sequence
-.bloom                    :: Bloom filter created by shredding the -f input into k-mers of size -k
+
+MPET INPUT
+==========
+In v1.7, a new option (-m) instructs LINKS that the long-read source (-s) is MPET. The users should prepare their input as specified in:
+cd test
+runme_EcoliK12singleMPET.sh
+
+The MPET input is a custom format akin to FASTA and the sequence record must consist of read1:read2
+>template
+ACGACACATCTACGCAGCGACGACGATAAATATAC:ATCAGCACAGCGACGCAGCGACAGCAGGACGACGAC
+
+
+NOTES:
+-Paired MPET reads are supplied in their original outward orientation <- ->
+-MPET sequences do not need to be trimmed (the Bloom filter will take care of eliminating erroneous kmers not found in the assembly)
+-You CANNOT combine MPET and long reads simultaneously in the same LINKS process
+-You may trim or process MPET reads if you wish (eg. with NxTrim), but remember to supply resulting MPETs in their original, outward-facing configuration (ie. <- ->). The script in ./tools/makeMPETOutput2EQUALfiles.pl does that for you.
+
+The default behaviour is to extract kmer pairs from long-read FASTA/FASTQ files specified in -s.
+
+Alternatively, when set to the MPET read length, the -m option will signal LINKS to
+extract kmer pairs across a distance set in -d, for each MPET pair supplied in files supplied under -s
+
+When doing so, ensure that -t is set to extract at least ~5 kmer pairs/MPET pair
+As a rule of thumb, -l should be set to at least double that value (-l 10 in this case)
+
+
+Preparing the MPET input
+------------------------
+For each fastq MPET file, convert in fasta:
+ gunzip -c EcMG1_S7_L001_R1_001.fastq.gz | perl -ne '$ct++;if($ct>4){$ct=1;}print if($ct<3);' > mpet4k_1.fa
+ gunzip -c EcMG1_S7_L001_R2_001.fastq.gz | perl -ne '$ct++;if($ct>4){$ct=1;}print if($ct<3);' > mpet4k_2.fa
+ gunzip -c set1_R1.mp.fastq.gz | perl -ne '$ct++;if($ct>4){$ct=1;}print if($ct<3);' > trimmedmpet4k_1.fa
+ gunzip -c set1_R2.mp.fastq.gz | perl -ne '$ct++;if($ct>4){$ct=1;}print if($ct<3);' > trimmedmpet4k_2.fa
+
+Generate the paired input (refer to the tools folder):
+Usage: ./makeMPETOutput2EQUALfiles.pl
+<fasta file 1>
+<fasta file 2>
+<read pair orientation 0/1,  0=raw MPET (<-->)   1=PET (-><-) >
+** fasta files must have the same number of records & arranged in the same order
+
+RAW: ../tools/makeMPETOutput2EQUALfiles.pl mpet4k_1.fa mpet4k_2.fa       
+TRIMMED: ../tools/makeMPETOutput2EQUALfiles.pl trimmedmpet4k_1.fa trimmedmpet4k_2.fa 1
+
+echo mpet4k_1.fa_paired.fa > mpet.fof
+echo trimmedmpet4k_1.fa_paired.fa > trimmedmpet.fof
+
+
+OUTPUT FILES
+============
+
+Output files                    Description
+
+.log                         :: text file; Logs execution time / errors / pairing stats
+.pairing_distribution.csv    :: comma-separated file; 1st column is the calculated distance for each pair (template) with reads that assembled logically within the same contig.  2nd column is the number of pairs at that distance
+.pairing_issues              :: text file; Lists all pairing issues encountered between contig pairs and illogical/out-of-bounds pairing
+.scaffolds                   :: comma-separated file; see below
+.scaffolds.fa                :: fasta file of the new scaffold sequence
+.bloom                       :: Bloom filter created by shredding the -f input into k-mers of size -k
+.gv                          :: scaffold graph (for visualizing merges), can be rendered in neato, graphviz, etc
+.assembly_correspondence.tsv :: correspondence file lists the scaffold ID, contig ID, original_name, #linking kmer pairs, links ratio, gap or overlap
+.simplepair_checkpoint.tsv   :: checkpoint file, contains info to rebuild datastructure for .gv graph
+.tigpair_checkpoint.tsv      :: if -b BASNAME.tigpair_checkpoint.tsv is present,
+                                LINKS will skip the kmer pair extraction and contig pairing stages.
+                                Delete this file to force LINKS to start at the beginning
+                                This file can be used to:
+                                -more quickly test certain parameters (-l min. links / -a min. links ratio)
+                                -quickly recover from crash
+                                -explore very large kmer spaces
+
+
+Interpreting .assembly_correspondence.tsv
+-------------------------------------
+
+This human-readable correspondence file lists the scaffold ID, contig ID,
+original assembly contig name, contig/sequence orientation, #linking kmer pairs, links ratio,
+gap or overlap(-) in this order
+
+
+Interpreting the graph / .gv file
+-------------------------------------
+-Vertices correspond to the sequences being considered for scaffolding, with
+the LINKS re-numbered sequences displayed in each vertex (unlinked sequences are not shown)
+-Edges are drawned between vertices when there is evidence for linking scaffolds (even if they are no ultimately scaffolded)
+-Only vertices/scaffolds highlighted in blue satisfied user-specified scaffold criteria (l and a parameters and satisfied logic/distance). These are scaffolded in the final LINKS output
+-Each edge in the graph will have 3 types of information (l=,g=,type=)
+l=:number of kmer pairs linking any two vertices/sequences
+g=:estimated gap or overlap (-) length between any two sequences
+type=:refers to the orientation of the sequences (forward=1,reverse=0)
 
 
 Understanding the .scaffolds csv file
@@ -374,7 +484,7 @@ Negative m values imply that there's a possible overlap between the contigs.  Bu
 License
 -------
 
-LINKS Copyright (c) 2014-2015 Canada's Michael Smith Genome Science Centre.  All rights reserved.
+LINKS Copyright (c) 2014-2016 Canada's Michael Smith Genome Science Centre.  All rights reserved.
 
 LINKS is released under the GNU General Public License
 
