@@ -1,5 +1,5 @@
 
-LINKS v1.7 Rene L. Warren, 2014-2016
+LINKS v1.8 Rene L. Warren, 2014-2016
 email: rwarren at bcgsc.ca
 
 Name
@@ -15,6 +15,12 @@ LINKS is a genomics application for scaffolding genome assemblies with long
 reads, such as those produced by Oxford Nanopore Technologies Ltd.
 It can be used to scaffold high-quality draft genome assemblies with any long
 sequences (eg. ONT reads, PacBio reads, another draft genomes, etc)
+
+
+What's new in v1.8 ?
+---------------------
+Native support for iterative k-mer pair extraction at distinct length
+intervals
 
 
 What's new in v1.7 ?
@@ -102,10 +108,10 @@ Install
 
 Download the tar ball, gunzip and extract the files on your system using:
 
-gunzip links_v1-7.tar.gz
-tar -xvf links_v1-7.tar
+gunzip links_v1-8.tar.gz
+tar -xvf links_v1-8.tar
 
-In v1.6+, the use of the Bloom::Faster PERL library is deprecated
+In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 
 =================================================
 INSTRUCTIONS TO BUILD THE BloomFilter PERL module
@@ -114,7 +120,7 @@ INSTRUCTIONS TO BUILD THE BloomFilter PERL module
 Bloom filters for bioinformatics projects, as well as any APIs created for
 other programming languages.
 
-cd ./links_v1.7/lib
+cd ./links_v1.8/lib
 git clone git://github.com/bcgsc/bloomfilter.git
 cd swig
 
@@ -199,29 +205,43 @@ Running LINKS
 
 e.g. /usr/bin/time -v -o timeLINKS_ECK12singleTIG.txt ../LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ./LINKS [v1.7]
+Usage: ../LINKS [v1.8]
 -f  sequences to scaffold (Multi-FASTA format, required)
--s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
--m  MPET read length (default -m 0, optional)
-	! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s
-	! Paired MPET reads in their original outward orientation <- -> must be separated by ":"
+-s  file-of-filenames, full path to long sequence reads or MPET pairs [see
+below] (Multi-FASTA/fastq format, required)
+-m  MPET reads (default -m 1 = yes, default = no, optional
+	! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL
+FORMAT UNDER -s
+	! Paired MPET reads in their original outward orientation <- -> must
+be separated by ":"
 	  >template_name
 	  ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC
--d  distance between k-mer pairs (eg. target distance to re-scaffold on. default -d 4000, optional)
+-d  distance between k-mer pairs (ie. target distances to re-scaffold on.
+default -d 4000, optional)
+	Multiple distances are separated by comma. eg. -d 500,1000,2000,3000
 -k  k-mer value (default -k 15, optional)
--t  step of sliding window when extracting k-mer pairs from long reads (default -t 2, optional)
+-t  step of sliding window when extracting k-mer pairs from long reads
+(default -t 2, optional)
+	Multiple steps are separated by comma. eg. -t 10,5
 -o  offset position for extracting k-mer pairs (default -o 0, optional)
--e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10% (default -e 0.1, optional)
--l  minimum number of links (k-mer pairs) to compute scaffold (default -l 5, optional)
--a  maximum link ratio between two best contig pairs (default -a 0.3, optional)
+-e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10%
+(default -e 0.1, optional)
+-l  minimum number of links (k-mer pairs) to compute scaffold (default -l 5,
+optional)
+-a  maximum link ratio between two best contig pairs (default -a 0.3,
+optional)
 	 *higher values lead to least accurate scaffolding*
 -b  base name for your output files (optional)
--r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)
-	 NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE
+-r  Bloom filter input file for sequences supplied in -s (optional, if none
+provided will output to .bloom)
+	 NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f
+WITH SAME -k VALUE
 	 IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)
--p  Bloom filter false positive rate (default -p 0.0001, optional; increase to prevent memory allocation errors)
+-p  Bloom filter false positive rate (default -p 0.001, optional; increase to
+prevent memory allocation errors)
 -x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)
 -v  Runs in verbose mode (-v 1 = yes, default = no, optional)
+
 
 Notes:
 -s K12_F2D.fof specifies a file-of-filenames (text file) listing: K12_full2dONT_longread.fa (see ./test folder)
@@ -229,8 +249,8 @@ Notes:
 This may be useful for large genome assembly drafts and when long reads are extremely high quality.
 
 
-Tips to minimize memory usage
------------------------------
+Tips to minimize memory usage and additional notes
+--------------------------------------------------
 
 The most important parameters for decreasing RAM usage are -t and -d.
 The largest dataset used for scaffolding by our group was a draft assembly of the white spruce genome (20 Gb)* - For this, a large sliding window, -t (200) was used and was decreased as the k-mer distance -d increased. 
@@ -245,7 +265,31 @@ On the data side of things, reducing the coverage (using less long reads), and l
 
 In v1.5, LINKS builds a Bloom filter that comprises all k-mer of a supplied (-f) genome draft and uses it to only hash k-mer pairs from longreads having an equivalent in the Bloom filter. When LINKS runs iteratively, the bloom filter built at the first iteration is re-used thus saving execution time.
 
-These are the best tips I can offer at the moment, until we address it further programmatically using even more efficient data structures & code.
+In v1.8, Users may input multiple distances using the -d parameter, separating
+each distance by a comma. 
+eg. 500,1000,2000,4000,5000
+will extract kmer pairs at these five distance intervals.
+
+Similarly, the window step size now accepts mutiple integers, each separated
+by a comma and with the order matching that in -d
+However, the size of the array can be shorter, and the last valid -t will be
+propagated to subsequent distances when they are not defined. 
+eg. -t 20,10,5
+A step size of 20, 10, 5, 5, 5 bp will be used when exploring the distances 
+supplied above.
+
+In v1.8, a single round of scaffolding is done, using the kmer pair space 
+extracted at the specified distances.
+Accordingly, v1.8 is not expected to yield the exact same results as
+separate iterative LINKS runs. For users comfortable with the original set up,
+no change is needed to make use of the previous LINKS behavior. 
+
+Simultaneous exploration of vast kmer space is expected to yield better
+scaffolding results.
+
+WARNING:
+Specifying many distances will require large amount of RAM, especially with
+low -t values.
 
 
 Test data
