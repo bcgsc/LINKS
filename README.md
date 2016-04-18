@@ -267,10 +267,10 @@ In v1.5, LINKS builds a Bloom filter that comprises all k-mer of a supplied (-f)
 
 In v1.8, Users may input multiple distances using the -d parameter, separating
 each distance by a comma. 
-eg. 500,1000,2000,4000,5000
-will extract kmer pairs at these five distance intervals.
+eg. -d 500,1000,2000,4000,5000
+will have for effect to extract kmer pairs at these five distance intervals.
 
-Similarly, the window step size now accepts mutiple integers, each separated
+Similarly, the window step size now accepts multiple integers, each separated
 by a comma and with the order matching that in -d
 However, the size of the array can be shorter, and the last valid -t will be
 propagated to subsequent distances when they are not defined. 
@@ -284,8 +284,7 @@ Accordingly, v1.8 is not expected to yield the exact same results as
 separate iterative LINKS runs. For users comfortable with the original set up,
 no change is needed to make use of the previous LINKS behavior. 
 
-Simultaneous exploration of vast kmer space is expected to yield better
-scaffolding results.
+Simultaneous exploration of vast kmer space is expected to yield better scaffolding results.
 
 WARNING:
 Specifying many distances will require large amount of RAM, especially with
