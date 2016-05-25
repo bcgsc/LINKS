@@ -1,5 +1,5 @@
 
-LINKS v1.8 Rene L. Warren, 2014-2016
+LINKS v1.8.1 Rene L. Warren, 2014-2016
 email: rwarren at bcgsc.ca
 
 Name
@@ -17,8 +17,15 @@ It can be used to scaffold high-quality draft genome assemblies with any long
 sequences (eg. ONT reads, PacBio reads, another draft genomes, etc)
 
 
+What's new in v1.8.1 ?
+---------------------
+
+Stratifies/prioritizes short-to-long distances when building the scaffold layout 
+
+
 What's new in v1.8 ?
 ---------------------
+
 Native support for iterative k-mer pair extraction at distinct length
 intervals
 
@@ -205,19 +212,15 @@ Running LINKS
 
 e.g. /usr/bin/time -v -o timeLINKS_ECK12singleTIG.txt ../LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ../LINKS [v1.8]
+Usage: ../LINKS [v1.8.1]
 -f  sequences to scaffold (Multi-FASTA format, required)
--s  file-of-filenames, full path to long sequence reads or MPET pairs [see
-below] (Multi-FASTA/fastq format, required)
+-s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
 -m  MPET reads (default -m 1 = yes, default = no, optional
-	! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL
-FORMAT UNDER -s
-	! Paired MPET reads in their original outward orientation <- -> must
-be separated by ":"
+	! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s
+	! Paired MPET reads in their original outward orientation <- -> must be separated by ":"
 	  >template_name
 	  ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC
--d  distance between k-mer pairs (ie. target distances to re-scaffold on.
-default -d 4000, optional)
+-d  distance between k-mer pairs (ie. target distances to re-scaffold on. default -d 4000, optional)
 	Multiple distances are separated by comma. eg. -d 500,1000,2000,3000
 -k  k-mer value (default -k 15, optional)
 -t  step of sliding window when extracting k-mer pairs from long reads
@@ -226,19 +229,14 @@ default -d 4000, optional)
 -o  offset position for extracting k-mer pairs (default -o 0, optional)
 -e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10%
 (default -e 0.1, optional)
--l  minimum number of links (k-mer pairs) to compute scaffold (default -l 5,
-optional)
--a  maximum link ratio between two best contig pairs (default -a 0.3,
-optional)
+-l  minimum number of links (k-mer pairs) to compute scaffold (default -l 5, optional) 
+-a  maximum link ratio between two best contig pairs (default -a 0.3, optional)
 	 *higher values lead to least accurate scaffolding*
 -b  base name for your output files (optional)
--r  Bloom filter input file for sequences supplied in -s (optional, if none
-provided will output to .bloom)
-	 NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f
-WITH SAME -k VALUE
+-r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)
+	 NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE
 	 IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)
--p  Bloom filter false positive rate (default -p 0.001, optional; increase to
-prevent memory allocation errors)
+-p  Bloom filter false positive rate (default -p 0.001, optional; increase to prevent memory allocation errors)
 -x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)
 -v  Runs in verbose mode (-v 1 = yes, default = no, optional)
 
