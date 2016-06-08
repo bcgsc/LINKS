@@ -141,9 +141,9 @@ http://www.swig.org/
 
 TO BUILD a Perl5 module (run in swig/):
 ```
-preinst-swig -Wall -c++ -perl5 BloomFilter.i
-g++ -c BloomFilter_wrap.cxx -I/usr/lib64/perl5/CORE -fPIC -Dbool=char -O3
-g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so -O3
+a) /home/<user>/<path to swig>/preinst-swig -Wall -c++ -perl5 BloomFilter.i
+b) g++ -c BloomFilter_wrap.cxx -I/usr/lib64/perl5/CORE -fPIC -Dbool=char -O3
+c) g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so -O3
 ```
 
 TO COMPILE, swig needs the following Perl5 headers:
@@ -210,9 +210,9 @@ Golnaz Jahesh
 Running LINKS
 -------------
 
-e.g. /usr/bin/time -v -o timeLINKS_ECK12singleTIG.txt ../LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
+e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ../LINKS [v1.8.1]
+Usage: ./LINKS [v1.8.1]
 -f  sequences to scaffold (Multi-FASTA format, required)
 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
 -m  MPET reads (default -m 1 = yes, default = no, optional
