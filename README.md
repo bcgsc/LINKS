@@ -1,5 +1,5 @@
 
-LINKS v1.8.1 Rene L. Warren, 2014-2016
+LINKS v1.8.2 Rene L. Warren, 2014-2016
 email: rwarren at bcgsc.ca
 
 Name
@@ -15,6 +15,12 @@ LINKS is a genomics application for scaffolding genome assemblies with long
 reads, such as those produced by Oxford Nanopore Technologies Ltd.
 It can be used to scaffold high-quality draft genome assemblies with any long
 sequences (eg. ONT reads, PacBio reads, another draft genomes, etc)
+
+
+What's new in v1.8.2 ?
+---------------------
+
+Implements the -z option, minimum contig size cutoff for scaffolding
 
 
 What's new in v1.8.1 ?
@@ -212,7 +218,7 @@ Running LINKS
 
 e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ./LINKS [v1.8.1]
+Usage: ./LINKS [v1.8.2]
 -f  sequences to scaffold (Multi-FASTA format, required)
 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
 -m  MPET reads (default -m 1 = yes, default = no, optional
@@ -232,6 +238,7 @@ Usage: ./LINKS [v1.8.1]
 -l  minimum number of links (k-mer pairs) to compute scaffold (default -l 5, optional) 
 -a  maximum link ratio between two best contig pairs (default -a 0.3, optional)
 	 *higher values lead to least accurate scaffolding*
+-z  minimum contig length to consider for scaffolding (default -z 500, optional)
 -b  base name for your output files (optional)
 -r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)
 	 NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE
