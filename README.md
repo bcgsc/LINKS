@@ -1,5 +1,5 @@
 
-LINKS v1.8.2 Rene L. Warren, 2014-2016
+LINKS v1.8.3 Rene L. Warren, 2014-2016
 email: rwarren at bcgsc.ca
 
 Name
@@ -15,6 +15,12 @@ LINKS is a genomics application for scaffolding genome assemblies with long
 reads, such as those produced by Oxford Nanopore Technologies Ltd.
 It can be used to scaffold high-quality draft genome assemblies with any long
 sequences (eg. ONT reads, PacBio reads, another draft genomes, etc)
+
+
+What's new in v1.8.3 ?
+---------------------
+
+Fixes a bug introduced in v1.8.1 that caused sequence overuse
 
 
 What's new in v1.8.2 ?
@@ -218,7 +224,7 @@ Running LINKS
 
 e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ./LINKS [v1.8.2]
+Usage: ./LINKS [v1.8.3]
 -f  sequences to scaffold (Multi-FASTA format, required)
 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
 -m  MPET reads (default -m 1 = yes, default = no, optional
