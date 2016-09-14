@@ -1,5 +1,5 @@
 
-LINKS v1.8.3 Rene L. Warren, 2014-2016
+LINKS v1.8.4 Rene L. Warren, 2014-2016
 email: rwarren at bcgsc.ca
 
 Name
@@ -15,6 +15,12 @@ LINKS is a genomics application for scaffolding genome assemblies with long
 reads, such as those produced by Oxford Nanopore Technologies Ltd.
 It can be used to scaffold high-quality draft genome assemblies with any long
 sequences (eg. ONT reads, PacBio reads, another draft genomes, etc)
+
+
+What's new in v1.8.4 ?
+---------------------
+
+Changed license to GPLv3 
 
 
 What's new in v1.8.3 ?
@@ -127,8 +133,8 @@ Install
 
 Download the tar ball, gunzip and extract the files on your system using:
 
-gunzip links_v1-8.tar.gz
-tar -xvf links_v1-8.tar
+gunzip links_v1-8-4.tar.gz
+tar -xvf links_v1-8-4.tar
 
 In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 
@@ -139,7 +145,7 @@ INSTRUCTIONS TO BUILD THE BloomFilter PERL module
 Bloom filters for bioinformatics projects, as well as any APIs created for
 other programming languages.
 
-cd ./links_v1.8/lib
+cd ./links_v1.8.4/lib
 git clone git://github.com/bcgsc/bloomfilter.git
 cd swig
 
@@ -224,7 +230,7 @@ Running LINKS
 
 e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ./LINKS [v1.8.3]
+Usage: ./LINKS [v1.8.4]
 -f  sequences to scaffold (Multi-FASTA format, required)
 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
 -m  MPET reads (default -m 1 = yes, default = no, optional
@@ -538,16 +544,21 @@ Negative m values imply that there's a possible overlap between the contigs.  Bu
 License
 -------
 
-LINKS Copyright (c) 2014-2016 Canada's Michael Smith Genome Science Centre.  All rights reserved.
+LINKS Copyright (c) 2014-2016 British Columbia Cancer Agency Branch.  All rights reserved.
 
-LINKS is released under the GNU General Public License
+LINKS is released under the GNU General Public License v3
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 3.
+ 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+ 
+For commercial licensing options, please contact
+Patrick Rebstein <prebstein@bccancer.bc.ca>
