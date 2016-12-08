@@ -130,10 +130,10 @@ In v1.5, there is a single dependency to Bloom::Faster - an extension for the c 
 -------
 
 Download the tar ball, gunzip and extract the files on your system using:
-
+<code>
 gunzip links_v1-8-4.tar.gz
 tar -xvf links_v1-8-4.tar
-
+</code>
 In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 
 =================================================
@@ -142,11 +142,11 @@ INSTRUCTIONS TO BUILD THE BloomFilter PERL module
 1. DOWNLOAD the BC Genome Sciences Centre's BloomFilter: The BTL C/C++ Common
 Bloom filters for bioinformatics projects, as well as any APIs created for
 other programming languages.
-
+<code>
 cd ./links_v1.8.4/lib
 git clone git://github.com/bcgsc/bloomfilter.git
 cd swig
-
+</code>
 
 2. BUILD a PERL5 module
 
@@ -180,9 +180,10 @@ If they are not located in /usr/lib64/perl5, you can run "perl -e 'use Config; p
 
 You only need to change if you have re-built in a relative directory different
 from:
+<code>
 use lib "$FindBin::Bin/./lib/bloomfilter/swig"; (for LINKS)
 use lib "$FindBin::Bin/../lib/bloomfilter/swig"; (for writeBloom.pl/testBloom.pl)
-
+</code>
 
 ###Documentation
 -------------
@@ -225,7 +226,7 @@ Golnaz Jahesh
 
 ###Running LINKS
 -------------
-
+<code>
 e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
 Usage: ./LINKS [v1.8.4]
@@ -262,7 +263,7 @@ Notes:
 -s K12_F2D.fof specifies a file-of-filenames (text file) listing: K12_full2dONT_longread.fa (see ./test folder)
 -x When turned on (-x 1), LINKS will run with a behaviour equivalent to v1.3 (no Bloom filters).  
 This may be useful for large genome assembly drafts and when long reads are extremely high quality.
-
+</code>
 
 ###Tips to minimize memory usage and additional notes
 --------------------------------------------------
@@ -308,12 +309,14 @@ low -t values.
 
 ###Test data
 ---------
-
+<pre>
 Go to ./test
+</pre>
 (cd test)
 
 
 run:
+<pre>
 -------------------------------------
 ./runme_EcoliK12single.sh
 
@@ -354,9 +357,8 @@ Ashton,P.M. 2015. Nat.Biotechnol.33,296–300). You will need a computer with at
 -------------------------------------
 or 
 ./runall.sh
-
 This script will run ALL of the above examples.
-
+</pre>
 
 Additional info:
 
@@ -373,7 +375,7 @@ are provided to show the re-scaffolding of the A. thaliana high-quality genome d
 
 ###Testing the Bloom filters
 -------------------------
-
+<code>
 # To test insertions:
 cd tools
 ./writeBloom.pl
@@ -389,7 +391,7 @@ Usage: ./testBloom.pl
 -f  sequences to test (Multi-FASTA format, required)
 -k  k-mer value (default -k 15, optional)
 -r  Bloom filter file
-
+</code>
 
 ###How it works
 ------------
@@ -402,7 +404,7 @@ Output: A summary of the scaffold layout is provided (.scaffold) as a text file 
 
 
 Consider the following contig pairs (AB, AC and rAD):
-
+<pre>
     A         B
 ========= ======== 
   ->       <-
@@ -420,6 +422,7 @@ Consider the following contig pairs (AB, AC and rAD):
       ->   <-
      ->   <-
        ->   <-
+</pre>
 
 Two parameters control scaffolding (-l and -a).  The -l option specifies the minimum number of links (read pairs) a valid contig pair MUST have to be considered.  The -a option specifies the maximum ratio between the best two contig pairs for a given seed/contig being extended.  For example, contig A shares 4 links with B and 2 links with C, in this orientation.  contig rA (reverse) also shares 3 links with D.   When it's time to extend contig A (with the options -l and -a set to 2 and 0.7, respectively), both contig pairs AB and AC are considered.  Since C (second-best) has 2 links and B (best) has 4 (2/4) = 0.5 below the maximum ratio of 0.7, A will be linked with B in the scaffold and C will be kept for another extension. If AC had 3 links the resulting ratio (0.75), above the user-defined maximum 0.7 would have caused the extension to terminate at A, with both B and C considered for a different scaffold.  A maximum links ratio of 1 (not recommended) means that the best two candidate contig pairs have the same number of links -- LINKS will accept the first one since both have a valid gap/overlap.  When a scaffold extension is terminated on one side, the scaffold is extended on the "left", by looking for contig pairs that involve the reverse of the seed (in this example, rAD).  With AB and AC having 4 and 2 links, respectively and rAD being the only pair on the left, the final scaffolds outputted by LINKS would be:
 
@@ -439,9 +442,10 @@ cd test
 runme_EcoliK12singleMPET.sh
 
 The MPET input is a custom format akin to FASTA and the sequence record must consist of read1:read2
+<pre>
 >template
 ACGACACATCTACGCAGCGACGACGATAAATATAC:ATCAGCACAGCGACGCAGCGACAGCAGGACGACGAC
-
+</pre>
 
 NOTES:
 -Paired MPET reads are supplied in their original outward orientation <- ->
@@ -460,6 +464,7 @@ As a rule of thumb, -l should be set to at least double that value (-l 10 in thi
 
 ###Preparing the MPET input
 ------------------------
+<code>
 For each fastq MPET file, convert in fasta:
  gunzip -c EcMG1_S7_L001_R1_001.fastq.gz | perl -ne '$ct++;if($ct>4){$ct=1;}print if($ct<3);' > mpet4k_1.fa
  gunzip -c EcMG1_S7_L001_R2_001.fastq.gz | perl -ne '$ct++;if($ct>4){$ct=1;}print if($ct<3);' > mpet4k_2.fa
@@ -478,7 +483,7 @@ TRIMMED: ../tools/makeMPETOutput2EQUALfiles.pl trimmedmpet4k_1.fa trimmedmpet4k_
 
 echo mpet4k_1.fa_paired.fa > mpet.fof
 echo trimmedmpet4k_1.fa_paired.fa > trimmedmpet.fof
-
+</code>
 
 ###OUTPUT FILES
 ============
@@ -525,8 +530,9 @@ type=:refers to the orientation of the sequences (forward=1,reverse=0)
 
 ###Understanding the .scaffolds csv file
 -------------------------------------
-
+<pre>
 scaffold1,7484,f127Z7068k12a0.58m42_f3090z62k7a0.14m76_f1473z354
+</pre>
 
 column 1: a unique scaffold identifier
 column 2: the sum of all contig sizes that made it to the scaffold/supercontig
