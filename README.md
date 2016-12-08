@@ -130,10 +130,10 @@ In v1.5, there is a single dependency to Bloom::Faster - an extension for the c 
 -------
 
 Download the tar ball, gunzip and extract the files on your system using:
-<code>
+<pre>
 gunzip links_v1-8-4.tar.gz
 tar -xvf links_v1-8-4.tar
-</code>
+</pre>
 In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 
 =================================================
@@ -142,11 +142,11 @@ INSTRUCTIONS TO BUILD THE BloomFilter PERL module
 1. DOWNLOAD the BC Genome Sciences Centre's BloomFilter: The BTL C/C++ Common
 Bloom filters for bioinformatics projects, as well as any APIs created for
 other programming languages.
-<code>
+<pre>
 cd ./links_v1.8.4/lib
 git clone git://github.com/bcgsc/bloomfilter.git
 cd swig
-</code>
+</pre>
 
 2. BUILD a PERL5 module
 
@@ -180,10 +180,10 @@ If they are not located in /usr/lib64/perl5, you can run "perl -e 'use Config; p
 
 You only need to change if you have re-built in a relative directory different
 from:
-<code>
+<pre>
 use lib "$FindBin::Bin/./lib/bloomfilter/swig"; (for LINKS)
 use lib "$FindBin::Bin/../lib/bloomfilter/swig"; (for writeBloom.pl/testBloom.pl)
-</code>
+</pre>
 
 ###Documentation
 -------------
@@ -226,7 +226,7 @@ Golnaz Jahesh
 
 ###Running LINKS
 -------------
-<code>
+<pre>
 e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
 Usage: ./LINKS [v1.8.4]
@@ -263,7 +263,7 @@ Notes:
 -s K12_F2D.fof specifies a file-of-filenames (text file) listing: K12_full2dONT_longread.fa (see ./test folder)
 -x When turned on (-x 1), LINKS will run with a behaviour equivalent to v1.3 (no Bloom filters).  
 This may be useful for large genome assembly drafts and when long reads are extremely high quality.
-</code>
+</pre>
 
 ###Tips to minimize memory usage and additional notes
 --------------------------------------------------
@@ -375,7 +375,7 @@ are provided to show the re-scaffolding of the A. thaliana high-quality genome d
 
 ###Testing the Bloom filters
 -------------------------
-<code>
+<pre>
 # To test insertions:
 cd tools
 ./writeBloom.pl
@@ -391,7 +391,7 @@ Usage: ./testBloom.pl
 -f  sequences to test (Multi-FASTA format, required)
 -k  k-mer value (default -k 15, optional)
 -r  Bloom filter file
-</code>
+</pre>
 
 ###How it works
 ------------
@@ -464,7 +464,7 @@ As a rule of thumb, -l should be set to at least double that value (-l 10 in thi
 
 ###Preparing the MPET input
 ------------------------
-<code>
+<pre>
 For each fastq MPET file, convert in fasta:
  gunzip -c EcMG1_S7_L001_R1_001.fastq.gz | perl -ne '$ct++;if($ct>4){$ct=1;}print if($ct<3);' > mpet4k_1.fa
  gunzip -c EcMG1_S7_L001_R2_001.fastq.gz | perl -ne '$ct++;if($ct>4){$ct=1;}print if($ct<3);' > mpet4k_2.fa
@@ -483,7 +483,7 @@ TRIMMED: ../tools/makeMPETOutput2EQUALfiles.pl trimmedmpet4k_1.fa trimmedmpet4k_
 
 echo mpet4k_1.fa_paired.fa > mpet.fof
 echo trimmedmpet4k_1.fa_paired.fa > trimmedmpet.fof
-</code>
+</pre>
 
 ###OUTPUT FILES
 ============
