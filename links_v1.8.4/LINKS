@@ -63,7 +63,8 @@ if(! $opt_f || ! $opt_s){
    print "\t IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)\n";
    print "-p  Bloom filter false positive rate (default -p $fpr, optional; increase to prevent memory allocation errors)\n";
    print "-x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)\n";
-   die   "-v  Runs in verbose mode (-v 1 = yes, default = no, optional)\n"; 
+   print "-v  Runs in verbose mode (-v 1 = yes, default = no, optional)\n";
+   die "Error: Missing mandatory options -f and -s.";
 }
 
 my $assemblyfile = $opt_f;
@@ -414,10 +415,8 @@ if($@){
 }
 close LOG;
 
-die "$0 $version terminated successfully on $date\n";
-
-
-exit 1;
+print "$0 $version terminated successfully on $date\n";
+exit;
 
 
 ###for dev. test purposes
