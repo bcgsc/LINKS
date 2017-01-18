@@ -198,10 +198,12 @@ rwarren at bcgsc.ca
 ###Citing LINKS
 ------------
 
+<pre>
 Rene L. Warren, Chen Yang, Benjamin P. Vandervalk, Bahar Behsaz,
 Albert Lagman, Steven J. M. Jones and Inanç Birol. 2015. LINKS: Scalable,
 alignment-free scaffolding of draft genomes with long reads. GigaScience 4:35
 DOI: 10.1186/s13742-015-0076-3©  Warren et al. 2015
+</pre>
 
 Thank you for using, developing and promoting this free software.
 
