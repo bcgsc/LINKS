@@ -489,7 +489,7 @@ echo trimmedmpet4k_1.fa_paired.fa > trimmedmpet.fof
 ============
 
 |Output files|                    Description|
-|============|===============================|
+|---|---|
 |.log                         | text file; Logs execution time / errors / pairing stats|
 |.pairing_distribution.csv    | comma-separated file; 1st column is the calculated distance for each pair (template) with reads that assembled logically within the same contig.  2nd column is the number of pairs at that distance|
 |.pairing_issues              | text file; Lists all pairing issues encountered between contig pairs and illogical/out-of-bounds pairing |
