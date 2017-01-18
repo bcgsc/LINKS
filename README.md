@@ -488,24 +488,18 @@ echo trimmedmpet4k_1.fa_paired.fa > trimmedmpet.fof
 ###OUTPUT FILES
 ============
 
-Output files                    Description
-
-.log                         :: text file; Logs execution time / errors / pairing stats
-.pairing_distribution.csv    :: comma-separated file; 1st column is the calculated distance for each pair (template) with reads that assembled logically within the same contig.  2nd column is the number of pairs at that distance
-.pairing_issues              :: text file; Lists all pairing issues encountered between contig pairs and illogical/out-of-bounds pairing
-.scaffolds                   :: comma-separated file; see below
-.scaffolds.fa                :: fasta file of the new scaffold sequence
-.bloom                       :: Bloom filter created by shredding the -f input into k-mers of size -k
-.gv                          :: scaffold graph (for visualizing merges), can be rendered in neato, graphviz, etc
-.assembly_correspondence.tsv :: correspondence file lists the scaffold ID, contig ID, original_name, #linking kmer pairs, links ratio, gap or overlap
-.simplepair_checkpoint.tsv   :: checkpoint file, contains info to rebuild datastructure for .gv graph
-.tigpair_checkpoint.tsv      :: if -b BASNAME.tigpair_checkpoint.tsv is present,
-                                LINKS will skip the kmer pair extraction and contig pairing stages.
-                                Delete this file to force LINKS to start at the beginning
-                                This file can be used to:
-                                -more quickly test certain parameters (-l min. links / -a min. links ratio)
-                                -quickly recover from crash
-                                -explore very large kmer spaces
+|Output files|                    Description|
+|============|===============================|
+|.log                         | text file; Logs execution time / errors / pairing stats|
+|.pairing_distribution.csv    | comma-separated file; 1st column is the calculated distance for each pair (template) with reads that assembled logically within the same contig.  2nd column is the number of pairs at that distance|
+|.pairing_issues              | text file; Lists all pairing issues encountered between contig pairs and illogical/out-of-bounds pairing |
+|.scaffolds                   | comma-separated file; see below |
+|.scaffolds.fa                | fasta file of the new scaffold sequence |
+|.bloom                       | Bloom filter created by shredding the -f input into k-mers of size -k |
+|.gv                          | scaffold graph (for visualizing merges), can be rendered in neato, graphviz, etc |
+|.assembly_correspondence.tsv | correspondence file lists the scaffold ID, contig ID, original_name, #linking kmer pairs, links ratio, gap or overlap|
+|.simplepair_checkpoint.tsv   | checkpoint file, contains info to rebuild datastructure for .gv graph |
+|.tigpair_checkpoint.tsv      | if -b BASNAME.tigpair_checkpoint.tsv is present, LINKS will skip the kmer pair extraction and contig pairing stages. Delete this file to force LINKS to start at the beginning. This file can be used to: 1) quickly test parameters (-l min. links / -a min. links ratio, 2) quickly recover from crash 3) explore very large kmer spaces 4) scaffold with output of ARCS |
 
 
 ###Interpreting .assembly_correspondence.tsv
@@ -518,13 +512,19 @@ gap or overlap(-) in this order
 
 ###Interpreting the graph / .gv file
 -------------------------------------
--Vertices correspond to the sequences being considered for scaffolding, with
-the LINKS re-numbered sequences displayed in each vertex (unlinked sequences are not shown)
--Edges are drawned between vertices when there is evidence for linking scaffolds (even if they are no ultimately scaffolded)
--Only vertices/scaffolds highlighted in blue satisfied user-specified scaffold criteria (l and a parameters and satisfied logic/distance). These are scaffolded in the final LINKS output
--Each edge in the graph will have 3 types of information (l=,g=,type=)
+
+1. Vertices correspond to the sequences being considered for scaffolding, with the LINKS re-numbered sequences displayed in each vertex (unlinked sequences are not shown)
+
+2. Edges are drawned between vertices when there is evidence for linking scaffolds (even if they are no ultimately scaffolded)
+
+3. Only vertices/scaffolds highlighted in blue satisfied user-specified scaffold criteria (l and a parameters and satisfied logic/distance). These are scaffolded in the final LINKS output
+
+4. Each edge in the graph will have 3 types of information (l=,g=,type=)
+
 l=:number of kmer pairs linking any two vertices/sequences
+
 g=:estimated gap or overlap (-) length between any two sequences
+
 type=:refers to the orientation of the sequences (forward=1,reverse=0)
 
 
