@@ -52,9 +52,10 @@ intervals
 Support for scaffolding with MPET (jumping library) reads
 Support for reading compressed long sequence [reads] and assembly files
 Implemented mid-scaffolding checkpoint to:
--more quickly test certain parameters (-l min. links / -a min. links ratio)
--quickly recover from crash
--explore very large kmer spaces
+
+- more quickly test certain parameters (-l min. links / -a min. links ratio)
+- quickly recover from crash
+- explore very large kmer spaces
 
 
 ###What's new in v1.6.1 ?
