@@ -115,7 +115,7 @@ Fixed bug that prevented reading traditional FASTA sequences (where a sequence i
 ###What's new in v1.1 ?
 ---------------------
 
-Included offset option (-o option) - Enable LINKS to explore a wider k-mer space range when running iteratively
+Included offset option (-o option) - Enables LINKS to explore a wider k-mer space range when running iteratively
 Minor fixes: IUPAC codes are now preserved
 
 
