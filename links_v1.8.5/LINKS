@@ -1338,8 +1338,8 @@ sub readContigPairs{
 	 ###added FEB2017
          if($simplepair_flag){### will only proceed to create this data structure if the simplepair file is missing
 
-            my ($orDir1,$orTig1) = ($1,$2) if($info[1] =~ /([rf])(\d+)/);
-	    my ($orDir2,$orTig2) = ($1,$2) if($info[2] =~ /([rf])(\d+)/);
+            my ($orDir1,$orTig1) = ($1,$2) if($info[1] =~ /^([rf])(\d+)$/);
+	    my ($orDir2,$orTig2) = ($1,$2) if($info[2] =~ /^([rf])(\d+)$/);
             my ($stripTig1,$stripTig2,$dir1,$dir2) = ($orTig1,$orTig2,$orDir1,$orDir2);
 
 	    if($orTig1<$orTig2){
@@ -1367,7 +1367,10 @@ sub readContigPairs{
                        $oritype .= "0";
                     }
                }
-               $simplepair->{$stripTig1}{$stripTig2}{'type'} = $oritype;
+	       if ($info[3] >= $simplepair->{$stripTig1}{$stripTig2}{'max'}){
+                  $simplepair->{$stripTig1}{$stripTig2}{'type'} = $oritype;###direction with most support
+	          $simplepair->{$stripTig1}{$stripTig2}{'max'} = $info[3];
+               }
             }
          }
       }
