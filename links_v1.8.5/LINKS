@@ -1474,7 +1474,7 @@ sub buildScaffoldFasta{
 
    open(OUT,">$scaffold_fasta") || die "can't write to $scaffold_fasta -- fatal\n";
    open(CORROUT,">$numnamecorr") || die "Can't write to $numnamecorr -- fatal\n";
-   print CORROUT "This correspondence $numnamecorr file lists the scaffold ID and contig ID used by LINKS (reported in the .scaffolds file), with the original contig name in the provided assembly file (-f $assemblyfile)\n";
+   print CORROUT "#This correspondence $numnamecorr file lists the scaffold ID and contig ID used by LINKS (reported in the .scaffolds file), with the original contig name in the provided assembly file (-f $assemblyfile)\n";
    print CORROUT "LINKS_scaffold_ID\tLINKS_contig_ID\toriginal_name\torientation(f=forward/r=reverse)\tnumber_of_links\tlinks_ratio\tgap_or_overlap(-)\n";
 
    my $tot=0;
