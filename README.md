@@ -495,7 +495,7 @@ echo trimmedmpet4k_1.fa_paired.fa > trimmedmpet.fof
 </pre>
 
 ### OUTPUT FILES
-============
+------------------------
 
 |Output files|                    Description|
 |---|---|
