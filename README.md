@@ -138,8 +138,8 @@ In v1.5, there is a single dependency to Bloom::Faster - an extension for the c 
 
 Download the tar ball, gunzip and extract the files on your system using:
 <pre>
-gunzip links_v1-8-4.tar.gz
-tar -xvf links_v1-8-4.tar
+gunzip links_v1-8-5.tar.gz
+tar -xvf links_v1-8-5.tar
 </pre>
 In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 
@@ -150,7 +150,7 @@ INSTRUCTIONS TO BUILD THE BloomFilter PERL module
 Bloom filters for bioinformatics projects, as well as any APIs created for
 other programming languages.
 <pre>
-cd ./links_v1.8.4/lib
+cd ./links_v1.8.5/lib
 git clone git://github.com/bcgsc/bloomfilter.git
 cd swig
 </pre>
@@ -445,7 +445,8 @@ NOTE: IT IS ADVISED TO RUN LINKS WITH SMALLER DISTANCES (-d) FIRST, ESPECIALLY W
 
 
 ### MPET INPUT
-==========
+---------------------
+
 In v1.7, a new option (-m) instructs LINKS that the long-read source (-s) is MPET. The users should prepare their input as specified in:
 cd test
 runme_EcoliK12singleMPET.sh
