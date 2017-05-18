@@ -1515,7 +1515,7 @@ sub buildScaffoldFasta{
             my $gapseq = "";
 
             $numlinks = $1 if($other=~/k(\d+)/);
-            $linksratio = $1 if($other=~/a(\d+)/);
+            $linksratio = $1 if($other=~/a(\d+.*)m/);
             $gap = $1 if($other=~/m(\-?\d+)/);
 
             print CORROUT "$a[0]\t$tnum\t$tignames->{$tnum}\t$orient\t$numlinks\t$linksratio\t$gap\n"; 
