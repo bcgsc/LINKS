@@ -143,8 +143,8 @@ tar -xvf links_v1-8-5.tar
 </pre>
 In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 
-=================================================
-INSTRUCTIONS TO BUILD THE BloomFilter PERL module
+### Instructions for building the BloomFilter PERL module
+-------
 
 1. DOWNLOAD the BC Genome Sciences Centre's BloomFilter: The BTL C/C++ Common
 Bloom filters for bioinformatics projects, as well as any APIs created for
@@ -191,6 +191,7 @@ from:
 use lib "$FindBin::Bin/./lib/bloomfilter/swig"; (for LINKS)
 use lib "$FindBin::Bin/../lib/bloomfilter/swig"; (for writeBloom.pl/testBloom.pl)
 </pre>
+
 
 ### Documentation
 -------------
