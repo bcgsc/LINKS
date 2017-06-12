@@ -542,7 +542,7 @@ type=:refers to the orientation of the sequences (forward=1,reverse=0)
 #### Understanding the .scaffolds csv file
 -------------------------------------
 <pre>
-scaffold1,7484,f127Z7068k12a0.58m42_f3090z62k7a0.14m76_f1473z354
+scaffold1,7484,f127Z7068k12a0.58m42_r3090z62k7a0.14m76_f1473z354
 </pre>
 
 column 1: a unique scaffold identifier
@@ -550,10 +550,10 @@ column 2: the sum of all contig sizes that made it to the scaffold/supercontig
 column 3: a contig chain representing the layout:
 
 e.g.
-f127Z7068k12a0.58m42_f3090z62k7a0.14m76_f1473z354
+f127Z7068k12a0.58m42_r3090z62k7a0.14m76_f1473z354
 
-means: contig f127 (strand=f/+), size (z) 7068 (Z if contig was used as the seed sequence) has 12 links (k), link ratio of 0.58 (a) with a mean gap of 42nt (m) with reverse (r) of contig 3090 (size 62) on the right.  if m values are negative, it's just that a possible overlap was calculated using the mean distance supplied by the user and the position of the reads flanking the contig.
-Negative m values imply that there's a possible overlap between the contigs.  But since the pairing distance distribution usually follows a Normal/Gaussian distribution, some distances are expected to be larger than the median size expected/observed.  In reality, if the exact size was known between each paired-reads, we wouldn't expect much negative m values unless a break occurred during the contig extension (likely due to base errors/SNPs). 
+means: contig f127 (strand=f/+), size (z) 7068 (Z if contig was used as the seed sequence) has 12 links (k), link ratio of 0.58 (a) with a mean gap of 42nt (m) with reverse (r) of contig 3090 (size 62) on the right. This again has 7 links with a link ration of 0.14 with the forward of contig 1473 with a length of 354. If m values are negative, it's just that a possible overlap was calculated using the mean distance supplied by the user and the position of the reads flanking the contig.
+Negative m values imply that there's a possible overlap between the contigs.  But since the pairing distance distribution usually follows a Normal/Gaussian distribution, some distances are expected to be smaller than the median size expected/observed.  In reality, if the exact size was known between each paired-reads, we wouldn't expect much negative m values unless a break occurred during the contig extension (likely due to base errors/SNPs). 
 
 
 ### License
