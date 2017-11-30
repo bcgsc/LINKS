@@ -40,7 +40,7 @@ if(! $opt_f || ! $opt_s){
    print "Usage: $0 $version\n";
    print "-f  sequences to scaffold (Multi-FASTA format, required)\n"; 
    print "-s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)\n";
-   print "-m  MPET reads (default -m 1 = yes, default = no, optional\n";
+   print "-m  MPET reads (default -m 1 = yes, default = no, optional)\n";
    print "\t! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s\n";
    print "\t! Paired MPET reads in their original outward orientation <- -> must be separated by \":\"\n"; 
    print "\t  >template_name\n\t  ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC\n";	
@@ -270,6 +270,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
       my $ctrd = 0;
       my $delta = $frag_dist - ( 2 * $k);
       my $file_ct = 0;
+      my $distpairs = 0;
 
       if(defined $step_array[$array_element]){
          $last_step = $step_array[$array_element];### records the last usable t params, even if array doesn't match with d
@@ -300,16 +301,16 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
          }else{
             ($matepair,$pairs,$ctrd) = &readFastaFastq($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$bloom,$readlength);
          }
-         $totalpairs+=$pairs;
+	 $distpairs+=$pairs;
          #}
          $initpos += $offset;###ensures a larger kmer spectrum is explored, conflicting kmer pairs are minimized, when $offset <> 0
       }### FOF ends
       close FOF;
 
-      my $kmerpairmessage = "\nExtracted $pairs $k-mer pairs, from all $ctrd sequences provided in $longfile\n\n";
+      my $kmerpairmessage = "\nExtracted $distpairs $k-mer pairs at -d $frag_dist, from all $ctrd sequences provided in $longfile\n\n";
       print $kmerpairmessage;
       print LOG $kmerpairmessage;
-
+      $totalpairs+=$distpairs;
       $array_element++;
    }### iterate through distances
 
@@ -659,8 +660,6 @@ sub kmerize{
          $matepair->{$rd1}{$rd2}{'bt'} = 0;
          $pairs++;
       }
-
-
 
    }
    return $matepair,$pairs;
@@ -1025,6 +1024,7 @@ sub pairContigs{
    my $ct_iz_issues_hash;
    my $ct_single_hash;
    my $ct_both_hash;
+   my $ct_multiple;
 
    my ($simplepair,$pair,$err,$track_insert);###simplepair is a simple pair to track node to node in a graph
 
@@ -1226,12 +1226,14 @@ sub pairContigs{
                      print PET "Pairs unsatisfied in pairing logic within a contig.  Pair ($read_a - $read_b) on contig $tig_a ($A_length nt) Astart:$A_start Aend:$A_end Bstart:$B_start Bend:$B_end\n";
                   }
                }
-            }else{###both pairs assembled
+            }else{###^both pairs assembled
                $ct_single++;
                $ct_single_hash->{$insert_size}++;
             }
-         }#if unseen
-      }#pairing read b
+         }else{#if unseen
+            $ct_multiple++ if( $matepair->{$read_a}{$read_b}{'bt'}==0 );
+	 }
+     }#pairing read b
    }#read a
 
    ### summary of contig pair issues
@@ -1250,6 +1252,7 @@ sub pairContigs{
    print LOG "\n===========PAIRED K-MER STATS===========\n";
    print LOG "Total number of pairs extracted from -s $longfile: $totalpairs\n";
    print LOG "At least one sequence/pair missing from contigs: $ct_single\n";
+   print LOG "Ambiguous kmer pairs (both kmers are ambiguous): $ct_multiple\n";
    print LOG "Assembled pairs: $ct_both ($ct_both_reads sequences)\n";
    print LOG "\tSatisfied in distance/logic within contigs (i.e. -> <-, distance on target: $ct_ok_contig\n";
    print LOG "\tUnsatisfied in distance within contigs (i.e. distance out-of-bounds): $ct_iz_issues\n";
@@ -1516,7 +1519,7 @@ sub buildScaffoldFasta{
 
             $numlinks = $1 if($other=~/k(\d+)/);
             $linksratio = $1 if($other=~/a(\d+.*)m/);
-            $gap = $1 if($other=~/m(\-?\d+)/);
+	    $gap = $1 if($other=~/m(\-?\d+)/);
 
             print CORROUT "$a[0]\t$tnum\t$tignames->{$tnum}\t$orient\t$numlinks\t$linksratio\t$gap\n"; 
 
