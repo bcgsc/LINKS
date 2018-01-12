@@ -1,3 +1,5 @@
+![Logo](https://github.com/warrenlr/links/blob/master/links-logo.png)
+
 # LINKS
 
 ## Long Interval Nucleotide K-mer Scaffolder
