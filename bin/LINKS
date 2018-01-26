@@ -181,6 +181,7 @@ eval{
 
 my ($contigpairs,$simplepair,$tig_length)=("","","");
 
+my ($tighash, $tignames, $tig_length);
 if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected this is the most crucial file
 
    my $reading_tigbloom_message = "\n\n=>Reading contig/sequence assembly file: $date\n";
@@ -341,6 +342,8 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    ($contigpairs,$simplepair) = &pairContigs($longfile,$matepair,$track_all,$tig_length,$issues,$distribution,$totalpairs,$tigpair_checkpoint,$simplepair_checkpoint,$verbose);
    #-------------------------------------------------
 
+   ### Read contig names and sequences from the FASTA file.
+   ($tighash, $tignames, $tig_length) = &readContigsMemory($assemblyfile);
 }else{######MAR2016 check point file exists, skip above
    $date = `date`;
    chomp($date);
@@ -348,14 +351,14 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    print $sc_start_message;
    print LOG $sc_start_message;
    $assemblyruninfo.= $sc_start_message . "\n";
-   ($contigpairs,$simplepair) = &readContigPairs($tigpair_checkpoint,$simplepair_checkpoint);
+
+   ### Read contig names and sequences from the FASTA file.
+   ($tighash, $tignames, $tig_length) = &readContigsMemory($assemblyfile);
+   ($contigpairs,$simplepair) = &readContigPairs($tigpair_checkpoint,$simplepair_checkpoint,$tig_length);
 }
 
-###re-reading contigs to make fasta file and get additional needed info
-my ($tighash, $tignames, $tig_length) = &readContigsMemory($assemblyfile);
 ###Building chains
 $simplepair = &buildScaffolds($contigpairs,$tig_length,$simplepair,$scaffold,$verbose);
-
 
 $date = `date`;
 chomp($date);
@@ -1317,7 +1320,7 @@ sub pairContigs{
 #----------------
 sub readContigPairs{
 
-   my ($contigpairfile,$simplepairfile) = @_;
+   my ($contigpairfile,$simplepairfile,$tig_length) = @_;
 
    my $pair;
    my $simplepair;
@@ -1331,6 +1334,12 @@ sub readContigPairs{
    while(<IN>){
       chomp;
       my @info=split(/\t/);
+
+      # Skip contigs shorter than -z min_size.
+      my $uid = substr $info[1], 1;
+      my $vid = substr $info[2], 1;
+      next if $tig_length->{$uid} < $min_size || $tig_length->{$vid} < $min_size;
+
       ### information organized as such:
       ### distance	tig1    tig2    numLINKS    gapSize 
       ### 500     r1000005        r1856837        1       10
