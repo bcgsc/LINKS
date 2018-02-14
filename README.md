@@ -462,10 +462,10 @@ ACGACACATCTACGCAGCGACGACGATAAATATAC:ATCAGCACAGCGACGCAGCGACAGCAGGACGACGAC
 
 NOTES:
 
--Paired MPET reads are supplied in their original outward orientation <- ->
--MPET sequences do not need to be trimmed (the Bloom filter will take care of eliminating erroneous kmers not found in the assembly)
--You CANNOT combine MPET and long reads simultaneously in the same LINKS process
--You may trim or process MPET reads if you wish (eg. with NxTrim), but remember to supply resulting MPETs in their original, outward-facing configuration (ie. <- ->). The script in ./tools/makeMPETOutput2EQUALfiles.pl does that for you.
+- Paired MPET reads are supplied in their original outward orientation <- ->
+- MPET sequences do not need to be trimmed (the Bloom filter will take care of eliminating erroneous kmers not found in the assembly)
+- You CANNOT combine MPET and long reads simultaneously in the same LINKS process
+- You may trim or process MPET reads if you wish (eg. with NxTrim), but remember to supply resulting MPETs in their original, outward-facing configuration (ie. <- ->). The script in ./tools/makeMPETOutput2EQUALfiles.pl does that for you.
 
 The default behaviour is to extract kmer pairs from long-read FASTA/FASTQ files specified in -s.
 
