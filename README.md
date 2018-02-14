@@ -461,6 +461,7 @@ ACGACACATCTACGCAGCGACGACGATAAATATAC:ATCAGCACAGCGACGCAGCGACAGCAGGACGACGAC
 </pre>
 
 NOTES:
+
 -Paired MPET reads are supplied in their original outward orientation <- ->
 -MPET sequences do not need to be trimmed (the Bloom filter will take care of eliminating erroneous kmers not found in the assembly)
 -You CANNOT combine MPET and long reads simultaneously in the same LINKS process
@@ -561,7 +562,7 @@ Negative m values imply that there's a possible overlap between the contigs.  Bu
 ### License
 -------
 
-LINKS Copyright (c) 2014-2017 British Columbia Cancer Agency Branch.  All rights reserved.
+LINKS Copyright (c) 2014-2018 British Columbia Cancer Agency Branch.  All rights reserved.
 
 LINKS is released under the GNU General Public License v3
 
