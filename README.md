@@ -147,8 +147,8 @@ In v1.5, there is a single dependency to Bloom::Faster - an extension for the c 
 
 Download the tar ball, gunzip and extract the files on your system using:
 <pre>
-gunzip links_v1-8-5.tar.gz
-tar -xvf links_v1-8-5.tar
+gunzip links_v1-8-6.tar.gz
+tar -xvf links_v1-8-6.tar
 </pre>
 In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 
@@ -159,7 +159,7 @@ In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 Bloom filters for bioinformatics projects, as well as any APIs created for
 other programming languages.
 <pre>
-cd ./links_v1.8.5/lib
+cd ./links_v1.8.6/lib
 git clone git://github.com/bcgsc/bloomfilter.git
 cd swig
 </pre>
@@ -248,7 +248,7 @@ Golnaz Jahesh
 <pre>
 e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ./LINKS [v1.8.5]
+Usage: ./LINKS [v1.8.6]
 -f  sequences to scaffold (Multi-FASTA format, required)
 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
 -m  MPET reads (default -m 1 = yes, default = no, optional
