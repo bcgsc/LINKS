@@ -29,6 +29,8 @@ When pipelined with the ARCS/ARKS scaffolder, LINKS v1.8.6 prioritizes paths wit
 
 When pipelined with the ARCS scaffolder, LINKS now extracts information from the tigpair_checkpoint.tsv file to generate a enhanced .gv file with additional information regarding other potential linking partners, number of supports and sequence orientation.
 
+**WHEN USING LONG READS FOR SCAFFOLDING, WE RECOMMEND THE USE OF v1.8.5 (FOR NOW), AS IT CONSUMES LESS MEMORY. THE LATEST RELEASE CONCERNS THE ARC/KS PIPELINE.**
+
 
 ### What's new in v1.8.4 ?
 ---------------------
