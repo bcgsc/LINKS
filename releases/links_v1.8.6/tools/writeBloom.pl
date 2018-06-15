@@ -1,4 +1,4 @@
-#!/home/martink/perl/5.10.0/bin/perl
+#!/usr/bin/env perl
 
 #AUTHOR
 #   Rene Warren
@@ -16,7 +16,7 @@
 #   If you use LINKS, the LINKS code or ideas, please cite our work
 
 #LICENSE
-#   LINKS Copyright (c) 2014-2016 Canada's Michael Smith Genome Science Centre.  All rights reserved.
+#   LINKS Copyright (c) 2014-2018 Canada's Michael Smith Genome Science Centre.  All rights reserved.
 
 #LINKS is released under the BC Cancer Agency software license agreement (academic use). Details of the license can be accessed at: http://www.bcgsc.ca/platform/bioinfo/license/bcca_2010
 #For commercial use, please contact rwarren@bcgsc.ca
