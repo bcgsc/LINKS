@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #Rene Warren 2018
 
 use strict;
@@ -37,7 +37,7 @@ while(<G2>){
    my ($node1,$node2) = ($1,$2) if($left=~/(\S+\s+)\-\-\s+(\S+\s+)/);
    $node1 = "\t" . $node1;
    $node2 = "\t" . $node2;
-   if($g1->{$_}==1){##common 
+   if($g1->{$_}==1){##common
       $g2[$ct]=~s/deepskyblue/orchid/g;### will only replace instances that have blue
       $s2->{$1} = $2 if($g2[$ct]=~/(.*)(\[.*\])/);
       #print "$_ >>> $g2[$ct]\n";
@@ -52,7 +52,7 @@ while(<G2>){
                if(defined $s2->{$node1}){
                   print OUT $node1 . $s2->{$node1} . "\n";
                }else{
-                  print OUT $node1 . $s1->{$node1} . "\n"; 
+                  print OUT $node1 . $s1->{$node1} . "\n";
                }
             }
             if(defined $s1->{$node2} && $s1->{$node2} ne $s2->{$node2}){###cases where first graph has node highlights, not second

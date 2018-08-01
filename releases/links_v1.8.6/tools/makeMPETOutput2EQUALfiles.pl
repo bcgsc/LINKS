@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #RLW 2010/2016
 
 use strict;
@@ -72,4 +72,3 @@ sub reverseComplement{
    tr/ATGCYRKMBDHV/TACGRYMKVHDB/;
    return (reverse());
 }
-

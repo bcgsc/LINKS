@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #Rene Warren
 #V0.1
 #3 Feb 2017
