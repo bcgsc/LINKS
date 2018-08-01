@@ -173,7 +173,7 @@ Make sure you have swig installed and included in your path.
 http://www.swig.org/
 
 
-TO BUILD a Perl5 module (run in swig/):
+TO BUILD a Perl5 module (run in `swig` directory):
 ```
 a) /home/<user>/<path to swig>/preinst-swig -Wall -c++ -perl5 BloomFilter.i
 b) g++ -c BloomFilter_wrap.cxx -I/usr/lib64/perl5/CORE -fPIC -Dbool=char -O3
@@ -186,12 +186,14 @@ TO COMPILE, swig needs the following Perl5 headers:
 #include "perl.h"
 #include "XSUB.h"
 ```
-If they are not located in /usr/lib64/perl5, you can run "perl -e 'use Config; print $Config{archlib};" to locate them.
+**Note** : If they are not located in `/usr/lib64/perl5/CORE`, you can run `perl -e 'use Config; print $Config{archlib}."\n";'` to locate them.
 
 
 3. VERIFY your install
 
+```bash
 [swig]$ ./test.pl
+```
 
 
 4. CHANGE the path to BloomFilter.pm in LINKS/writeBloom.pl/testBloom.pl
