@@ -126,7 +126,7 @@ Added support for multiple long-reads files. With v1.3, the reads file is not su
 ### What's new in v1.2 ?
 ---------------------
 
-Fixed bug that prevented reading traditional FASTA sequences (where a sequence is represented as a series of linestypically no longer than 120 characters)
+Fixed bug that prevented reading traditional FASTA sequences (where a sequence is represented as a series of lines typically no longer than 120 characters)
 
 
 ### What's new in v1.1 ?
@@ -251,7 +251,7 @@ Golnaz Jahesh
 e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
 Usage: ./LINKS [v1.8.6]
--f  sequences to scaffold (Multi-FASTA format, required)
+-f  sequences to scaffold (Multi-FASTA format with each sequence on a single line, required)
 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
 -m  MPET reads (default -m 1 = yes, default = no, optional
 	! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s
@@ -282,9 +282,17 @@ Usage: ./LINKS [v1.8.6]
 
 Notes:
 -s K12_F2D.fof specifies a file-of-filenames (text file) listing: K12_full2dONT_longread.fa (see ./test folder)
+   -f and -s : sequences must be on a SINGLE line with no linebreaks
+   eg.  
+   >LONGREAD-1
+   AATACAATAGACGCACA...ATGAACGCAGACTTACAG
+   >LONGREAD-2
+   TGTGCTCTCTGTAATGTTC...ATACAGAACACGCAGCCAAGCGA
+
 -x When turned on (-x 1), LINKS will run with a behaviour equivalent to v1.3 (no Bloom filters).  
 This may be useful for large genome assembly drafts and when long reads are extremely high quality.
 </pre>
+
 
 ### Tips to minimize memory usage and additional notes
 --------------------------------------------------
