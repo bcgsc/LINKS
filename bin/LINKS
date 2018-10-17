@@ -57,7 +57,7 @@ if(! $opt_f || ! $opt_s){
    print "\t *higher values lead to least accurate scaffolding*\n";
    print "-z  minimum contig length to consider for scaffolding (default -z $min_size, optional)\n";
    print "-b  base name for your output files (optional)\n";
-   print "-r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)\n";
+   print "-r  Bloom filter input file for sequences supplied in -f (optional, if none provided will output to .bloom)\n";
    print "\t NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE\n";
    print "\t IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)\n";
    print "-p  Bloom filter false positive rate (default -p $fpr, optional; increase to prevent memory allocation errors)\n";
