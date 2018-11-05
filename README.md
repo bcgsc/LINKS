@@ -182,7 +182,7 @@ c) g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so -O3
 
 TO COMPILE, swig needs the following Perl5 headers:
 ```C++
-#include "Extern.h"
+#include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
 ```

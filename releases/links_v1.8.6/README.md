@@ -29,6 +29,8 @@ When pipelined with the ARCS/ARKS scaffolder, LINKS v1.8.6 prioritizes paths wit
 
 When pipelined with the ARCS scaffolder, LINKS now extracts information from the tigpair_checkpoint.tsv file to generate a enhanced .gv file with additional information regarding other potential linking partners, number of supports and sequence orientation.
 
+**WHEN USING LONG READS FOR SCAFFOLDING, WE RECOMMEND THE USE OF v1.8.5 (FOR NOW), AS IT CONSUMES LESS MEMORY. THE LATEST RELEASE CONCERNS THE ARC/KS PIPELINE.**
+
 
 ### What's new in v1.8.4 ?
 ---------------------
@@ -124,7 +126,7 @@ Added support for multiple long-reads files. With v1.3, the reads file is not su
 ### What's new in v1.2 ?
 ---------------------
 
-Fixed bug that prevented reading traditional FASTA sequences (where a sequence is represented as a series of linestypically no longer than 120 characters)
+Fixed bug that prevented reading traditional FASTA sequences (where a sequence is represented as a series of lines typically no longer than 120 characters)
 
 
 ### What's new in v1.1 ?
@@ -147,8 +149,8 @@ In v1.5, there is a single dependency to Bloom::Faster - an extension for the c 
 
 Download the tar ball, gunzip and extract the files on your system using:
 <pre>
-gunzip links_v1-8-5.tar.gz
-tar -xvf links_v1-8-5.tar
+gunzip links_v1-8-6.tar.gz
+tar -xvf links_v1-8-6.tar
 </pre>
 In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 
@@ -159,7 +161,7 @@ In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 Bloom filters for bioinformatics projects, as well as any APIs created for
 other programming languages.
 <pre>
-cd ./links_v1.8.5/lib
+cd ./links_v1.8.6/lib
 git clone git://github.com/bcgsc/bloomfilter.git
 cd swig
 </pre>
@@ -180,7 +182,7 @@ c) g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so -O3
 
 TO COMPILE, swig needs the following Perl5 headers:
 ```C++
-#include "Extern.h"
+#include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
 ```
@@ -248,8 +250,8 @@ Golnaz Jahesh
 <pre>
 e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ./LINKS [v1.8.5]
--f  sequences to scaffold (Multi-FASTA format, required)
+Usage: ./LINKS [v1.8.6]
+-f  sequences to scaffold (Multi-FASTA format with each sequence on a single line, required)
 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
 -m  MPET reads (default -m 1 = yes, default = no, optional
 	! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s
@@ -280,9 +282,17 @@ Usage: ./LINKS [v1.8.5]
 
 Notes:
 -s K12_F2D.fof specifies a file-of-filenames (text file) listing: K12_full2dONT_longread.fa (see ./test folder)
+   -f and -s : sequences must be on a SINGLE line with no linebreaks
+   eg.  
+   >LONGREAD-1
+   AATACAATAGACGCACA...ATGAACGCAGACTTACAG
+   >LONGREAD-2
+   TGTGCTCTCTGTAATGTTC...ATACAGAACACGCAGCCAAGCGA
+
 -x When turned on (-x 1), LINKS will run with a behaviour equivalent to v1.3 (no Bloom filters).  
 This may be useful for large genome assembly drafts and when long reads are extremely high quality.
 </pre>
+
 
 ### Tips to minimize memory usage and additional notes
 --------------------------------------------------
