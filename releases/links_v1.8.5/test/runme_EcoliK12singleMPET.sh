@@ -3,11 +3,11 @@ echo ---------------------------------------------------------------------------
 echo Running LINKS on ABySS E.coli assembly with MPET data 
 echo Downloading data...
 echo --------------------------------------------------------------------------------------------- 
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/EcMG1_S7_L001_R1_001.fastq.gz
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/EcMG1_S7_L001_R2_001.fastq.gz
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/set1_R1.mp.fastq.gz
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/set1_R2.mp.fastq.gz
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/ecoliK12_abyss_illumina_scaffold_baseline.fa
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/EcMG1_S7_L001_R1_001.fastq.gz
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/EcMG1_S7_L001_R2_001.fastq.gz
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/set1_R1.mp.fastq.gz
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/set1_R2.mp.fastq.gz
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/ecoliK12_abyss_illumina_scaffold_baseline.fa
 echo ---------------------------------------------------------------------------------------------
 echo done. Prepping files...
 echo ---------------------------------------------------------------------------------------------

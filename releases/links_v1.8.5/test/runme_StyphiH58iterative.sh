@@ -6,8 +6,8 @@ echo ---------------------------------------------------------------------------
 echo *Must be running on a computer with at least 16 GB RAM, with current parameters
 echo ---------------------------------------------------------------------------------------------
 echo Downloading baseline assembly and ONT long reads... be patient.
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/StyphiH58_2dONT_longread.fa
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/StyphiH58illumina-baseline.fa
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/StyphiH58_2dONT_longread.fa
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/StyphiH58illumina-baseline.fa
 echo ---------------------------------------------------------------------------------------------
 echo StyphiH58_2dONT_longread.fa > STH58_2D.fof
 echo Running LINKS iteratively a few times...be patient!

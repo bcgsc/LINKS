@@ -6,8 +6,8 @@ echo *Must be running on a computer with at least 132 GB RAM, with current set o
 echo Figure 1 -green triangle- in manuscript 
 echo ---------------------------------------------------------------------------------------------
 echo Downloading baseline assembly and ONT long reads... be patient.
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/W303illumina-baseline.fa
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/W303_rawONT_longread.fa.gz
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/W303illumina-baseline.fa
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/W303_rawONT_longread.fa.gz
 echo ---------------------------------------------------------------------------------------------
 echo Decompressing ONT long reads file...be patient.
 gunzip -f W303_rawONT_longread.fa.gz

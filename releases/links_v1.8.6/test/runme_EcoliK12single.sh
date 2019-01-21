@@ -5,9 +5,9 @@ echo ---------------------------------------------------------------------------
 echo WITH CURRENT PARAMETERS, YOU NEED A SYSTEM WITH AT LEAST 8GB RAM. INCREASE -t IF YOU DO NOT
 echo Table 1C and 1D in manuscript 
 echo ---------------------------------------------------------------------------------------------
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/K12_full2dONT_longread.fa
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/ecoliK12_abyss_illumina_contig_baseline.fa
-wget ftp://ftp.bcgsc.ca/supplementary/LINKS/ecoliK12_abyss_illumina_scaffold_baseline.fa
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/K12_full2dONT_longread.fa
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/ecoliK12_abyss_illumina_contig_baseline.fa
+wget http://www.bcgsc.ca/downloads/supplementary/LINKS/ecoliK12_abyss_illumina_scaffold_baseline.fa
 echo ---------------------------------------------------------------------------------------------
 echo done. Initiating LINKS scaffolding ETA 1-2 min depending on system...
 echo ---------------------------------------------------------------------------------------------
