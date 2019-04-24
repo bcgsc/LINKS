@@ -30,7 +30,7 @@ while(<IN>){
    foreach my $component(@b){
       my ($ori,$id,$type,$sz,$gap) = ("NA","NA","N",0,"NA");
       $ct++;
-      if($component=~/^([fr])(\d+)z(\d+)k\d+a\d+\.\d+m(.*)/i){
+      if($component=~/^([fr])(\d+)z(\d+)k\d+a\S+m(.*)$/i){
          ($ori,$id,$sz,$gap)=($1,$2,$3,$4);
          if($ori eq "f"){
             $ori="+";
