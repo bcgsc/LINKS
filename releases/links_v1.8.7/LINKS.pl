@@ -16,7 +16,7 @@
 #   If you use LINKS, the LINKS code or ideas, please cite our work
 
 #LICENSE
-#LINKS Copyright (c) 2014-2019 British Columbia Cancer Agency Branch.  All rights reserved.
+#LINKS Copyright (c) 2014-2018 British Columbia Cancer Agency Branch.  All rights reserved.
 #LINKS is released under the GNU General Public License v3
 
 use strict;
@@ -29,9 +29,9 @@ use Getopt::Std;
 use Net::SMTP;
 use vars qw($opt_f $opt_s $opt_d $opt_k $opt_e $opt_l $opt_a $opt_v $opt_b $opt_t $opt_p $opt_o $opt_r $opt_x $opt_m $opt_z);
 getopts('f:s:d:k:e:l:a:v:b:t:p:o:r:x:m:z:');
-my ($bf_file,$base_name,$distances,$k,$insert_stdev,$min_links,$max_link_ratio,$verbose,$step,$offset,$fpr,$bfoff,$readlength,$min_size,$compress_ratio)=("","",4000,15,0.1,5,0.3,0,2,0,0.001,0,0,500,1);
+my ($bf_file,$base_name,$distances,$k,$insert_stdev,$min_links,$max_link_ratio,$verbose,$step,$offset,$fpr,$bfoff,$readlength,$min_size)=("","",4000,15,0.1,5,0.3,0,2,0,0.001,0,0,500);
 my $last_step  = $step; ### default for last_step set as step
-my $version = "[v1.8.7]";
+my $version = "[v1.8.6]";
 my $dev = "rwarren\@bcgsc.ca";
 my $ARCKS_RUN = 0;### MEANS ONLY LINKS PROCESS
 
@@ -57,7 +57,7 @@ if(! $opt_f || ! $opt_s){
    print "\t *higher values lead to least accurate scaffolding*\n";
    print "-z  minimum contig length to consider for scaffolding (default -z $min_size, optional)\n";
    print "-b  base name for your output files (optional)\n";
-   print "-r  Bloom filter input file for sequences supplied in -f (optional, if none provided will output to .bloom)\n";
+   print "-r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)\n";
    print "\t NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE\n";
    print "\t IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)\n";
    print "-p  Bloom filter false positive rate (default -p $fpr, optional; increase to prevent memory allocation errors)\n";
@@ -160,8 +160,6 @@ if(! -e $longfile){
    $ARCKS_RUN = 1 if(-z $longfile);###file is empty (empty.fof), this is likely from ARCS/ARKS
 }
 
-
-
 if(! -e $assemblyfile){
    $file_message = "\nInvalid file: $assemblyfile -- fatal\n";
    print $file_message;
@@ -169,10 +167,6 @@ if(! -e $assemblyfile){
    exit;
 }else{
    $file_message = "Checking sequence target file $assemblyfile...ok\n";
-   ###Support for compressed files MAR2016
-   if($file=~/gz$/i || $file=~/gzip$/i || $file=~/bz2$/i || $file=~/zip$/i){
-      $compress_ratio=3;
-   }
    print $file_message;
    print LOG $file_message;
 }
@@ -199,7 +193,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    if($bfoff==0){
 
     my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,$blksize,$blocks) = stat($assemblyfile);
-    my $bfelements = int($size) * $compress_ratio;### a rough estimate of BF size based on draft assembly filesize
+    my $bfelements = int($size);
     my $m = ceil((-1 * $bfelements * log($fpr)) / (log(2) * log(2))); #the number of bits
     ### ensures $m is a multiple of 8 to avoid error in BloomFilter
     my $rem = 64 - ($m % 64);
@@ -478,8 +472,6 @@ sub contigsToBloom{
       open(IN,"unzip -p $file|") || die "Error reading $file -- fatal\n";
    }elsif($file=~/gz$/i || $file=~/gzip$/i){
       open(IN,"gunzip -c $file|") || die "Error reading $file -- fatal\n";
-   }elsif($file=~/bz2$/i){
-      open(IN,"bunzip2 -c $file|") || die "Error reading $file -- fatal\n";
    }else{
       open(IN,$file) || die "Error reading $file -- fatal\n";
    }
@@ -530,8 +522,6 @@ sub readContigs{
       open(IN,"unzip -p $file|") || die "Error reading $file -- fatal\n";
    }elsif($file=~/gz$/i || $file=~/gzip$/i){
       open(IN,"gunzip -c $file|") || die "Error reading $file -- fatal\n";
-   }elsif($file=~/bz2$/i){
-      open(IN,"bunzip2 -c $file|") || die "Error reading $file -- fatal\n";
    }else{
       open(IN,$file) || die "Error reading $file -- fatal\n";
    }
@@ -596,8 +586,6 @@ sub readFastaFastq{
       open(IN,"unzip -p $file|") || die "Error reading $file -- fatal\n";
    }elsif($file=~/gz$/i || $file=~/gzip$/i){
       open(IN,"gunzip -c $file|") || die "Error reading $file -- fatal\n";
-   }elsif($file=~/bz2$/i){
-      open(IN,"bunzip2 -c $file|") || die "Error reading $file -- fatal\n";
    }else{
       open(IN,$file) || die "Error reading $file -- fatal\n";
    }
@@ -715,8 +703,6 @@ sub readFastaFastqBFoff{
       open(IN,"unzip -p $file|") || die "Error reading $file -- fatal\n";
    }elsif($file=~/gz$/i || $file=~/gzip$/i){
       open(IN,"gunzip -c $file|") || die "Error reading $file -- fatal\n";
-   }elsif($file=~/bz2$/i){
-      open(IN,"bunzip2 -c $file|") || die "Error reading $file -- fatal\n";
    }else{
       open(IN,$file) || die "Error reading $file -- fatal\n";
    }
@@ -1489,8 +1475,6 @@ sub readContigsMemory{
       open(IN,"unzip -p $file|") || die "Error reading $file -- fatal\n";
    }elsif($file=~/gz$/i || $file=~/gzip$/i){
       open(IN,"gunzip -c $file|") || die "Error reading $file -- fatal\n";
-   }elsif($file=~/bz2$/i){
-      open(IN,"bunzip2 -c $file|") || die "Error reading $file -- fatal\n";
    }else{
       open(IN,$file) || die "Error reading $file -- fatal\n";
    }
