@@ -170,7 +170,7 @@ if(! -e $assemblyfile){
 }else{
    $file_message = "Checking sequence target file $assemblyfile...ok\n";
    ###Support for compressed files MAR2016
-   if($file=~/gz$/i || $file=~/gzip$/i || $file=~/bz2$/i || $file=~/zip$/i){
+   if($assemblyfile=~/gz$/i || $assemblyfile=~/gzip$/i || $assemblyfile=~/bz2$/i || $assemblyfile=~/zip$/i){
       $compress_ratio=3;
    }
    print $file_message;
