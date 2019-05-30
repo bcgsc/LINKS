@@ -209,6 +209,41 @@ use lib "$FindBin::Bin/../lib/bloomfilter/swig"; (for writeBloom.pl/testBloom.pl
 </pre>
 
 
+Summary of steps
+<pre>
+wget https://github.com/bcgsc/LINKS/releases/download/v1.8.7/links_v1-8-7.tar.gz
+tar -xvf links_v1-8-7.tar.gz
+cd links_v1.8.7/lib
+rm -rf bloomfilter/
+git clone git://github.com/bcgsc/bloomfilter.git
+cd bloomfilter/swig
+swig -Wall -c++ -perl5 BloomFilter.i
+g++ -c BloomFilter_wrap.cxx -I/usr/lib64/perl5/CORE -fPIC -Dbool=char -O3
+g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so -O3
+
+*These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz:
+
+[rwarren@hpce705 swig]$ brew list perl | grep EXTERN.h
+/gsc/btl/linuxbrew/Cellar/perl/5.28.0/lib/perl5/5.28.0/x86_64-linux-thread-multi/CORE/EXTERN.h
+[rwarren@hpce705 swig]$ swig -version
+
+SWIG Version 3.0.12
+
+Compiled with g++-5 [x86_64-pc-linux-gnu]
+
+Configured options: +pcre
+
+Please see http://www.swig.org for reporting bugs and further information
+[rwarren@hpce705 swig]$ swig -Wall -c++ -perl5 BloomFilter.i
+[rwarren@hpce705 swig]$ g++ -c BloomFilter_wrap.cxx -I/gsc/btl/linuxbrew/Cellar/perl/5.28.0/lib/perl5/5.28.0/x86_64-linux-thread-multi/CORE -fPIC -Dbool=char -O3
+[rwarren@hpce705 swig]$ g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so -O3
+[rwarren@hpce705 swig]$
+
+
+</pre>
+
+
+
 ### Documentation
 -------------
 
