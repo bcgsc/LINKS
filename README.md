@@ -14,7 +14,7 @@
 LINKS is a genomics application for scaffolding genome assemblies with long
 reads, such as those produced by Oxford Nanopore Technologies Ltd.
 It can be used to scaffold high-quality draft genome assemblies with any long
-sequences (eg. ONT reads, PacBio reads, another draft genomes, etc).
+sequences (eg. ONT reads, PacBio reads, other draft genomes, etc).
 It is also used to scaffold contig pairs linked by ARCS/ARKS.
 
 ### What's new in v1.8.7 ?
