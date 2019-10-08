@@ -154,8 +154,7 @@ In v1.5, there is a single dependency to Bloom::Faster - an extension for the c 
 
 Download the tar ball, gunzip and extract the files on your system using:
 <pre>
-gunzip links_v1-8-7.tar.gz
-tar -xvf links_v1-8-7.tar
+tar -zxvf links_v1-8-7.tar
 </pre>
 In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
 
