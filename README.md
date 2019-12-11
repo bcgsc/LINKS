@@ -1,3 +1,7 @@
+[![Release](https://img.shields.io/github/release/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/releases)
+[![Downloads](https://img.shields.io/github/downloads/bcgsc/LINKS/total?logo=github)](https://github.com/bcgsc/LINKS/releases/download/v1.8.7/links_v1-8-7.tar.gz)
+[![Issues](https://img.shields.io/github/issues/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/issues)
+
 ![Logo](https://github.com/warrenlr/links/blob/master/links-logo.png)
 
 # LINKS
@@ -265,7 +269,7 @@ DOI: 10.1186/s13742-015-0076-3©  Warren et al. 2015
 </pre>
 https://gigascience.biomedcentral.com/articles/10.1186/s13742-015-0076-3
 
-Thank you for using, developing and promoting this free software.
+Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/stargazers) and for using, developing and promoting this free software.
 
 
 ### Credits
