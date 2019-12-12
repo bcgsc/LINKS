@@ -7,7 +7,7 @@
 # LINKS
 
 ## Long Interval Nucleotide K-mer Scaffolder
-## LINKS v1.8.7 Rene L. Warren, 2014-2019
+## LINKS v1.8.7 Rene L. Warren, 2014-2020
 ## email: rwarren [at] bcgsc [dot] ca
 ## Visit www.bcgsc.ca/bioinfo/software/links for additional information
 
@@ -260,6 +260,8 @@ rwarren at bcgsc.ca
 ### Citing LINKS
 ------------
 
+Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/stargazers) and for using, developing and promoting this free software!
+
 <pre>
 Rene L. Warren, Chen Yang, Benjamin P. Vandervalk, Bahar Behsaz,
 Albert Lagman, Steven J. M. Jones and Inanç Birol. 2015. LINKS: Scalable,
@@ -268,8 +270,6 @@ alignment-free scaffolding of draft genomes with long reads. GigaScience 4:35
 DOI: 10.1186/s13742-015-0076-3©  Warren et al. 2015
 </pre>
 https://gigascience.biomedcentral.com/articles/10.1186/s13742-015-0076-3
-
-Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/stargazers) and for using, developing and promoting this free software.
 
 
 ### Credits
@@ -624,7 +624,7 @@ Negative m values imply that there's a possible overlap between the contigs.  Bu
 ### License
 -------
 
-LINKS Copyright (c) 2014-2019 British Columbia Cancer Agency Branch.  All rights reserved.
+LINKS Copyright (c) 2014-2020 British Columbia Cancer Agency Branch.  All rights reserved.
 
 LINKS is released under the GNU General Public License v3
 
