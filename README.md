@@ -266,7 +266,7 @@ LINKS: Scalable, alignment-free scaffolding of draft genomes with long reads.
 Warren RL, Yang C, Vandervalk BP, Behsaz B, Lagman A, Jones SJ, Birol I.
 Gigascience. 2015 Aug 4;4:35. doi: 10.1186/s13742-015-0076-3. eCollection 2015.
 </pre>
-[![link](https://img.shields.io/badge/LINKS-manuscript-blue)](https://gigascience.biomedcentral.com/articles/10.1186/s13742-015-0076-3)
+[![link](https://img.shields.io/badge/LINKS-manuscript-brightgreen)](https://gigascience.biomedcentral.com/articles/10.1186/s13742-015-0076-3)
 [![link](https://img.shields.io/badge/LINKS-github-yellow)](https://github.com/warrenlr/LINKS)
 
 
