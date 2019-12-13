@@ -9,7 +9,6 @@
 ## Long Interval Nucleotide K-mer Scaffolder
 ## LINKS v1.8.7 Rene L. Warren, 2014-2020
 ## email: rwarren [at] bcgsc [dot] ca
-## Visit www.bcgsc.ca/bioinfo/software/links for additional information
 
 
 ### Description
