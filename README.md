@@ -275,16 +275,9 @@ Gigascience. 2015 Aug 4;4:35. doi: 10.1186/s13742-015-0076-3. eCollection 2015.
 LINKS:
 Rene Warren
 
-SWIG/BloomFilter.pm:
-Sarah Yeo
-Justin Chu
+SWIG/BloomFilter.pm: Sarah Yeo, Justin Chu
 
-https://github.com/bcgsc/bloomfilter:
-Justin Chu
-Ben Vandervalk
-Hamid Mohamadi (recursive/ntHash)
-Sarah Yeo
-Golnaz Jahesh
+https://github.com/bcgsc/bloomfilter: Justin Chu, Ben Vandervalk, Hamid Mohamadi (ntHash), Sarah Yeo
 
 
 ### Running LINKS
