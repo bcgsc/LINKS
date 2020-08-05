@@ -2,7 +2,7 @@
 [![Downloads](https://img.shields.io/github/downloads/bcgsc/LINKS/total?logo=github)](https://github.com/bcgsc/LINKS/releases/download/v1.8.7/links_v1-8-7.tar.gz)
 [![Conda](https://img.shields.io/conda/dn/bioconda/links?label=Conda)](https://anaconda.org/bioconda/LINKS)
 [![Issues](https://img.shields.io/github/issues/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/issues)
-Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/stargazers)
+Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/stargazers)!
 
 ![Logo](https://github.com/warrenlr/links/blob/master/links-logo.png)
 
