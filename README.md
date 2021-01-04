@@ -9,7 +9,7 @@ Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg
 # LINKS
 
 ## Long Interval Nucleotide K-mer Scaffolder
-## LINKS v1.8.7 Rene L. Warren, 2014-2020
+## LINKS v1.8.7 Rene L. Warren, 2014-2021
 ## email: rwarren [at] bcgsc [dot] ca
 
 
@@ -616,7 +616,7 @@ Negative m values imply that there's a possible overlap between the contigs.  Bu
 ### License
 -------
 
-LINKS Copyright (c) 2014-2020 British Columbia Cancer Agency Branch.  All rights reserved.
+LINKS Copyright (c) 2014-2021 British Columbia Cancer Agency Branch.  All rights reserved.
 
 LINKS is released under the GNU General Public License v3
 
