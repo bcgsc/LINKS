@@ -2,17 +2,17 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <filesystem>
 #include <getopt.h>
 #include <vector>
 #include <cmath>
+
 #include "btllib/include/btllib/bloom_filter.hpp"
 #include "btllib/include/btllib/seq_reader.hpp"
 
 //Globals
 #define BASE_TEN 10
 char version[] = "2.0";
-namespace fs = std::__fs::filesystem;
+
   
 class InputParser {
     private:
@@ -177,11 +177,19 @@ printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os)
 	   << "\n";
 }
 
+long getFileSize(std::string filename)
+{
+    struct stat stat_buf;
+    int rc = stat(filename.c_str(), &stat_buf);
+    return rc == 0 ? stat_buf.st_size : -1;
+}
+
 int main(int argc, char** argv) { 
     InputParser* linksArgParser = new InputParser(argc, argv);
     std::cout << linksArgParser->assemblyFile << "\n";
-    fs::path path = linksArgParser->assemblyFile;
-    unsigned bfElements = fs::file_size(path);
+    std::string path = linksArgParser->assemblyFile;
+    unsigned bfElements = getFileSize(path);
+
     unsigned long m = ceil((-1 * bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
     unsigned rem = 64 - (m % 64);
     m = ((unsigned)(m / 8) + 1) * 8;
@@ -207,9 +215,7 @@ int main(int argc, char** argv) {
     // myFilter.storeFilter(outfile);
 
     // k-merize long reads
-    for (btllib::SeqReader::Record record; (record = reader.read());) {
-        myFilter->insert(record.seq);
-    }
+    
     
 
 
