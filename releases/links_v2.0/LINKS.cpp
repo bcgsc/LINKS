@@ -1,34 +1,119 @@
-using namespace btllib;
+// using namespace btllib;
 #include <string>
 #include <iostream>
+#include <fstream>
+#include <filesystem>
 #include <getopt.h>
 #include <vector>
-#include "btllib/bloom_filter.hpp"
+#include <cmath>
+#include "btllib/include/btllib/bloom_filter.hpp"
+#include "btllib/include/btllib/seq_reader.hpp"
 
 //Globals
+#define BASE_TEN 10
 char version[] = "2.0";
+namespace fs = std::__fs::filesystem;
   
-class InputParser{
+class InputParser {
     private:
     std::vector <std::string> tokens;
+    int argc;
+    int c;
+    int optindex = 0;
+	int help = 0;
+    char* end = nullptr;
 
     public:
-    InputParser (int &argc, char **argv){
-            for (int i=1; i < argc; ++i) {
-                this->tokens.push_back(std::string(argv[i]));
-            }
+    std::string assemblyFile;
+    std::string longFile;
+    unsigned distances;
+    unsigned k;
+    bool verbose;
+    unsigned minLinks;
+    unsigned minSize;
+    float maxLinkRatio;
+    unsigned step;
+    // Added for MPET
+    unsigned readLength;         // MPET
+    float insertStdev;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
+    std::string baseName;   // When set, this will override the MPET-induced changes on -e
+    unsigned offset;
+    std::string bfFile;
+    float fpr = 0.1;
+    unsigned bfoff;
 
+
+    InputParser (int &argc, char **argv) {
+            this->argc = argc;
+            static const struct option longopts[] = { { "help", no_argument, &help, 1 },
+		                                      { nullptr, 0, nullptr, 0 } };
+            while ((c = getopt_long(argc, argv, "f:s:m:d:k:t:o:e:l:a:z:b:r:p:x:v", longopts, &optindex)) != -1) {
+                switch (c) {
+                case 0:
+                    break;
+                case 'f':
+                    assemblyFile.assign(optarg);
+                    break;
+                case 's':
+                    // full path for fof
+                    longFile.assign(optarg);
+                    break;
+                case 'm':
+                    readLength = strtoul(optarg, &end, BASE_TEN);
+                    insertStdev = 0.5;
+                    break;
+                case 'd':
+                    distances = strtoul(optarg, &end, BASE_TEN);
+                    break;
+                case 'k':
+                    k = strtoul(optarg, &end, BASE_TEN);
+                    break;
+                case 't':
+                    step = strtoul(optarg, &end, BASE_TEN);
+                    break;
+                case 'o':
+                    offset = strtoul(optarg, &end, BASE_TEN);
+                    break;
+                case 'e':
+                    insertStdev = strtof(optarg, &end);
+                    break;
+                case 'l':
+                    minLinks = strtoul(optarg, &end, BASE_TEN);
+                    break;
+                case 'a':
+                    maxLinkRatio = strtof(optarg, &end);
+                    break;
+                case 'z':
+                    minSize = strtoul(optarg, &end, BASE_TEN);
+                    break;
+                case 'b':
+                    baseName.assign(optarg);
+                    break;
+                case 'r':
+                    bfFile.assign(optarg);
+                    break;
+                case 'p':
+                    fpr = strtof(optarg, &end);
+                    break;
+                case 'x':
+                    bfoff = strtoul(optarg, &end, BASE_TEN);
+                    break;
+                case 'v':
+                    verbose = true;
+                    break;
+                default:
+                    exit(EXIT_FAILURE);
+                }
+            }
         }
 
     static void
-    printErrorMsg(const std::string& progname, const std::string& msg)
-    {
+    printErrorMsg(const std::string& progname, const std::string& msg) {
         std::cerr << progname << ": " << msg << "\nTry 'physlr-makebf --help' for more information.\n";
     }
 
     static void
-    printUsage(const std::string& progname)
-    {
+    printUsage(const std::string& progname) {
         std::cout << "Usage:  " << progname << " " << version << "\n"
                 << "  -f  sequences to scaffold (Multi-FASTA format, required)\n"
                     "  -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)\n"
@@ -57,20 +142,76 @@ class InputParser{
                     
                     //  nError: Missing mandatory options -f and -s.\n\n";
     }
+    void
+    printOpts() {
+        // Command to test all input parsing
+        // -f inputFasta.fa -s fofLongReads.txt -m 10 -d 20 -k 30 -t 40 -o 50 -e 60.45 -l 70 -a 1.345 -z 80 -b mybase -r myBloomFilter -p 0.003 -x 34 -v
+
+        std::cout   << "  -f " << assemblyFile << "\n" 
+                    << "  -s " << longFile << "\n" 
+                    << "  -m " << readLength << "\n" 
+                    << "  -d " << distances << "\n" 
+                    << "  -k " << k << "\n"
+                    << "  -t " << step << "\n"
+                    << "  -o " << offset << "\n"
+                    << "  -e " <<  insertStdev << "\n"
+                    << "  -l " << minLinks << "\n"
+                    << "  -a " << maxLinkRatio << "\n"
+                    << "  -z " << minSize << "\n"
+                    << "  -b " << baseName << "\n"
+                    << "  -r " << bfFile << "\n"
+                    << "  -p " << fpr << "\n"
+                    << "  -x " << bfoff << "\n"
+                    << "  -v " << verbose << "\n";
+    }
 };
 
-int main(int argc, char** argv) 
-{ 
+static void
+printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os)
+{
+	os << "Bloom filter stats:"
+	   << "\n\t#counters               = " << bloom.get_occupancy()//getFilterSize()
+	   << "\n\t#size (B)               = " << bloom.get_bytes()
+	   << "\n\tpopcount                = " << bloom.get_pop_cnt()
+	   << "\n\tFPR                     = " << 100.f * bloom.get_fpr() << "%"
+	   << "\n";
+}
+
+int main(int argc, char** argv) { 
     InputParser* linksArgParser = new InputParser(argc, argv);
-    linksArgParser->printUsage(argv[0]);
-    // linksArgParser->printErrorMsg(argv[0], "erorsdkjg");
+    std::cout << linksArgParser->assemblyFile << "\n";
+    fs::path path = linksArgParser->assemblyFile;
+    unsigned bfElements = fs::file_size(path);
+    unsigned long m = ceil((-1 * bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
+    unsigned rem = 64 - (m % 64);
+    m = ((unsigned)(m / 8) + 1) * 8;
+    // m = 64;
+    unsigned hashFct = floor((m / bfElements) * log(2));
+    // tmp k value
+    int kTmp = 60;
+    std::cout << "- Number of bfElements: " << bfElements << "\n";
+    std::cout << "- Input file path: " << path << "\n";
+    std::cout << "- Input file: " << linksArgParser->assemblyFile << "\n";
+    std::cout << "- kmersize: " << kTmp << "\n";
+    std::cout << "- m: " << m << "\n";
+    std::cout << "- fpr: " << linksArgParser->fpr << "\n";
+    std::cout << "- hashFct: " << hashFct << "\n";
+    // std::cout << "- Filter output file : " << outFileBf << "\n";
+    std::cout << "- Filter output file : " << kTmp << "\n";
+    btllib::KmerBloomFilter* myFilter = new btllib::KmerBloomFilter(m, hashFct, kTmp);
+    btllib::SeqReader reader(linksArgParser->assemblyFile);
+    for (btllib::SeqReader::Record record; (record = reader.read());) {
+        myFilter->insert(record.seq);
+    }
+    printBloomStats(*myFilter, std::cerr);
+    // myFilter.storeFilter(outfile);
+
+    // k-merize long reads
+    for (btllib::SeqReader::Record record; (record = reader.read());) {
+        myFilter->insert(record.seq);
+    }
     
-    // make the bloomfilter with given parameters
-    int filterSizeTmp = 1000;
-    int kTmp = 5;
-    int hashNumTmp = 4;
-    KmerBloomFilter kmerBloomFilter(filterSizeTmp, hashNumTmp, kTmp);
-    
-  
+
+
     return 0; 
-} 
+}
