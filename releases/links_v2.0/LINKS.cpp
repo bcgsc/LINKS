@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
     std::cout << "- Filter output file : " << kTmp << "\n";
     btllib::KmerBloomFilter* myFilter = new btllib::KmerBloomFilter(m, hashFct, kTmp);
     btllib::SeqReader assemblyReader(linksArgParser->assemblyFile);
-    for (btllib::SeqReader::Record record; (record = reader.read());) {
+    for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
         myFilter->insert(record.seq);
     }
     printBloomStats(*myFilter, std::cerr);
@@ -219,9 +219,9 @@ int main(int argc, char** argv) {
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
 
         btllib::NtHash nthash(record.seq, kTmp, hashFct);
-        btllib::NtHash nthashLead(record.seq, kTmp, hashFct, distances);
+        btllib::NtHash nthashLead(record.seq, kTmp, hashFct, linksArgParser->distances);
 
-        for (i = 0; nthash.roll() && nthashLead.roll(); ++i) {
+        for (size_t i = 0; nthash.roll() && nthashLead.roll(); ++i) {
             for (size_t j = 0; j < nthash.get_hash_num(); ++j) {
                 std::cout << nthash.hashes()[j];
             }
