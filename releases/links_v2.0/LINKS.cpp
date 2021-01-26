@@ -6,8 +6,8 @@
 #include <vector>
 #include <cmath>
 
-#include "btllib/include/btllib/bloom_filter.hpp"
-#include "btllib/include/btllib/seq_reader.hpp"
+#include "btllib/bloom_filter.hpp"
+#include "btllib/seq_reader.hpp"
 
 //Globals
 #define BASE_TEN 10
@@ -215,6 +215,9 @@ int main(int argc, char** argv) {
     // myFilter.storeFilter(outfile);
 
     // k-merize long reads
+    // std::vector<std::vector<int>> matchedMatrix;
+
+
     btllib::SeqReader longReader(linksArgParser->assemblyFile);
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
 
@@ -222,9 +225,10 @@ int main(int argc, char** argv) {
         btllib::NtHash nthashLead(record.seq, kTmp, hashFct, linksArgParser->distances);
 
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); ++i) {
-            for (size_t j = 0; j < nthash.get_hash_num(); ++j) {
-                std::cout << nthash.hashes()[j];
-            }
+            // for (size_t j = 0; j < nthash.get_hash_num(); ++j) {
+                std::cout << nthash.get_hash_num();
+                // if()
+            // }
         }
     }
 
