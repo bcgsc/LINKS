@@ -231,9 +231,9 @@ int main(int argc, char** argv) {
             if(i % 1000000 == 0) {
                 std::cout << "reading... i: " << i << "\n";
             }
-            counter++;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
                 std::vector<const uint64_t *> pairHashes = {nthash.hashes(), nthashLead.hashes()};
+                counter++;
                 matchedMatrix.push_back(pairHashes);
             }
         }
