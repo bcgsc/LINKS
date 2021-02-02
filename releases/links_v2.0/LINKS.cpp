@@ -26,21 +26,24 @@ class InputParser {
     public:
     std::string assemblyFile;
     std::string longFile;
-    unsigned distances;
-    unsigned k;
+    unsigned distances = 4000;
+    unsigned k = 15;
     bool verbose;
-    unsigned minLinks;
-    unsigned minSize;
-    float maxLinkRatio;
-    unsigned step;
+    unsigned minLinks = 5;
+    unsigned minSize = 500;
+    float maxLinkRatio = 0.3;
+    unsigned step = 2;
     // Added for MPET
     unsigned readLength;         // MPET
-    float insertStdev;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
+    float insertStdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
     std::string baseName;   // When set, this will override the MPET-induced changes on -e
-    unsigned offset;
+    unsigned offset = 0;
     std::string bfFile;
-    float fpr = 0.1;
-    unsigned bfoff;
+    float fpr = 0.001;
+    unsigned bfoff = 0;
+    // std::string bfout = $base_name . ".bloom";
+    // $base_name = $assemblyfile . ".scaff_s-" . $longfile . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
+
 
 
     InputParser (int &argc, char **argv) {
@@ -154,7 +157,7 @@ class InputParser {
                     << "  -k " << k << "\n"
                     << "  -t " << step << "\n"
                     << "  -o " << offset << "\n"
-                    << "  -e " <<  insertStdev << "\n"
+                    << "  -e " << insertStdev << "\n"
                     << "  -l " << minLinks << "\n"
                     << "  -a " << maxLinkRatio << "\n"
                     << "  -z " << minSize << "\n"
@@ -189,49 +192,55 @@ int main(int argc, char** argv) {
     std::cout << linksArgParser->assemblyFile << "\n";
     std::string path = linksArgParser->assemblyFile;
     unsigned bfElements = getFileSize(path);
-
-    unsigned long m = ceil((-1 * bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
+    // std::cout << (log(2) * log(2)) << "\n";
+    // std::cout << log(linksArgParser->fpr) << "\n";
+    // std::cout << (-1 * (double)bfElements * log(linksArgParser->fpr)) << "\n";
+    unsigned long m = ceil((-1 * (double)bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
     unsigned rem = 64 - (m % 64);
     m = ((unsigned)(m / 8) + 1) * 8;
     // m = 64;
     unsigned hashFct = floor((m / bfElements) * log(2));
     // tmp k value
-    int kTmp = 60;
     std::cout << "- Number of bfElements: " << bfElements << "\n";
     std::cout << "- Input file path: " << path << "\n";
     std::cout << "- Input file: " << linksArgParser->assemblyFile << "\n";
-    std::cout << "- kmersize: " << kTmp << "\n";
+    std::cout << "- kmersize: " << linksArgParser->k << "\n";
     std::cout << "- m: " << m << "\n";
     std::cout << "- fpr: " << linksArgParser->fpr << "\n";
     std::cout << "- hashFct: " << hashFct << "\n";
     // std::cout << "- Filter output file : " << outFileBf << "\n";
-    std::cout << "- Filter output file : " << kTmp << "\n";
-    btllib::KmerBloomFilter* myFilter = new btllib::KmerBloomFilter(m, hashFct, kTmp);
+    std::cout << "- Filter output file : " << linksArgParser->k << "\n";
+    btllib::KmerBloomFilter myFilter(m, hashFct, linksArgParser->k);
     btllib::SeqReader assemblyReader(linksArgParser->assemblyFile);
     for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
-        myFilter->insert(record.seq);
+        myFilter.insert(record.seq);
     }
-    printBloomStats(*myFilter, std::cerr);
+    printBloomStats(myFilter, std::cerr);
     // myFilter.storeFilter(outfile);
 
     // k-merize long reads
-    // std::vector<std::vector<int>> matchedMatrix;
+    std::vector<std::vector<const uint64_t *> > matchedMatrix;
 
-
+    btllib::BloomFilter& filtering = myFilter.get_bloom_filter();
     btllib::SeqReader longReader(linksArgParser->assemblyFile);
+    unsigned long counter = 0;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
-
-        btllib::NtHash nthash(record.seq, kTmp, hashFct);
-        btllib::NtHash nthashLead(record.seq, kTmp, hashFct, linksArgParser->distances);
-
+        btllib::NtHash nthash(record.seq, linksArgParser->k, hashFct);
+        btllib::NtHash nthashLead(record.seq, linksArgParser->k, hashFct, linksArgParser->distances);
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); ++i) {
-            // for (size_t j = 0; j < nthash.get_hash_num(); ++j) {
-                std::cout << nthash.get_hash_num();
-                // if()
-            // }
+            if(i % 1000000 == 0) {
+                std::cout << "reading... i: " << i << "\n";
+            }
+            counter++;
+            if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
+                std::vector<const uint64_t *> pairHashes = {nthash.hashes(), nthashLead.hashes()};
+                matchedMatrix.push_back(pairHashes);
+            }
         }
     }
 
 
-    return 0; 
+    std::cout << matchedMatrix.size() << " match percentage: % "<< (double)matchedMatrix.size()/counter * 100.0 << " counter: " << counter << " \n";
+
+    return 0;
 }
