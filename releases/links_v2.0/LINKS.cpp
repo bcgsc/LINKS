@@ -11,9 +11,11 @@
 
 //Globals
 #define BASE_TEN 10
-char version[] = "2.0";
+std::string version = "2.0";
 
-  
+void printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os);
+long getFileSize(std::string filename);
+
 class InputParser {
     private:
     std::vector <std::string> tokens;
@@ -169,45 +171,92 @@ class InputParser {
     }
 };
 
-static void
-printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os)
-{
-	os << "Bloom filter stats:"
-	   << "\n\t#counters               = " << bloom.get_occupancy()//getFilterSize()
-	   << "\n\t#size (B)               = " << bloom.get_bytes()
-	   << "\n\tpopcount                = " << bloom.get_pop_cnt()
-	   << "\n\tFPR                     = " << 100.f * bloom.get_fpr() << "%"
-	   << "\n";
-}
-
-long getFileSize(std::string filename)
-{
-    struct stat stat_buf;
-    int rc = stat(filename.c_str(), &stat_buf);
-    return rc == 0 ? stat_buf.st_size : -1;
-}
-
-int main(int argc, char** argv) { 
+int main(int argc, char** argv) {
+    // Parse command line arguments
     InputParser* linksArgParser = new InputParser(argc, argv);
-    std::cout << linksArgParser->assemblyFile << "\n";
+
+    //Set Bloom Filter element number based on the size of the assembly file (1 byte = 1 character)
     std::string path = linksArgParser->assemblyFile;
     unsigned bfElements = getFileSize(path);
-    // std::cout << (log(2) * log(2)) << "\n";
-    // std::cout << log(linksArgParser->fpr) << "\n";
-    // std::cout << (-1 * (double)bfElements * log(linksArgParser->fpr)) << "\n";
+
+    // Checking validity of input assemble file
+    if(bfElements == -1){
+        std::cout << "Invalid file: " << linksArgParser->assemblyFile << " -- fatal\n";
+        return -1;
+    }
+
+    // Naming output files
+    if (linksArgParser->baseName == "") {
+        linksArgParser->baseName =  linksArgParser->assemblyFile + ".scaff_s-" + 
+                                    linksArgParser->longFile + "_d" + 
+                                    std::to_string(linksArgParser->distances) + 
+                                    "_k" + std::to_string(linksArgParser->k) + 
+                                    "_e" + std::to_string(linksArgParser->insertStdev) +
+                                    "_l" + std::to_string(linksArgParser->minLinks) +
+                                    "_a" + std::to_string(linksArgParser->maxLinkRatio) +
+                                    "_z" + std::to_string(linksArgParser->minSize) +
+                                    "_t" + std::to_string(linksArgParser->step) +
+                                    "_o" + std::to_string(linksArgParser->offset) +
+                                    "_r-"+ linksArgParser->bfFile +
+                                    "_p" + std::to_string(linksArgParser->fpr) +
+                                    "_x" + std::to_string(linksArgParser->bfoff) +
+                                    "_m" + std::to_string(linksArgParser->readLength);
+        pid_t pid_num = getppid();
+        linksArgParser->baseName += "_pid" + std::to_string(pid_num);
+    }
+    std::cout << linksArgParser->baseName;
+    std::string outlog = linksArgParser->baseName + ".log";
+    std::string scaffold = linksArgParser->baseName + ".scaffolds";
+    std::string issues = linksArgParser->baseName + ".pairing_issues";
+    std::string distribution = linksArgParser->baseName + ".pairing_distribution.csv";
+    std::string bfout = linksArgParser->baseName + ".bloom";
+    std::string graph = linksArgParser->baseName + ".gv";
+    std::string numnamecorr = linksArgParser->baseName + ".assembly_correspondence.tsv";
+    std::string tigpair_checkpoint = linksArgParser->baseName + ".tigpair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
+    std::string simplepair_checkpoint = linksArgParser->baseName + ".simplepair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
+    
+    if(freopen(outlog.c_str(), "w", stderr ) == NULL) {
+        std::cout << "Can't write to " << outlog << " -- fatal\n";
+        return -1;
+    }
+    std::string initMessage = "\nRunning: " + version + 
+                                "\n-f " + linksArgParser->assemblyFile +
+                                "\n-s " + linksArgParser->longFile + 
+                                "\n-m " + std::to_string(linksArgParser->readLength) + 
+                                "\n-d " + std::to_string(linksArgParser->distances) + 
+                                "\n-k " + std::to_string(linksArgParser->k) + 
+                                "\n-e " + std::to_string(linksArgParser->insertStdev) +
+                                "\n-l " + std::to_string(linksArgParser->minLinks) +
+                                "\n-a " + std::to_string(linksArgParser->maxLinkRatio) +
+                                "\n-t " + std::to_string(linksArgParser->step) + 
+                                "\n-o " + std::to_string(linksArgParser->offset) +
+                                "\n-z " + std::to_string(linksArgParser->minSize) +
+                                "\n-b " + linksArgParser->baseName +
+                                "\n-r " + linksArgParser->bfFile +
+                                "\n-p " + std::to_string(linksArgParser->fpr) +
+                                "\n-x " + std::to_string(linksArgParser->bfoff) +
+                                "\n\n----------------- Verifying files -----------------\n\n";
+    std::cout << initMessage;
+    std::cerr << initMessage;
+    // "\nRunning: $0 $version\n-f $assemblyfile\n-s $longfile\n-m $readlength\n";
+    // $init_message .= "-d $distances\n-k $k\n-e $insert_stdev\n-l $min_links\n-a $max_link_ratio\n-t $step\n-o $offset\n-z $min_size\n-b $base_name\n-r $bf_file\n-p $fpr\n-x $bfoff\n\n----------------- Verifying files -----------------\n\n";
+
+    // print $init_message;
+    // print LOG $init_message;
+
+
     unsigned long m = ceil((-1 * (double)bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
     unsigned rem = 64 - (m % 64);
     m = ((unsigned)(m / 8) + 1) * 8;
-    // m = 64;
     unsigned hashFct = floor((m / bfElements) * log(2));
-    // tmp k value
-    std::cout << "- Number of bfElements: " << bfElements << "\n";
-    std::cout << "- Input file path: " << path << "\n";
-    std::cout << "- Input file: " << linksArgParser->assemblyFile << "\n";
-    std::cout << "- kmersize: " << linksArgParser->k << "\n";
-    std::cout << "- m: " << m << "\n";
-    std::cout << "- fpr: " << linksArgParser->fpr << "\n";
-    std::cout << "- hashFct: " << hashFct << "\n";
+    std::cout << "- Number of bfElements: " << bfElements << "\n"
+                << "- Input file path: " << path << "\n"
+                << "- Input file: " << linksArgParser->assemblyFile << "\n"
+                << "- kmersize: " << linksArgParser->k << "\n"
+                << "- m: " << m << "\n"
+                << "- fpr: " << linksArgParser->fpr << "\n"
+                << "- hashFct: " << hashFct << "\n";
+
     // std::cout << "- Filter output file : " << outFileBf << "\n";
     std::cout << "- Filter output file : " << linksArgParser->k << "\n";
     btllib::KmerBloomFilter myFilter(m, hashFct, linksArgParser->k);
@@ -222,18 +271,21 @@ int main(int argc, char** argv) {
     std::vector<std::vector<const uint64_t *> > matchedMatrix;
 
     btllib::BloomFilter& filtering = myFilter.get_bloom_filter();
-    btllib::SeqReader longReader(linksArgParser->assemblyFile);
+    btllib::SeqReader longReader(linksArgParser->longFile);
     unsigned long counter = 0;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser->k, hashFct);
         btllib::NtHash nthashLead(record.seq, linksArgParser->k, hashFct, linksArgParser->distances);
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); ++i) {
-            if(i % 1000000 == 0) {
-                std::cout << "reading... i: " << i << "\n";
-            }
+            std::cout << "reading... i: " << i << "\n";
+            counter++;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
                 std::vector<const uint64_t *> pairHashes = {nthash.hashes(), nthashLead.hashes()};
-                counter++;
+                std::cout << "FOUND i: " << std::to_string(i) << "\n";
+                for (int k = 0; k < nthash.get_hash_num(); k++) {
+                    std::cout << nthash.hashes()[k];
+                }
+                std::cout << "\n";
                 matchedMatrix.push_back(pairHashes);
             }
         }
@@ -243,4 +295,24 @@ int main(int argc, char** argv) {
     std::cout << matchedMatrix.size() << " match percentage: % "<< (double)matchedMatrix.size()/counter * 100.0 << " counter: " << counter << " \n";
 
     return 0;
+}
+
+void printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os)
+{
+	os << "Bloom filter stats:"
+	   << "\n\t#counters               = " << bloom.get_occupancy()//getFilterSize()
+	   << "\n\t#size (B)               = " << bloom.get_bytes()
+	   << "\n\tpopcount                = " << bloom.get_pop_cnt()
+	   << "\n\tFPR                     = " << 100.f * bloom.get_fpr() << "%"
+	   << "\n";
+}
+
+long getFileSize(std::string filename)
+{
+    // This buffer is a stat struct that the information is placed concerning the file.
+    struct stat stat_buf;
+    // Stat method returns true if successfully completed
+    int rc = stat(filename.c_str(), &stat_buf);
+    // st_size holds the total size of the file in bytes
+    return rc == 0 ? stat_buf.st_size : -1;
 }
