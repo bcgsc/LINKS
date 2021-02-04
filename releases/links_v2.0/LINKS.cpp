@@ -5,6 +5,7 @@
 #include <getopt.h>
 #include <vector>
 #include <cmath>
+#include <regex>
 
 #include "btllib/bloom_filter.hpp"
 #include "btllib/seq_reader.hpp"
@@ -181,6 +182,7 @@ int main(int argc, char** argv) {
 
     // Checking validity of input assemble file
     if(bfElements == -1){
+        std::cout << std::to_string(bfElements);
         std::cout << "Invalid file: " << linksArgParser->assemblyFile << " -- fatal\n";
         return -1;
     }
