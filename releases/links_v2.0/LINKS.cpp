@@ -178,14 +178,14 @@ int main(int argc, char** argv) {
 
     //Set Bloom Filter element number based on the size of the assembly file (1 byte = 1 character)
     std::string path = linksArgParser->assemblyFile;
-    unsigned bfElements = getFileSize(path);
+    long bfElements = getFileSize(path);
 
     // Checking validity of input assemble file
-    if(bfElements == -1){
-        std::cout << std::to_string(bfElements);
-        std::cout << "Invalid file: " << linksArgParser->assemblyFile << " --- fatal\n";
-        return -1;
-    }
+    // if(bfElements == -1){
+    //     std::cout << std::to_string(bfElements);
+    //     std::cout << "Invalid file: " << linksArgParser->assemblyFile << " -- fatal\n";
+    //     return -1;
+    // }
 
     // Naming output files
     if (linksArgParser->baseName == "") {
