@@ -92,7 +92,6 @@ if(! -e $assemblyfile){
    die "Invalid file: $assemblyfile -- fatal\n";
 }
 
-
 ### Naming output files
 if ($base_name eq ""){
 
