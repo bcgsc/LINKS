@@ -181,11 +181,11 @@ int main(int argc, char** argv) {
     long bfElements = getFileSize(path);
 
     // Checking validity of input assemble file
-    // if(bfElements == -1){
-    //     std::cout << std::to_string(bfElements);
-    //     std::cout << "Invalid file: " << linksArgParser->assemblyFile << " -- fatal\n";
-    //     return -1;
-    // }
+    if(bfElements == -1){
+        std::cout << std::to_string(bfElements);
+        std::cout << "Invalid file: " << linksArgParser->assemblyFile << " -- fatal\n";
+        return -1;
+    }
 
     // Naming output files
     if (linksArgParser->baseName == "") {
