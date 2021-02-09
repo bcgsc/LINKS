@@ -221,6 +221,8 @@ int main(int argc, char** argv) {
         std::cout << "Can't write to " << outlog << " -- fatal\n";
         return -1;
     }
+    //---------------------------
+    // Initialization message
     std::string initMessage = "\nRunning: " + version + 
                                 "\n-f " + linksArgParser->assemblyFile +
                                 "\n-s " + linksArgParser->longFile + 
@@ -238,13 +240,11 @@ int main(int argc, char** argv) {
                                 "\n-p " + std::to_string(linksArgParser->fpr) +
                                 "\n-x " + std::to_string(linksArgParser->bfoff) +
                                 "\n\n----------------- Verifying files -----------------\n\n";
+    
     std::cout << initMessage;
     std::cerr << initMessage;
-    // "\nRunning: $0 $version\n-f $assemblyfile\n-s $longfile\n-m $readlength\n";
-    // $init_message .= "-d $distances\n-k $k\n-e $insert_stdev\n-l $min_links\n-a $max_link_ratio\n-t $step\n-o $offset\n-z $min_size\n-b $base_name\n-r $bf_file\n-p $fpr\n-x $bfoff\n\n----------------- Verifying files -----------------\n\n";
+    //-----------------------------
 
-    // print $init_message;
-    // print LOG $init_message;
 
 
     unsigned long m = ceil((-1 * (double)bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
@@ -263,10 +263,16 @@ int main(int argc, char** argv) {
     std::cout << "- Filter output file : " << linksArgParser->k << "\n";
     btllib::KmerBloomFilter myFilter(m, hashFct, linksArgParser->k);
     btllib::SeqReader assemblyReader(linksArgParser->assemblyFile);
+    int builder = 0;
     for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
+        if(builder % 100000 == 0) {
+            std::cout << "reading... builder: " << builder << "\n";
+        }
+                builder++;
+
         myFilter.insert(record.seq);
     }
-    printBloomStats(myFilter, std::cerr);
+    printBloomStats(myFilter, std::cout);
     // myFilter.storeFilter(outfile);
 
     // k-merize long reads
@@ -279,7 +285,9 @@ int main(int argc, char** argv) {
         btllib::NtHash nthash(record.seq, linksArgParser->k, hashFct);
         btllib::NtHash nthashLead(record.seq, linksArgParser->k, hashFct, linksArgParser->distances);
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); ++i) {
-            // std::cout << "reading... i: " << i << "\n";
+            // if(counter % 10000 == 0) {
+            //     std::cout << "reading... i: " << i << "\n";
+            // }
             counter++;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
                 std::vector<const uint64_t *> pairHashes = {nthash.hashes(), nthashLead.hashes()};
@@ -317,4 +325,9 @@ long getFileSize(std::string filename)
     int rc = stat(filename.c_str(), &stat_buf);
     // st_size holds the total size of the file in bytes
     return rc == 0 ? stat_buf.st_size : -1;
+}
+
+inline bool exists(const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
 }
