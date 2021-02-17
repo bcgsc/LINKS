@@ -291,12 +291,13 @@ int main(int argc, char** argv) {
             counter++;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
                 std::vector<const uint64_t *> pairHashes = {nthash.hashes(), nthashLead.hashes()};
-                // std::cout << "FOUND i: " << std::to_string(i) << "\n";
+                std::cout << "FOUND i: " << std::to_string(i) << "\n";
                 // for (int k = 0; k < nthash.get_hash_num(); k++) {
                 //     std::cout << nthash.hashes()[k];
                 // }
                 // std::cout << "\n";
                 matchedMatrix.push_back(pairHashes);
+                std::cout << "size" << matchedMatrix.size() << "\n";
             }
         }
     }
