@@ -249,8 +249,8 @@ int main(int argc, char** argv) {
 
     unsigned long m = ceil((-1 * (double)bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
     unsigned rem = 64 - (m % 64);
-    m = ((unsigned)(m / 8) + 1) * 8;
-    unsigned hashFct = floor((m / bfElements) * log(2));
+    m = ((unsigned)(m / 8) + 1);
+    unsigned hashFct = floor(((double)m / bfElements) * log(2));
     std::cout << "- Number of bfElements: " << bfElements << "\n"
                 << "- Input file path: " << path << "\n"
                 << "- Input file: " << linksArgParser->assemblyFile << "\n"
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
 
     // std::cout << "- Filter output file : " << outFileBf << "\n";
     std::cout << "- Filter output file : " << linksArgParser->k << "\n";
-    btllib::KmerBloomFilter myFilter(m, hashFct, linksArgParser->k);
+    btllib::KmerBloomFilter myFilter(, hashFct, linksArgParser->k);
     btllib::SeqReader assemblyReader(linksArgParser->assemblyFile);
     int builder = 0;
     for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
@@ -284,7 +284,7 @@ int main(int argc, char** argv) {
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser->k, hashFct);
         btllib::NtHash nthashLead(record.seq, linksArgParser->k, hashFct, linksArgParser->distances + linksArgParser->k);
-        for (size_t i = 0; nthash.roll() && nthashLead.roll(); ++i) {
+        for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser->step) {
             // if(counter % 10000 == 0) {
             //     std::cout << "reading... i: " << i << "\n";
             // }
