@@ -262,7 +262,7 @@ int main(int argc, char** argv) {
 
     // std::cout << "- Filter output file : " << outFileBf << "\n";
     std::cout << "- Filter output file : " << linksArgParser->k << "\n";
-    btllib::KmerBloomFilter myFilter(145463048, 3, linksArgParser->k);
+    btllib::KmerBloomFilter myFilter(m, hashFct, linksArgParser->k);
     btllib::SeqReader assemblyReader(linksArgParser->assemblyFile);
     int builder = 0;
     for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
