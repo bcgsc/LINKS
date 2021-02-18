@@ -282,6 +282,7 @@ int main(int argc, char** argv) {
     btllib::BloomFilter& filtering = myFilter.get_bloom_filter();
     btllib::SeqReader longReader(linksArgParser->longFile);
     unsigned long counter = 0;
+    unsigned long hits = 0;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser->k, hashFct);
         btllib::NtHash nthashLead(record.seq, linksArgParser->k, hashFct, linksArgParser->distances + linksArgParser->k);
@@ -291,6 +292,7 @@ int main(int argc, char** argv) {
             // }
             counter++;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
+                hits++;
                 std::vector<const uint64_t *> pairHashes = {nthash.hashes(), nthashLead.hashes()};
                 std::cout << "FOUND i: " << std::to_string(i) << "\n";
                 // for (int k = 0; k < nthash.get_hash_num(); k++) {
@@ -304,7 +306,7 @@ int main(int argc, char** argv) {
     }
 
 
-    std::cout << matchedMatrix.size() << " match percentage: % "<< (double)matchedMatrix.size()/counter * 100.0 << " counter: " << counter << " \n";
+    std::cout << hits << " match percentage: % "<< (double)matchedMatrix.size()/counter * 100.0 << " counter: " << counter << " \n";
 
     return 0;
 }
