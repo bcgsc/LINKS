@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
 
     unsigned long m = ceil((-1 * (double)bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
     unsigned rem = 64 - (m % 64);
-    m = ((unsigned)(m / 8) + 1);
+    m = ((unsigned)(m / 8) + 1) * 8;
     std::cout << "HASHES CALC: " << std::to_string(((double)m / bfElements)) << " second: " << std::to_string(((double)m / bfElements) * log(2)) << "\n";
     unsigned hashFct = floor(((double)m / bfElements) * log(2));
     std::cout << "- Number of bfElements: " << bfElements << "\n"
