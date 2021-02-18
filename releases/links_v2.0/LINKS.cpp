@@ -285,7 +285,7 @@ int main(int argc, char** argv) {
     unsigned long hits = 0;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser->k, hashFct);
-        btllib::NtHash nthashLead(record.seq, linksArgParser->k, hashFct, linksArgParser->distances + linksArgParser->k);
+        btllib::NtHash nthashLead(record.seq, linksArgParser->k, hashFct, linksArgParser->distances);
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser->step) {
             // if(counter % 10000 == 0) {
             //     std::cout << "reading... i: " << i << "\n";
