@@ -6,6 +6,9 @@
 #include <vector>
 #include <cmath>
 #include <regex>
+#include <map>
+#include <ctime>
+
 
 #include "btllib/bloom_filter.hpp"
 #include "btllib/seq_reader.hpp"
@@ -14,8 +17,76 @@
 #define BASE_TEN 10
 std::string version = "2.0";
 
-void printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os);
-long getFileSize(std::string filename);
+
+class LongReadKmer {
+    private:
+    uint64_t hash;
+    uint64_t distance;
+    
+    public:
+    LongReadKmer(const uint64_t hash, int distance){
+        this->hash = hash;
+        this->distance = distance;
+    }
+};
+
+class kMerInfo {
+    private:
+    std::string head;
+    uint64_t start;
+    uint64_t end;
+    uint64_t multiple;
+    
+    public:
+    kMerInfo(){
+        this->head = "";
+        this->start = 0;
+        this->end = 0;
+        this->multiple = 0;
+    }
+    kMerInfo(uint64_t start, uint64_t end){
+        this->head = "";
+        this->start = start;
+        this->end = end;
+        this->multiple = 0;
+    }
+    kMerInfo(std::string head, uint64_t start, uint64_t end){
+        this->head = head;
+        this->start = start;
+        this->end = end;
+        this->multiple = 0;
+    }
+
+    void setHead(std::string head) {
+        this->head = head;
+    }
+
+    void setStart(uint64_t start) {
+        this->start = start;
+    }
+
+    void setEnd(uint64_t end) {
+        this->end = end;
+    }
+
+    void incrementMultiple() {
+        this->multiple += 1;
+    }
+
+    std::string getHead() {
+        return this->head;
+    }
+
+    uint64_t getStart() {
+        return this->start;
+    }
+
+    uint64_t getEnd() {
+        return this->end;
+    }
+
+    
+};
 
 class InputParser {
     private:
@@ -112,7 +183,7 @@ class InputParser {
                 }
             }
         }
-
+    // class 
     static void
     printErrorMsg(const std::string& progname, const std::string& msg) {
         std::cerr << progname << ": " << msg << "\nTry 'physlr-makebf --help' for more information.\n";
@@ -172,7 +243,22 @@ class InputParser {
     }
 };
 
+void printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os);
+long getFileSize(std::string filename);
+void readContigs(
+        std::string assemblyFile,
+        std::map<const uint64_t, kMerInfo *>& trackAll,
+        std::map<const uint64_t, LongReadKmer *> matePair,
+        unsigned k,
+        unsigned minSize,
+        unsigned hashFcts);
+
 int main(int argc, char** argv) {
+    // Get todays date
+    time_t now = time(0);
+   
+    // convert now to string form
+    char* dt = ctime(&now);
     // Parse command line arguments
     InputParser* linksArgParser = new InputParser(argc, argv);
 
@@ -277,7 +363,7 @@ int main(int argc, char** argv) {
     // myFilter.storeFilter(outfile);
 
     // k-merize long reads
-    std::vector<std::vector<const uint64_t *> > matchedMatrix;
+    std::map<const uint64_t, LongReadKmer *> matePair;
 
     btllib::BloomFilter& filtering = myFilter.get_bloom_filter();
     btllib::SeqReader longReader(linksArgParser->longFile);
@@ -285,31 +371,87 @@ int main(int argc, char** argv) {
     unsigned long hits = 0;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser->k, hashFct);
-        btllib::NtHash nthashLead(record.seq, linksArgParser->k, hashFct, linksArgParser->distances);
+        btllib::NtHash nthashLead(record.seq, linksArgParser->k, hashFct, linksArgParser->distances + linksArgParser->k);
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser->step) {
-            // if(counter % 10000 == 0) {
-            //     std::cout << "reading... i: " << i << "\n";
-            // }
             counter++;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
                 hits++;
-                std::vector<const uint64_t *> pairHashes = {nthash.hashes(), nthashLead.hashes()};
-                // std::cout << "FOUND i: " << std::to_string(i) << "\n";
-                // for (int k = 0; k < nthash.get_hash_num(); k++) {
-                //     std::cout << nthash.hashes()[k];
-                // }
-                // std::cout << "\n";
-                matchedMatrix.push_back(pairHashes);
-                // std::cout << "size" << matchedMatrix.size() << "\n";
+                LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser->distances);
+                matePair.insert({nthash.hashes()[0], leadPair});
             }
         }
     }
+    std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
+    
+    
+    std::map<const uint64_t, kMerInfo *> trackAll;
+    std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
 
+    std::cout << "hashFct in MAIN: " << hashFct << "\n";
+    // Read contigs to find where the long read kmers belong in
+    readContigs(linksArgParser->assemblyFile, trackAll, matePair, linksArgParser->k, linksArgParser->minSize, hashFct);
 
-    std::cout << hits << " match percentage: % "<< (double)matchedMatrix.size()/counter * 100.0 << " counter: " << counter << " \n";
+    std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
 
     return 0;
 }
+
+void kmerizeContig( std::string seq, 
+                    std::map<const uint64_t, kMerInfo *>& trackAll,
+                    std::map<const uint64_t, LongReadKmer *> matePair,
+                    unsigned k,
+                    std::string head,
+                    unsigned hashFcts,
+                    unsigned step) {
+
+    btllib::NtHash ntHashContig(seq, k, hashFcts);
+    int counter = 0;
+    std::cout << "hashFct in kmerizeContig: " << hashFcts << "\n";
+    for (size_t i = 0; ntHashContig.roll(); i+=step) {
+        // roll for the steps
+        // for (int j < step)
+        if(matePair.find(ntHashContig.hashes()[0])!= matePair.end()) {
+            // std::cout << "kmer not found in long reads! Insert it\n";
+            trackAll.insert({ntHashContig.hashes()[0], new kMerInfo(head, i, i + k)});
+            // std::cout << "size: " << trackAll.size() << "\n";
+        } else {
+            // std::cout << "kmer found in matePair! Increment multiple\n";
+            trackAll.find(ntHashContig.hashes()[0])->second->incrementMultiple();
+        }
+        counter++;
+    }
+    std::cout << "matePair size:" << matePair.size();
+    std::cout << "\n\n\n";
+}
+
+void readContigs(
+        std::string assemblyFile,
+        std::map<const uint64_t, kMerInfo *>& trackAll,
+        std::map<const uint64_t, LongReadKmer *> matePair,
+        unsigned k,
+        unsigned minSize,
+        unsigned hashFcts) {
+    std::cout << "hashFct in readContig: " << hashFcts << "\n";
+    uint64_t cttig = 0;
+    btllib::SeqReader contigReader(assemblyFile);
+    for (btllib::SeqReader::Record record; (record = contigReader.read());) {
+        cttig++;
+        std::cout << "\r" << cttig;
+        if(record.seq.length() >= minSize) {
+            std::cout << "Kmerizing contig\n";
+            // std::cout << "seq:\n" << record.seq << "\n";
+            std::cout << "k:\n" << k << "\n";
+            std::cout << "hashFcts:\n" << hashFcts << "\n";
+            // std::cout << "head:\n" << record.name << "\n";
+            kmerizeContig(record.seq, trackAll, matePair, k, record.name, hashFcts, cttig);
+        }
+    }
+}
+
+//my ($longfile,$matepair,$track,$tig_length,$issues,$distribution,$totalpairs,$tigpair_checkpoint,$simplepair_checkpoint,$verbose) = @_;
+// void pairContigs() {
+
+// }
 
 void printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os)
 {
@@ -335,3 +477,4 @@ inline bool exists(const std::string& name) {
   struct stat buffer;   
   return (stat (name.c_str(), &buffer) == 0); 
 }
+
