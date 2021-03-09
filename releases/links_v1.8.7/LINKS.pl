@@ -330,6 +330,11 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    $assemblyruninfo.=$reading_seqs_message;
    my ($track_all);
    ($track_all,$tig_length) = &readContigs($assemblyfile,$matepair,$k,$min_size);
+   # get the hash size
+   $mapsize = keys %track_all;
+
+   # print the hash size
+   print "The hash contains $mapsize elements.\n";
 
    #-------------------------------------------------
    $date = `date`;
@@ -656,8 +661,8 @@ sub readFastaFastq{
 
    #####
 
-   #print "\nExtracted $pairct total $k-mer pairs.\n";  
-   #print LOG "\nExtracted $pairct total $k-mer pairs.\n"; 
+   print "\nExtracted $pairct total $k-mer pairs.\n";  
+   print LOG "\nExtracted $pairct total $k-mer pairs.\n"; 
 
    return $matepair,$pairct,$ctrd;
 }
@@ -770,8 +775,8 @@ sub readFastaFastqBFoff{
 
    #####
 
-   #print "\nExtracted $pairct total $k-mer pairs\n";
-   #print LOG "\nExtracted $pairct total $k-mer pairs\n";
+   print "\nExtracted $pairct total $k-mer pairs\n";
+   print LOG "\nExtracted $pairct total $k-mer pairs\n";
 
    return $matepair,$pairct,$ctrd;
 }
