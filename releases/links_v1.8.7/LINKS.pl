@@ -334,6 +334,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    $mapsize = keys %track_all;
 
    # print the hash size
+   print "MAPELEMENTS\n"
    print "The hash contains $mapsize elements.\n";
 
    #-------------------------------------------------
@@ -1178,7 +1179,7 @@ sub pairContigs{
                             $err->{$err_pair}{'gaps'} += $d;
                             $ct_problem_pairs++;
                             $ct_problem_pairs_hash->{$insert_size}++;
-                            print PET "Pairs unsatisfied in distance within a contig pair.  A-> <-rB  WITH tig#$tig_a -> $d <- tig#r.$tig_b, A=$A_length  nt (start:$A_start, end:$A_end) B=$B_length nt (start:$B_start, end:$B_end) CALCULATED DISTANCE APART: $d < $min_allowed\n";
+                            print PET "Pairs unsatisfied in distance within a contig pair.  A-> <-rB  WITH tig#$tig_a -> $d <- tig#r.$tig_b, A=$A_length nt (start:$A_start, end:$A_end) B=$B_length nt (start:$B_start, end:$B_end) CALCULATED DISTANCE APART: $d < $min_allowed\n";
                          }
                       }
                   }else{
@@ -1288,8 +1289,8 @@ sub pairContigs{
             }
          }else{#if unseen
             $ct_multiple++ if( $matepair->{$read_a}{$read_b}{'bt'}==0 );
-	 }
-     }#pairing read b
+	      }
+      }#pairing read b
    }#read a
 
    ### summary of contig pair issues
