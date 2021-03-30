@@ -603,7 +603,7 @@ void pairContigs(
                 int min_allowed = -1 * (insertStdev * insert_size); // check int
                 int low_iz = insert_size + min_allowed; // check int
                 int up_iz = insert_size - min_allowed; // check int
-                if(verbose) std::cout << "Pair read1Hash=" << matePairItr->first << " read2Hash=" << mateListItr->first;
+                if(verbose) std::cout << "Pair read1Hash=" << matePairItr->first << " read2Hash=" << mateListItr->first << "\n";
 
                 if(trackAll[matePairItr->first]->getTig() != "" && trackAll[mateListItr->first]->getTig() != "") {
                     std::cout << "Checkpoint 3 (if both reads are found in trackAll)\n";
@@ -631,12 +631,16 @@ void pairContigs(
                     uint64_t B_end = trackAll[mateListItr->first]->getEnd();
 
                     if(tig_a != tig_b) { // paired reads located on <> contigs
+                        std::cout << "Checkpoint 4 (if tigs are different)\n";
                         //Determine most likely possibility
                         if(trackAll[matePairItr->first]->getStart() < trackAll[matePairItr->first]->getEnd()) {
+                            std::cout << "Checkpoint 5 (A.start < A.end)";
                             if(trackAll[mateListItr->first]->getEnd() < trackAll[mateListItr->first]->getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
+                                std::cout << "Checkpoint 6 (B.end < B.start)";
                                 uint64_t distance = getDistance(insert_size, A_length, A_start, B_start);
                                 if(verbose) std::cout << "A-> <-B  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,Bstart\n";
                                 if(distance > min_allowed) {
+                                    std::cout << "Checkpoint 7 distance > min allowed";
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
                                         pair[ftig_a][isz][rtig_b] = new Gaps_Links();
