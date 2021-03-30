@@ -481,6 +481,17 @@ int main(int argc, char** argv) {
     // Read contigs to find where the long read kmers belong in
     readContigs(linksArgParser->assemblyFile, trackAll, matePair, tigLength, linksArgParser->k, linksArgParser->minSize, hashFct);
     std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
+    std::cout << " pairContigs Parameter List : \n\n";
+    std::cout << " 1- LongFile " << linksArgParser->longFile <<"\n";
+    std::cout << " 2- matePair Size " << matePair.size() <<"\n";
+    std::cout << " 3- trackAll size " << trackAll.size() <<"\n";
+    std::cout << " 4- tigLength size " << tigLength.size() <<"\n";
+    std::cout << " 5- issuesName " << tigLength.size() <<"\n";
+    std::cout << " 6- distributionName " << distribution <<"\n";
+    std::cout << " 7- totalPairs " << tigLength.size() <<"\n";
+    std::cout << " 8- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
+    std::cout << " 9- verbose " << linksArgParser->verbose <<"\n";
+    std::cout << " 10- distributionName " << linksArgParser->insertStdev <<"\n";
     pairContigs(
         linksArgParser->longFile,
         matePair,
