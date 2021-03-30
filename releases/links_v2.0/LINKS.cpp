@@ -513,7 +513,8 @@ void kmerizeContig( std::string seq,
                     uint64_t k,
                     std::string head,
                     uint64_t hashFcts,
-                    uint64_t step) {
+                    uint64_t step,
+                    uint64_t &tmpCounter) {
 
     btllib::NtHash ntHashContig(seq, k, hashFcts);
     int counter = 0;
@@ -546,6 +547,7 @@ void readContigs(
     std::cout << "hashFct in readContig: " << hashFcts << "\n";
     uint64_t cttig = 0;
     btllib::SeqReader contigReader(assemblyFile);
+    uint64_t tmpCounter = 0;
     for (btllib::SeqReader::Record record; (record = contigReader.read());) {
         tigLength.insert({record.name, record.seq.length()});
         cttig++;
@@ -556,9 +558,10 @@ void readContigs(
             std::cout << "k:\n" << k << "\n";
             std::cout << "hashFcts:\n" << hashFcts << "\n";
             // std::cout << "head:\n" << record.name << "\n";
-            kmerizeContig(record.seq, trackAll, matePair, k, record.name, hashFcts, cttig);
+            kmerizeContig(record.seq, trackAll, matePair, k, record.name, hashFcts, cttig, tmpCounter);
         }
     }
+    std::cout << "*****THis is the tmpCounter *******: " << tmpCounter << "\n";
 }
 
 void pairContigs(
