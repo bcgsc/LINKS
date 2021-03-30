@@ -450,6 +450,7 @@ int main(int argc, char** argv) {
     btllib::BloomFilter& filtering = myFilter.get_bloom_filter();
     btllib::SeqReader longReader(linksArgParser->longFile);
     uint64_t counter = 0;
+    uint64_t totalpairs = 0;
     uint64_t hits = 0;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser->k, hashFct);
@@ -472,6 +473,7 @@ int main(int argc, char** argv) {
             }
         }
     }
+    totalpairs = hits;
     std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
     
     
@@ -486,9 +488,9 @@ int main(int argc, char** argv) {
     std::cout << " 2- matePair Size " << matePair.size() <<"\n";
     std::cout << " 3- trackAll size " << trackAll.size() <<"\n";
     std::cout << " 4- tigLength size " << tigLength.size() <<"\n";
-    std::cout << " 5- issuesName " << tigLength.size() <<"\n";
+    std::cout << " 5- issuesName " <<"\n";
     std::cout << " 6- distributionName " << distribution <<"\n";
-    std::cout << " 7- totalPairs " << tigLength.size() <<"\n";
+    std::cout << " 7- totalPairs " << totalpairs <<"\n";
     std::cout << " 8- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
     std::cout << " 9- verbose " << linksArgParser->verbose <<"\n";
     std::cout << " 10- distributionName " << linksArgParser->insertStdev <<"\n";
@@ -499,7 +501,7 @@ int main(int argc, char** argv) {
         tigLength,
         issues,
         distribution,
-        tigLength.size(),
+        totalpairs,
         tigpair_checkpoint,
         simplepair_checkpoint,
         linksArgParser->verbose,
