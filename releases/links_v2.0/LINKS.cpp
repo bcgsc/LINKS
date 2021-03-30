@@ -522,7 +522,8 @@ void kmerizeContig( std::string seq,
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
         // roll for the steps
         // for (int j < step)
-        if(matePair.find(ntHashContig.hashes()[0]) == matePair.end()) {
+        if(matePair.find(ntHashContig.hashes()[0]) != matePair.end()) {
+            tmpCounter++;
             if(trackAll.find(ntHashContig.hashes()[0]) == trackAll.end()) {
                 trackAll[ntHashContig.hashes()[0]] = new kMerInfo(head, i, i + k);
             } else {
