@@ -905,9 +905,12 @@ void pairContigs(
                     }
                 }
             } else { // if unseen
+                std::cout << "UNSEEN\n";
                 if(matePair[matePairItr->first][mateListItr->first]->getBT() == 0) {
+                    std::cout << "UNSEEN getBT() increment ct\n";
                     ct_multiple++;
                 }
+
             }
         } // pairing read b
     } // pairing read a
