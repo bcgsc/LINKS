@@ -572,7 +572,7 @@ sub readContigs{
 
 #----------------
 sub readFastaFastq{
-
+   my $uniquePairct = 0;
    my ($file_ct,$ct_fof_line,$ctrd,$file,$frag_dist,$k,$step,$matepair,$delta,$initpos,$bloom,$readlength) = @_;
    ###
    my $readinput_message = "\nReads processed from file $file_ct/$ct_fof_line, $file:\n";
@@ -647,8 +647,8 @@ sub readFastaFastq{
          $buffer = $readlength+1;###MPET
       }###MPET
 
-
-      ($matepair,$pairct) = &kmerize(uc($seq),$frag_dist,$k,$matepair,$step,$prevhead,$endposition,$initpos,$pairct,$bloom,$buffer,$readlength);
+      
+      ($matepair,$pairct, $uniquePairct) = &kmerize(uc($seq),$frag_dist,$k,$matepair,$step,$prevhead,$endposition,$initpos,$pairct,$uniquePairct,$bloom,$buffer,$readlength);
    }
 
    close IN;
@@ -657,6 +657,7 @@ sub readFastaFastq{
    #####
 
    print "\nExtracted $pairct total $k-mer pairs.\n";  
+   print "\nExtracted unique $uniquePairct total $k-mer pairs.\n";  
    print LOG "\nExtracted $pairct total $k-mer pairs.\n"; 
 
    return $matepair,$pairct,$ctrd;
@@ -665,7 +666,7 @@ sub readFastaFastq{
 #----------------
 sub kmerize{
 
-   my ($seq,$frag_dist,$k,$matepair,$step,$head,$endposition,$initpos,$pairct,$bloom,$buffer,$readlength) = @_;
+   my ($seq,$frag_dist,$k,$matepair,$step,$head,$endposition,$initpos,$pairct,$uniquePairct,$bloom,$buffer,$readlength) = @_;
 
    for(my $pos=$initpos;$pos<=$endposition;$pos+=$step){###MPET
 
@@ -678,6 +679,9 @@ sub kmerize{
       if(defined $matepair->{$rd2}{$rd1}){my $trd1=$rd2;my $trd2=$rd1;$rd1=$trd1;$rd2=$trd2;}
 
       if($bloom->contains($rd1) && $bloom->contains($rd2)){ ###Don't bother hashing k-mer pairs if assembly doesn't have these kmers
+         if(not(defined $matepair->{$rd1})) {
+            $uniquePairct++;
+         }
          $matepair->{$rd1}{$rd2}{'is'} = $frag_dist;
          #$matepair->{$rd1}{$rd2}{'rd'}{$head}++;  ### this will be used to track uniqueness in pairing (should expect 1 pair per [long]read and one [long]read with that specific pair. HAS LITTLE TO NO EFFECT BUT REQ MORE MEM
          $matepair->{$rd1}{$rd2}{'bt'} = 0;
@@ -685,7 +689,7 @@ sub kmerize{
       }
 
    }
-   return $matepair,$pairct;
+   return $matepair,$pairct,$uniquePairct;
 }
 
 #----------------
