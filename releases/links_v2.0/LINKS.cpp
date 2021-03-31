@@ -701,16 +701,21 @@ void pairContigs(
                                 uint64_t distance = getDistance(insert_size, A_length, A_start, rB_start);
                                 if(verbose) std::cout << "A-> <-rB  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,rBstart\n";
                                 if(distance >= min_allowed) {
+                                    std::cout << "Checkpoint 10.1\n"
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
+                                        std::cout << "Checkpoint 10.2\n"
                                         pair[ftig_a][isz][rtig_b] = new Gaps_Links();
                                     } else {
+                                        std::cout << "Checkpoint 10.3\n"
                                         pair[ftig_a][isz][rtig_b]->addToGap(distance);
                                         pair[ftig_a][isz][rtig_b]->incrementLinks();
                                     }
                                     if(pair.find(ftig_b) == pair.end() || pair[ftig_b].find(isz) == pair[ftig_b].end() || pair[ftig_b][isz].find(rtig_a) == pair[ftig_b][isz].end()) {
+                                        std::cout "Checkpoint 10.4\n"
                                         pair[ftig_b][isz][rtig_a] = new Gaps_Links();
                                     } else {
+                                        std::cout "Checkpoint 10.5\n"
                                         pair[ftig_b][isz][rtig_a]->addToGap(distance);
                                         pair[ftig_b][isz][rtig_a]->incrementLinks();
                                     }
