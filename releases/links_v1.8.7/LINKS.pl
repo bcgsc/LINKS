@@ -340,8 +340,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    print $sc_start_message;
    print LOG $sc_start_message;
    $assemblyruninfo.= $sc_start_message . "\n";
-   print "Longfile "
-   ($contigpairs,$simplepair) = &pairContigs($longfile,$matepair,$tra ck_all,$tig_length,$issues,$distribution,$totalpairs,$tigpair_checkpoint,$simplepair_checkpoint,$verbose);
+   ($contigpairs,$simplepair) = &pairContigs($longfile,$matepair,$track_all,$tig_length,$issues,$distribution,$totalpairs,$tigpair_checkpoint,$simplepair_checkpoint,$verbose);
    #-------------------------------------------------
 
    ### Read contig names and sequences from the FASTA file.
