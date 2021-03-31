@@ -22,7 +22,7 @@
 use strict;
 use POSIX;
 use FindBin;
-use lib "$FindBin::Bin/./lib/bloomfilter/swig";
+use lib "/gsc/btl/linuxbrew/Cellar/links-scaffolder/1.8.7_1/libexec/";
 use BloomFilter;
 use Time::HiRes;
 use Getopt::Std;
@@ -302,6 +302,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
             ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
          }else{
             ($matepair,$pairct,$ctrd) = &readFastaFastq($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$bloom,$readlength);
+            print "PAIRCT for FILLING MATEPAIR is : $pairct\n"
          }
 	 $distpairs+=$pairct;
          #}
@@ -330,12 +331,6 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    $assemblyruninfo.=$reading_seqs_message;
    my ($track_all);
    ($track_all,$tig_length) = &readContigs($assemblyfile,$matepair,$k,$min_size);
-   # get the hash size
-   $mapsize = keys %track_all;
-
-   # print the hash size
-   print "MAPELEMENTS\n"
-   print "The hash contains $mapsize elements.\n";
 
    #-------------------------------------------------
    $date = `date`;
@@ -345,8 +340,8 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    print $sc_start_message;
    print LOG $sc_start_message;
    $assemblyruninfo.= $sc_start_message . "\n";
-
-   ($contigpairs,$simplepair) = &pairContigs($longfile,$matepair,$track_all,$tig_length,$issues,$distribution,$totalpairs,$tigpair_checkpoint,$simplepair_checkpoint,$verbose);
+   print "Longfile "
+   ($contigpairs,$simplepair) = &pairContigs($longfile,$matepair,$tra ck_all,$tig_length,$issues,$distribution,$totalpairs,$tigpair_checkpoint,$simplepair_checkpoint,$verbose);
    #-------------------------------------------------
 
    ### Read contig names and sequences from the FASTA file.
