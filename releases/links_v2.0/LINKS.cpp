@@ -761,14 +761,18 @@ void pairContigs(
                                 if(distance >= min_allowed) {
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_b) == pair.end() || pair[ftig_b].find(isz) == pair[ftig_b].end() || pair[ftig_b][isz].find(ftig_a) == pair[ftig_b][isz].end()) {
+                                        std::cout << "Checkpoint 11.1\n";
                                         pair[ftig_b][isz][ftig_a] = new Gaps_Links();
                                     } else {
+                                        std::cout << "Checkpoint 11.2\n";
                                         pair[ftig_b][isz][ftig_a]->addToGap(distance);
                                         pair[ftig_b][isz][ftig_a]->incrementLinks();
                                     }
                                     if(pair.find(rtig_a) == pair.end() || pair[rtig_a].find(isz) == pair[rtig_a].end() || pair[rtig_a][isz].find(rtig_b) == pair[rtig_a][isz].end()) {
+                                        std::cout << "Checkpoint 11.3\n";
                                         pair[rtig_a][isz][rtig_b] = new Gaps_Links();
                                     } else {
+                                        std::cout << "Checkpoint 11.4\n";
                                         pair[rtig_a][isz][rtig_b]->addToGap(distance);
                                         pair[rtig_a][isz][rtig_b]->incrementLinks();
                                     }
@@ -812,14 +816,18 @@ void pairContigs(
                                 if(distance >= min_allowed) {
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(rtig_b) == pair.end() || pair[rtig_b].find(isz) == pair[rtig_b].end() || pair[rtig_b][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
+                                        std::cout << "Checkpoint 12.1\n";
                                         pair[rtig_b][isz][ftig_a] = new Gaps_Links();
                                     } else {
+                                        std::cout << "Checkpoint 12.2\n";
                                         pair[rtig_b][isz][ftig_a]->addToGap(distance);
                                         pair[rtig_b][isz][ftig_a]->incrementLinks();
                                     }
                                     if(pair.find(rtig_a) == pair.end() || pair[rtig_a].find(isz) == pair[rtig_a].end() || pair[rtig_a][isz].find(ftig_b) == pair[rtig_a][isz].end()) {
+                                        std::cout << "Checkpoint 12.3\n";
                                         pair[rtig_a][isz][ftig_b] = new Gaps_Links();
                                     } else {
+                                        std::cout << "Checkpoint 12.4\n";
                                         pair[rtig_a][isz][ftig_b]->addToGap(distance);
                                         pair[rtig_a][isz][ftig_b]->incrementLinks();
                                     }

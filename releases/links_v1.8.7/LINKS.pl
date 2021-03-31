@@ -1123,6 +1123,7 @@ sub pairContigs{
 
                             my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                             #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
+                            print "CHECKPOINT 1 adding to PAIR\n";
                             $pair->{$ftig_a}{'layer'}{$isz}{$ftig_b}{'links'}++;
                             $pair->{$ftig_a}{'layer'}{$isz}{$ftig_b}{'gaps'} += $d;                  
                             $pair->{$rtig_b}{'layer'}{$isz}{$rtig_a}{'links'}++;
@@ -1133,6 +1134,7 @@ sub pairContigs{
                             $pair->{$rtig_b}{'all'}{0}{$rtig_a}{'gaps'} += $d;
 
                             my ($order1,$order2)=($tig_a<$tig_b) ? ($tig_a,$tig_b) : ($tig_b,$tig_a);
+                            print "CHECKPOINT 2 adding to SIMPLEPAIR\n";
                             $simplepair->{$order1}{$order2}{'links'}++;
                             $simplepair->{$order1}{$order2}{'sumgaps'}+=$d;                            
                             $simplepair->{$order1}{$order2}{'type'}='11';
@@ -1155,6 +1157,7 @@ sub pairContigs{
 
                             my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                             #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
+                            print "CHECKPOINT 3 adding to PAIR\n";
                             $pair->{$ftig_a}{'layer'}{$isz}{$rtig_b}{'links'}++;
                             $pair->{$ftig_a}{'layer'}{$isz}{$rtig_b}{'gaps'} += $d;
                             $pair->{$ftig_b}{'layer'}{$isz}{$rtig_a}{'links'}++;
@@ -1189,6 +1192,7 @@ sub pairContigs{
 
                            my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                            #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
+                           print "CHECKPOINT 4 adding to PAIR\n";
                            $pair->{$ftig_b}{'layer'}{$isz}{$ftig_a}{'links'}++;
                            $pair->{$ftig_b}{'layer'}{$isz}{$ftig_a}{'gaps'} += $d;
                            $pair->{$rtig_a}{'layer'}{$isz}{$rtig_b}{'links'}++;
@@ -1221,7 +1225,7 @@ sub pairContigs{
 
                            my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                            #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
-
+                           print "CHECKPOINT 5 adding to PAIR\n";
                            $pair->{$rtig_b}{'layer'}{$isz}{$ftig_a}{'links'}++;
                            $pair->{$rtig_b}{'layer'}{$isz}{$ftig_a}{'gaps'} += $d;
                            $pair->{$rtig_a}{'layer'}{$isz}{$ftig_b}{'links'}++;
