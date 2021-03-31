@@ -595,7 +595,12 @@ void pairContigs(
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
             std::cout << "Checkpoint 1 iteration through every matePair\n";
-            if(mateListItr->second->getBT() == 0 && trackAll[matePairItr->first]->getMultiple() == 1 && trackAll[mateListItr->first]->getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
+            // seg faults here
+            if(mateListItr->second->getBT() == 0) {
+                std::cout << "Seg fault 1\n";
+                if(trackAll[matePairItr->first]->getMultiple() == 1) { 
+                    std::cout << "Seg fault 2\n";
+                    if(trackAll[mateListItr->first]->getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
                 std::cout << "Checkpoint 2 (if both pairss multiple == 1)\n";
                 // below indicates this specific pair has been seen (bt = 1)
                 mateListItr->second->setBT(1);
@@ -904,7 +909,7 @@ void pairContigs(
                         ct_single_hash[insert_size] = ct_single_hash[insert_size] + 1;
                     }
                 }
-            } else { // if unseen
+            }}} else { // if unseen
                 std::cout << "UNSEEN\n";
                 if(matePair[matePairItr->first][mateListItr->first]->getBT() == 0) {
                     std::cout << "UNSEEN getBT() increment ct\n";
