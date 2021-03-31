@@ -598,9 +598,9 @@ void pairContigs(
             // seg faults here
             if(mateListItr->second->getBT() == 0) {
                 std::cout << "Seg fault 1\n";
-                if(trackAll[matePairItr->first]->getMultiple() == 1) { 
+                if(trackAll.find(matePairItr->first) != trackAll.end() && trackAll[matePairItr->first]->getMultiple() == 1) { 
                     std::cout << "Seg fault 2\n";
-                    if(trackAll[mateListItr->first]->getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
+                    if(trackAll.find(mateListItr->first) != trackAll.end() && trackAll[mateListItr->first]->getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
                 std::cout << "Checkpoint 2 (if both pairss multiple == 1)\n";
                 // below indicates this specific pair has been seen (bt = 1)
                 mateListItr->second->setBT(1);
@@ -648,12 +648,15 @@ void pairContigs(
                                     std::cout << "Checkpoint 7 distance > min allowed";
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
+                                        std::cout << "Checkpoint 7.1 adding to pair new GAPSLINKS";
                                         pair[ftig_a][isz][rtig_b] = new Gaps_Links();
                                     } else {
+                                        std::cout << "Checkpoint 7.2 adding to pair existing gapslings";
                                         pair[ftig_a][isz][rtig_b]->addToGap(distance);
                                         pair[ftig_a][isz][rtig_b]->incrementLinks();
                                     }
                                     if(pair.find(rtig_b) == pair.end() || pair[rtig_b].find(isz) == pair[rtig_b].end() || pair[rtig_b][isz].find(rtig_a) == pair[rtig_b][isz].end()) {
+                                        std::cout << "Checkpoint 7.3 adding to pair new GAPSLINKSs";
                                         pair[rtig_b][isz][rtig_a] = new Gaps_Links();
                                     } else {
                                         pair[rtig_b][isz][rtig_a]->addToGap(distance);
