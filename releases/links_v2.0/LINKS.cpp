@@ -6,7 +6,7 @@
 #include <vector>
 #include <cmath>
 #include <regex>
-#include <map>
+#include <unordered_map>
 #include <ctime>
 // #include <pair>
 
@@ -21,13 +21,15 @@ std::string version = "2.0";
 
 class BT_IS {
     private:
-    uint64_t bt;
+    bool bt;
     uint64_t is;
     // change this to a map of hash to distance
     // uint64_t distance;
     
     public:
-    BT_IS(uint64_t bt, uint64_t is) {
+    BT_IS(const BT_IS&) = default;
+    BT_IS(BT_IS&&) = default;
+    BT_IS(bool bt, uint64_t is) {
         this->bt = bt;
         this-> is = is;
         // secondLayerReads.insert({hash, distance});
@@ -39,7 +41,7 @@ class BT_IS {
     void setIS(uint64_t is) {
         this->is = is;
     }
-    uint64_t getBT() {
+    bool getBT() {
         return this->bt;
     }
     uint64_t getIS() {
@@ -86,7 +88,7 @@ class Gaps_Links {
     }
 };
 
-class kMerInfo {
+class KmerInfo {
     private:
     std::string tig;
     uint64_t start;
@@ -94,19 +96,19 @@ class kMerInfo {
     uint64_t multiple;
     
     public:
-    kMerInfo(){
+    KmerInfo(){
         this->tig = "";
         this->start = 0;
         this->end = 0;
         this->multiple = 0;
     }
-    kMerInfo(uint64_t start, uint64_t end){
+    KmerInfo(uint64_t start, uint64_t end){
         this->tig = "";
         this->start = start;
         this->end = end;
         this->multiple = 0;
     }
-    kMerInfo(std::string tig, uint64_t start, uint64_t end){
+    KmerInfo(std::string tig, uint64_t start, uint64_t end){
         this->tig = tig;
         this->start = start;
         this->end = end;
@@ -304,22 +306,22 @@ class InputParser {
 };
 
 // Helper Methods
-void sortErr(std::map<std::string, Gaps_Links*>& M);
+void sortErr(std::map<std::string, Gaps_Links>& M);
 void sortInsertSize(std::map<uint64_t, uint64_t>& M);
 void printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os);
 long getFileSize(std::string filename);
 void readContigs(
         std::string assemblyFile,
-        std::map<const uint64_t, kMerInfo *>& trackAll,
-        std::map<const uint64_t, std::map<const uint64_t, BT_IS *> > matePair,
+        std::map<const uint64_t, KmerInfo >& trackAll,
+        std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair,
         std::map<std::string, uint64_t>& tigLength,
         uint64_t k,
         uint64_t minSize,
         uint64_t hashFcts);
 void pairContigs(
     std::string longReadsFile,
-    std::map<const uint64_t, std::map<const uint64_t, BT_IS *> > matePair,
-    std::map<const uint64_t, kMerInfo *> trackAll,
+    std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair,
+    std::map<const uint64_t, KmerInfo > trackAll,
     std::map<std::string, uint64_t> tigLength,
     std::string issues,
     std::string distribution,
@@ -342,48 +344,48 @@ int main(int argc, char** argv) {
     // convert now to string form
     char* dt = ctime(&now);
     // Parse command line arguments
-    InputParser* linksArgParser = new InputParser(argc, argv);
+    InputParser linksArgParser = InputParser(argc, argv);
 
     //Set Bloom Filter element number based on the size of the assembly file (1 byte = 1 character)
-    std::string path = linksArgParser->assemblyFile;
+    std::string path = linksArgParser.assemblyFile;
     long bfElements = getFileSize(path);
 
     // Checking validity of input assemble file
     if(bfElements == -1){
         std::cout << std::to_string(bfElements);
-        std::cout << "Invalid file: " << linksArgParser->assemblyFile << " -- fatal\n";
+        std::cout << "Invalid file: " << linksArgParser.assemblyFile << " -- fatal\n";
         return -1;
     }
 
     // Naming output files
-    if (linksArgParser->baseName == "") {
-        linksArgParser->baseName =  linksArgParser->assemblyFile + ".scaff_s-" + 
-                                    linksArgParser->longFile + "_d" + 
-                                    std::to_string(linksArgParser->distances) + 
-                                    "_k" + std::to_string(linksArgParser->k) + 
-                                    "_e" + std::to_string(linksArgParser->insertStdev) +
-                                    "_l" + std::to_string(linksArgParser->minLinks) +
-                                    "_a" + std::to_string(linksArgParser->maxLinkRatio) +
-                                    "_z" + std::to_string(linksArgParser->minSize) +
-                                    "_t" + std::to_string(linksArgParser->step) +
-                                    "_o" + std::to_string(linksArgParser->offset) +
-                                    "_r-"+ linksArgParser->bfFile +
-                                    "_p" + std::to_string(linksArgParser->fpr) +
-                                    "_x" + std::to_string(linksArgParser->bfoff) +
-                                    "_m" + std::to_string(linksArgParser->readLength);
+    if (linksArgParser.baseName == "") {
+        linksArgParser.baseName =  linksArgParser.assemblyFile + ".scaff_s-" + 
+                                    linksArgParser.longFile + "_d" + 
+                                    std::to_string(linksArgParser.distances) + 
+                                    "_k" + std::to_string(linksArgParser.k) + 
+                                    "_e" + std::to_string(linksArgParser.insertStdev) +
+                                    "_l" + std::to_string(linksArgParser.minLinks) +
+                                    "_a" + std::to_string(linksArgParser.maxLinkRatio) +
+                                    "_z" + std::to_string(linksArgParser.minSize) +
+                                    "_t" + std::to_string(linksArgParser.step) +
+                                    "_o" + std::to_string(linksArgParser.offset) +
+                                    "_r-"+ linksArgParser.bfFile +
+                                    "_p" + std::to_string(linksArgParser.fpr) +
+                                    "_x" + std::to_string(linksArgParser.bfoff) +
+                                    "_m" + std::to_string(linksArgParser.readLength);
         pid_t pid_num = getppid();
-        linksArgParser->baseName += "_pid" + std::to_string(pid_num);
+        linksArgParser.baseName += "_pid" + std::to_string(pid_num);
     }
-    std::cout << linksArgParser->baseName;
-    std::string outlog = linksArgParser->baseName + ".log";
-    std::string scaffold = linksArgParser->baseName + ".scaffolds";
-    std::string issues = linksArgParser->baseName + ".pairing_issues";
-    std::string distribution = linksArgParser->baseName + ".pairing_distribution.csv";
-    std::string bfout = linksArgParser->baseName + ".bloom";
-    std::string graph = linksArgParser->baseName + ".gv";
-    std::string numnamecorr = linksArgParser->baseName + ".assembly_correspondence.tsv";
-    std::string tigpair_checkpoint = linksArgParser->baseName + ".tigpair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
-    std::string simplepair_checkpoint = linksArgParser->baseName + ".simplepair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
+    std::cout << linksArgParser.baseName;
+    std::string outlog = linksArgParser.baseName + ".log";
+    std::string scaffold = linksArgParser.baseName + ".scaffolds";
+    std::string issues = linksArgParser.baseName + ".pairing_issues";
+    std::string distribution = linksArgParser.baseName + ".pairing_distribution.csv";
+    std::string bfout = linksArgParser.baseName + ".bloom";
+    std::string graph = linksArgParser.baseName + ".gv";
+    std::string numnamecorr = linksArgParser.baseName + ".assembly_correspondence.tsv";
+    std::string tigpair_checkpoint = linksArgParser.baseName + ".tigpair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
+    std::string simplepair_checkpoint = linksArgParser.baseName + ".simplepair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
     
     if(freopen(outlog.c_str(), "w", stderr ) == NULL) {
         std::cout << "Can't write to " << outlog << " -- fatal\n";
@@ -392,21 +394,21 @@ int main(int argc, char** argv) {
     //---------------------------
     // Initialization message
     std::string initMessage = "\nRunning: " + version + 
-                                "\n-f " + linksArgParser->assemblyFile +
-                                "\n-s " + linksArgParser->longFile + 
-                                "\n-m " + std::to_string(linksArgParser->readLength) + 
-                                "\n-d " + std::to_string(linksArgParser->distances) + 
-                                "\n-k " + std::to_string(linksArgParser->k) + 
-                                "\n-e " + std::to_string(linksArgParser->insertStdev) +
-                                "\n-l " + std::to_string(linksArgParser->minLinks) +
-                                "\n-a " + std::to_string(linksArgParser->maxLinkRatio) +
-                                "\n-t " + std::to_string(linksArgParser->step) + 
-                                "\n-o " + std::to_string(linksArgParser->offset) +
-                                "\n-z " + std::to_string(linksArgParser->minSize) +
-                                "\n-b " + linksArgParser->baseName +
-                                "\n-r " + linksArgParser->bfFile +
-                                "\n-p " + std::to_string(linksArgParser->fpr) +
-                                "\n-x " + std::to_string(linksArgParser->bfoff) +
+                                "\n-f " + linksArgParser.assemblyFile +
+                                "\n-s " + linksArgParser.longFile + 
+                                "\n-m " + std::to_string(linksArgParser.readLength) + 
+                                "\n-d " + std::to_string(linksArgParser.distances) + 
+                                "\n-k " + std::to_string(linksArgParser.k) + 
+                                "\n-e " + std::to_string(linksArgParser.insertStdev) +
+                                "\n-l " + std::to_string(linksArgParser.minLinks) +
+                                "\n-a " + std::to_string(linksArgParser.maxLinkRatio) +
+                                "\n-t " + std::to_string(linksArgParser.step) + 
+                                "\n-o " + std::to_string(linksArgParser.offset) +
+                                "\n-z " + std::to_string(linksArgParser.minSize) +
+                                "\n-b " + linksArgParser.baseName +
+                                "\n-r " + linksArgParser.bfFile +
+                                "\n-p " + std::to_string(linksArgParser.fpr) +
+                                "\n-x " + std::to_string(linksArgParser.bfoff) +
                                 "\n\n----------------- Verifying files -----------------\n\n";
     
     std::cout << initMessage;
@@ -415,23 +417,23 @@ int main(int argc, char** argv) {
 
 
 
-    uint64_t m = ceil((-1 * (double)bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
+    uint64_t m = ceil((-1 * (double)bfElements * log(linksArgParser.fpr)) / (log(2) * log(2)));
     uint64_t rem = 64 - (m % 64);
     m = ((uint64_t)(m / 8) + 1) * 8;
     std::cout << "HASHES CALC: " << std::to_string(((double)m / bfElements)) << " second: " << std::to_string(((double)m / bfElements) * log(2)) << "\n";
     uint64_t hashFct = floor(((double)m / bfElements) * log(2));
     std::cout << "- Number of bfElements: " << bfElements << "\n"
                 << "- Input file path: " << path << "\n"
-                << "- Input file: " << linksArgParser->assemblyFile << "\n"
-                << "- kmersize: " << linksArgParser->k << "\n"
+                << "- Input file: " << linksArgParser.assemblyFile << "\n"
+                << "- kmersize: " << linksArgParser.k << "\n"
                 << "- m: " << m << "\n"
-                << "- fpr: " << linksArgParser->fpr << "\n"
+                << "- fpr: " << linksArgParser.fpr << "\n"
                 << "- hashFct: " << hashFct << "\n";
 
     // std::cout << "- Filter output file : " << outFileBf << "\n";
-    std::cout << "- Filter output file : " << linksArgParser->k << "\n";
-    btllib::KmerBloomFilter myFilter(m/8, hashFct, linksArgParser->k);
-    btllib::SeqReader assemblyReader(linksArgParser->assemblyFile);
+    std::cout << "- Filter output file : " << linksArgParser.k << "\n";
+    btllib::KmerBloomFilter myFilter(m/8, hashFct, linksArgParser.k);
+    btllib::SeqReader assemblyReader(linksArgParser.assemblyFile);
     int builder = 0;
     for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
         if(builder % 100000 == 0) {
@@ -445,30 +447,30 @@ int main(int argc, char** argv) {
     // myFilter.storeFilter(outfile);
 
     // k-merize long reads
-    std::map<const uint64_t, std::map<const uint64_t, BT_IS *> > matePair;
+    std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair;
 
     btllib::BloomFilter& filtering = myFilter.get_bloom_filter();
-    btllib::SeqReader longReader(linksArgParser->longFile);
+    btllib::SeqReader longReader(linksArgParser.longFile);
     uint64_t counter = 0;
     uint64_t totalpairs = 0;
     uint64_t hits = 0;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
-        btllib::NtHash nthash(record.seq, linksArgParser->k, hashFct);
-        btllib::NtHash nthashLead(record.seq, linksArgParser->k, hashFct, linksArgParser->distances + linksArgParser->k);
-        for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser->step) {
+        btllib::NtHash nthash(record.seq, linksArgParser.k, hashFct);
+        btllib::NtHash nthashLead(record.seq, linksArgParser.k, hashFct, linksArgParser.distances + linksArgParser.k);
+        for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
             counter++;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
                 hits++;
                 // If this hash exists in matePair, add the read to the second layer of instead of making a new entry
                 if(matePair[nthash.hashes()[0]].find(nthashLead.hashes()[0]) == matePair[nthash.hashes()[0]].end()) {
-                    matePair[nthash.hashes()[0]][nthashLead.hashes()[0]] = new BT_IS(0, linksArgParser->distances);
+                    matePair[nthash.hashes()[0]][nthashLead.hashes()[0]] = BT_IS(false, linksArgParser.distances);
                 } else {
-                    // LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser->distances);
+                    // LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser.distances);
                     // Check for existence
                     // frag_dist is an array of distances
-                    matePair[nthash.hashes()[0]][nthashLead.hashes()[0]]->setBT(1);
-                    matePair[nthash.hashes()[0]][nthashLead.hashes()[0]]->setIS(linksArgParser->distances);
+                    matePair[nthash.hashes()[0]][nthashLead.hashes()[0]].setBT(true);
+                    matePair[nthash.hashes()[0]][nthashLead.hashes()[0]].setIS(linksArgParser.distances);
                 }
             }
         }
@@ -477,14 +479,14 @@ int main(int argc, char** argv) {
     std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
     
     
-    std::map<const uint64_t, kMerInfo *> trackAll;
+    std::map<const uint64_t, KmerInfo> trackAll;
     std::map<std::string, uint64_t> tigLength;
     std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
     // Read contigs to find where the long read kmers belong in
-    readContigs(linksArgParser->assemblyFile, trackAll, matePair, tigLength, linksArgParser->k, linksArgParser->minSize, hashFct);
+    readContigs(linksArgParser.assemblyFile, trackAll, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct);
     std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
     std::cout << " pairContigs Parameter List : \n\n";
-    std::cout << " 1- LongFile " << linksArgParser->longFile <<"\n";
+    std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
     std::cout << " 2- matePair Size " << matePair.size() <<"\n";
     std::cout << " 3- trackAll size " << trackAll.size() <<"\n";
     std::cout << " 4- tigLength size " << tigLength.size() <<"\n";
@@ -492,10 +494,10 @@ int main(int argc, char** argv) {
     std::cout << " 6- distributionName " << distribution <<"\n";
     std::cout << " 7- totalPairs " << totalpairs <<"\n";
     std::cout << " 8- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
-    std::cout << " 9- verbose " << linksArgParser->verbose <<"\n";
-    std::cout << " 10- distributionName " << linksArgParser->insertStdev <<"\n";
+    std::cout << " 9- verbose " << linksArgParser.verbose <<"\n";
+    std::cout << " 10- distributionName " << linksArgParser.insertStdev <<"\n";
     pairContigs(
-        linksArgParser->longFile,
+        linksArgParser.longFile,
         matePair,
         trackAll,
         tigLength,
@@ -504,14 +506,14 @@ int main(int argc, char** argv) {
         totalpairs,
         tigpair_checkpoint,
         simplepair_checkpoint,
-        linksArgParser->verbose,
-        linksArgParser->insertStdev);
+        linksArgParser.verbose,
+        linksArgParser.insertStdev);
     return 0;
 }
 
 void kmerizeContig( std::string seq, 
-                    std::map<const uint64_t, kMerInfo *>& trackAll,
-                    std::map<const uint64_t, std::map<const uint64_t, BT_IS *> > matePair,
+                    std::map<const uint64_t, KmerInfo>& trackAll,
+                    std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair,
                     uint64_t k,
                     std::string head,
                     uint64_t hashFcts,
@@ -527,22 +529,22 @@ void kmerizeContig( std::string seq,
         if(matePair.find(ntHashContig.hashes()[0]) != matePair.end()) {
             tmpCounter++;
             if(trackAll.find(ntHashContig.hashes()[0]) == trackAll.end()) {
-                trackAll[ntHashContig.hashes()[0]] = new kMerInfo(head, i, i + k);
+                trackAll[ntHashContig.hashes()[0]] = KmerInfo(head, i, i + k);
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
-                trackAll[ntHashContig.hashes()[0]]->incrementMultiple();
+                trackAll[ntHashContig.hashes()[0]].incrementMultiple();
             }
         }
         counter++;
     }
-    std::cout << "matePair size:" << matePair.size();
+    std::cout << "trackAll size:" << trackAll.size();
     std::cout << "\n\n\n";
 }
 
 void readContigs(
         std::string assemblyFile,
-        std::map<const uint64_t, kMerInfo *>& trackAll,
-        std::map<const uint64_t, std::map<const uint64_t, BT_IS *> > matePair,
+        std::map<const uint64_t, KmerInfo>& trackAll,
+        std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair,
         std::map<std::string, uint64_t>& tigLength,
         uint64_t k,
         uint64_t minSize,
@@ -569,8 +571,8 @@ void readContigs(
 
 void pairContigs(
     std::string longReadsFile,
-    std::map<const uint64_t, std::map<const uint64_t, BT_IS *> > matePair,
-    std::map<const uint64_t, kMerInfo *> trackAll,
+    std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair,
+    std::map<const uint64_t, KmerInfo> trackAll,
     std::map<std::string, uint64_t> tigLength,
     std::string issues,
     std::string distribution,
@@ -583,34 +585,34 @@ void pairContigs(
     uint64_t ct_illogical = 0, ct_ok_contig = 0, ct_ok_pairs = 0, ct_problem_pairs = 0, ct_iz_issues = 0, ct_single = 0, ct_multiple = 0, ct_both = 0, trackInsert = 0;
     std::map<uint64_t, uint64_t> ct_single_hash, ct_both_hash, ct_illogical_hash, ct_ok_contig_hash, ct_ok_pairs_hash, ct_problem_pairs_hash, ct_iz_issues_hash;
     // Mapping of tiga_head -> insertSize -> tigb_head -> links & gaps
-    std::map<std::string, std::map<uint64_t, std::map<std::string, Gaps_Links *> > > pair;
-    std::map<std::string, std::map<std::string, Gaps_Links*> >simplePair;
-    std::map<std::string, Gaps_Links*> err;
+    std::map<std::string, std::map<uint64_t, std::map<std::string, Gaps_Links> > > pair;
+    std::map<std::string, std::map<std::string, Gaps_Links> >simplePair;
+    std::map<std::string, Gaps_Links> err;
     std::string order1;
     std::string order2;
     if(verbose) std::cout << "Pairing contigs...\n";
     
-    std::map<const uint64_t, BT_IS *>::iterator mateListItr;
-    std::map<const uint64_t, std::map<const uint64_t, BT_IS *> >::iterator matePairItr;
+    std::map<const uint64_t, BT_IS>::iterator mateListItr;
+    std::map<const uint64_t, std::map<const uint64_t, BT_IS> >::iterator matePairItr;
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
             std::cout << "Checkpoint 1 iteration through every matePair\n";
             // seg faults here
-            if(mateListItr->second->getBT() == 0) {
+            if(mateListItr->second.getBT() == false) {
                 std::cout << "Seg fault 1\n";
-                if(trackAll.find(matePairItr->first) != trackAll.end() && trackAll[matePairItr->first]->getMultiple() == 1) { 
+                if(trackAll.find(matePairItr->first) != trackAll.end() && trackAll[matePairItr->first].getMultiple() == 1) { 
                     std::cout << "Seg fault 2\n";
-                    if(trackAll.find(mateListItr->first) != trackAll.end() && trackAll[mateListItr->first]->getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
+                    if(trackAll.find(mateListItr->first) != trackAll.end() && trackAll[mateListItr->first].getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
                 std::cout << "Checkpoint 2 (if both pairss multiple == 1)\n";
                 // below indicates this specific pair has been seen (bt = 1)
-                mateListItr->second->setBT(1);
-                uint64_t insert_size = matePair[matePairItr->first][mateListItr->first]->getIS();
+                mateListItr->second.setBT(true);
+                uint64_t insert_size = matePair[matePairItr->first][mateListItr->first].getIS();
                 int min_allowed = -1 * (insertStdev * insert_size); // check int
                 int low_iz = insert_size + min_allowed; // check int
                 int up_iz = insert_size - min_allowed; // check int
                 if(verbose) std::cout << "Pair read1Hash=" << matePairItr->first << " read2Hash=" << mateListItr->first << "\n";
 
-                if(trackAll[matePairItr->first]->getTig() != "" && trackAll[mateListItr->first]->getTig() != "") {
+                if(trackAll[matePairItr->first].getTig() != "" && trackAll[mateListItr->first].getTig() != "") {
                     std::cout << "Checkpoint 3 (if both reads are found in trackAll)\n";
                     ct_both++;
                     if(ct_both_hash.find(insert_size) == ct_both_hash.end()) {
@@ -618,8 +620,8 @@ void pairContigs(
                     } else {
                         ct_both_hash[insert_size] = ct_both_hash[insert_size] + 1;
                     }
-                    std::string tig_a = trackAll[matePairItr->first]->getTig();
-                    std::string tig_b = trackAll[mateListItr->first]->getTig();
+                    std::string tig_a = trackAll[matePairItr->first].getTig();
+                    std::string tig_b = trackAll[mateListItr->first].getTig();
 
                     std::string ftig_a = "f" + tig_a;
                     std::string ftig_b = "f" + tig_b;
@@ -628,19 +630,19 @@ void pairContigs(
                     std::string rtig_b = "r" + tig_b;
 
                     uint64_t A_length = tigLength[tig_a];
-                    uint64_t A_start = trackAll[matePairItr->first]->getStart();
-                    uint64_t A_end = trackAll[matePairItr->first]->getEnd();
+                    uint64_t A_start = trackAll[matePairItr->first].getStart();
+                    uint64_t A_end = trackAll[matePairItr->first].getEnd();
 
                     uint64_t B_length = tigLength[tig_b];
-                    uint64_t B_start = trackAll[mateListItr->first]->getStart();
-                    uint64_t B_end = trackAll[mateListItr->first]->getEnd();
+                    uint64_t B_start = trackAll[mateListItr->first].getStart();
+                    uint64_t B_end = trackAll[mateListItr->first].getEnd();
 
                     if(tig_a != tig_b) { // paired reads located on <> contigs
                         std::cout << "Checkpoint 4 (if tigs are different)\n";
                         //Determine most likely possibility
-                        if(trackAll[matePairItr->first]->getStart() < trackAll[matePairItr->first]->getEnd()) {
+                        if(trackAll[matePairItr->first].getStart() < trackAll[matePairItr->first].getEnd()) {
                             std::cout << "Checkpoint 5 (A.start < A.end)";
-                            if(trackAll[mateListItr->first]->getEnd() < trackAll[mateListItr->first]->getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
+                            if(trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
                                 std::cout << "Checkpoint 6 (B.end < B.start)";
                                 uint64_t distance = getDistance(insert_size, A_length, A_start, B_start);
                                 if(verbose) std::cout << "A-> <-B  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,Bstart\n";
@@ -649,18 +651,18 @@ void pairContigs(
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
                                         std::cout << "Checkpoint 7.1 adding to pair new GAPSLINKS";
-                                        pair[ftig_a][isz][rtig_b] = new Gaps_Links();
+                                        pair[ftig_a][isz][rtig_b] = Gaps_Links();
                                     } else {
                                         std::cout << "Checkpoint 7.2 adding to pair existing gapslings";
-                                        pair[ftig_a][isz][rtig_b]->addToGap(distance);
-                                        pair[ftig_a][isz][rtig_b]->incrementLinks();
+                                        pair[ftig_a][isz][rtig_b].addToGap(distance);
+                                        pair[ftig_a][isz][rtig_b].incrementLinks();
                                     }
                                     if(pair.find(rtig_b) == pair.end() || pair[rtig_b].find(isz) == pair[rtig_b].end() || pair[rtig_b][isz].find(rtig_a) == pair[rtig_b][isz].end()) {
                                         std::cout << "Checkpoint 7.3 adding to pair new GAPSLINKSs";
-                                        pair[rtig_b][isz][rtig_a] = new Gaps_Links();
+                                        pair[rtig_b][isz][rtig_a] = Gaps_Links();
                                     } else {
-                                        pair[rtig_b][isz][rtig_a]->addToGap(distance);
-                                        pair[rtig_b][isz][rtig_a]->incrementLinks();
+                                        pair[rtig_b][isz][rtig_a].addToGap(distance);
+                                        pair[rtig_b][isz][rtig_a].incrementLinks();
                                     }
                                     if(tig_a < tig_b) {
                                         order1 = tig_a;
@@ -670,9 +672,9 @@ void pairContigs(
                                         order2 = tig_a;
                                     }
                                     // Check if exists
-                                    simplePair[order1][order2] = new Gaps_Links("11");
-                                    simplePair[order1][order2]->incrementLinks();
-                                    simplePair[order1][order2]->addToGap(distance);
+                                    simplePair[order1][order2] = Gaps_Links("11");
+                                    simplePair[order1][order2].incrementLinks();
+                                    simplePair[order1][order2].addToGap(distance);
                                     
                                     ct_ok_pairs++;
                                     if(ct_ok_pairs_hash.find(insert_size) == ct_ok_pairs_hash.end()) {
@@ -683,10 +685,10 @@ void pairContigs(
                                 } else {
                                     std::string err_pair = ftig_a + "-" + ftig_b;
                                     if(err.find(err_pair) == err.end()) {
-                                        err[err_pair] = new Gaps_Links(distance, 1);
+                                        err[err_pair] = Gaps_Links(distance, 1);
                                     } else {
-                                        err[err_pair]->addToGap(distance);
-                                        err[err_pair]->incrementLinks();
+                                        err[err_pair].addToGap(distance);
+                                        err[err_pair].incrementLinks();
                                     }
                                     ct_problem_pairs++;
                                     if(ct_problem_pairs_hash.find(insert_size) == ct_problem_pairs_hash.end()) {
@@ -705,19 +707,19 @@ void pairContigs(
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
                                         std::cout << "Checkpoint 10.2\n";
-                                        pair[ftig_a][isz][rtig_b] = new Gaps_Links();
+                                        pair[ftig_a][isz][rtig_b] = Gaps_Links();
                                     } else {
                                         std::cout << "Checkpoint 10.3\n";
-                                        pair[ftig_a][isz][rtig_b]->addToGap(distance);
-                                        pair[ftig_a][isz][rtig_b]->incrementLinks();
+                                        pair[ftig_a][isz][rtig_b].addToGap(distance);
+                                        pair[ftig_a][isz][rtig_b].incrementLinks();
                                     }
                                     if(pair.find(ftig_b) == pair.end() || pair[ftig_b].find(isz) == pair[ftig_b].end() || pair[ftig_b][isz].find(rtig_a) == pair[ftig_b][isz].end()) {
                                         std::cout << "Checkpoint 10.4\n";
-                                        pair[ftig_b][isz][rtig_a] = new Gaps_Links();
+                                        pair[ftig_b][isz][rtig_a] = Gaps_Links();
                                     } else {
                                         std::cout << "Checkpoint 10.5\n";
-                                        pair[ftig_b][isz][rtig_a]->addToGap(distance);
-                                        pair[ftig_b][isz][rtig_a]->incrementLinks();
+                                        pair[ftig_b][isz][rtig_a].addToGap(distance);
+                                        pair[ftig_b][isz][rtig_a].incrementLinks();
                                     }
                                     if(tig_a < tig_b) {
                                         order1 = tig_a;
@@ -726,9 +728,9 @@ void pairContigs(
                                         order1 = tig_b;
                                         order2 = tig_a;
                                     }
-                                    simplePair[order1][order2] = new Gaps_Links("10");
-                                    simplePair[order1][order2]->incrementLinks();
-                                    simplePair[order1][order2]->addToGap(distance);
+                                    simplePair[order1][order2] = Gaps_Links("10");
+                                    simplePair[order1][order2].incrementLinks();
+                                    simplePair[order1][order2].addToGap(distance);
                                     
                                     ct_ok_pairs++;
                                     if(ct_ok_pairs_hash.find(insert_size) == ct_ok_pairs_hash.end()) {
@@ -739,10 +741,10 @@ void pairContigs(
                                 } else {
                                     std::string err_pair = ftig_a + "-" + rtig_b;
                                     if(err.find(err_pair) == err.end()) {
-                                        err[err_pair] = new Gaps_Links(distance, 1);
+                                        err[err_pair] = Gaps_Links(distance, 1);
                                     } else {
-                                        err[err_pair]->addToGap(distance);
-                                        err[err_pair]->incrementLinks();
+                                        err[err_pair].addToGap(distance);
+                                        err[err_pair].incrementLinks();
                                     }
                                     ct_problem_pairs++;
                                     if(ct_problem_pairs_hash.find(insert_size) == ct_problem_pairs_hash.end()) {
@@ -755,26 +757,26 @@ void pairContigs(
                             }
                         } else {
                             // if ({read_b}{'end'} > {$read_b}{'start'}
-                            if(trackAll[mateListItr->first]->getEnd() > trackAll[mateListItr->first]->getStart()) {
+                            if(trackAll[mateListItr->first].getEnd() > trackAll[mateListItr->first].getStart()) {
                                 uint64_t distance = getDistance(insert_size, B_length, B_start, A_start);
                                 if(verbose) std::cout << "B-> <-A  WITH " << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Blen, Bstart,Astart\n";
                                 if(distance >= min_allowed) {
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_b) == pair.end() || pair[ftig_b].find(isz) == pair[ftig_b].end() || pair[ftig_b][isz].find(ftig_a) == pair[ftig_b][isz].end()) {
                                         std::cout << "Checkpoint 11.1\n";
-                                        pair[ftig_b][isz][ftig_a] = new Gaps_Links();
+                                        pair[ftig_b][isz][ftig_a] = Gaps_Links();
                                     } else {
                                         std::cout << "Checkpoint 11.2\n";
-                                        pair[ftig_b][isz][ftig_a]->addToGap(distance);
-                                        pair[ftig_b][isz][ftig_a]->incrementLinks();
+                                        pair[ftig_b][isz][ftig_a].addToGap(distance);
+                                        pair[ftig_b][isz][ftig_a].incrementLinks();
                                     }
                                     if(pair.find(rtig_a) == pair.end() || pair[rtig_a].find(isz) == pair[rtig_a].end() || pair[rtig_a][isz].find(rtig_b) == pair[rtig_a][isz].end()) {
                                         std::cout << "Checkpoint 11.3\n";
-                                        pair[rtig_a][isz][rtig_b] = new Gaps_Links();
+                                        pair[rtig_a][isz][rtig_b] = Gaps_Links();
                                     } else {
                                         std::cout << "Checkpoint 11.4\n";
-                                        pair[rtig_a][isz][rtig_b]->addToGap(distance);
-                                        pair[rtig_a][isz][rtig_b]->incrementLinks();
+                                        pair[rtig_a][isz][rtig_b].addToGap(distance);
+                                        pair[rtig_a][isz][rtig_b].incrementLinks();
                                     }
                                     if(tig_a < tig_b) {
                                         order1 = tig_a;
@@ -783,9 +785,9 @@ void pairContigs(
                                         order1 = tig_b;
                                         order2 = tig_a;
                                     }
-                                    simplePair[order1][order2] = new Gaps_Links("11");
-                                    simplePair[order1][order2]->incrementLinks();
-                                    simplePair[order1][order2]->addToGap(distance);
+                                    simplePair[order1][order2] = Gaps_Links("11");
+                                    simplePair[order1][order2].incrementLinks();
+                                    simplePair[order1][order2].addToGap(distance);
                                     
                                     ct_ok_pairs++;
                                     if(ct_ok_pairs_hash.find(insert_size) == ct_ok_pairs_hash.end()) {
@@ -796,10 +798,10 @@ void pairContigs(
                                 } else {
                                     std::string err_pair = ftig_b + "-" + ftig_a;
                                     if(err.find(err_pair) == err.end()) {
-                                        err[err_pair] = new Gaps_Links(distance, 1);
+                                        err[err_pair] = Gaps_Links(distance, 1);
                                     } else {
-                                        err[err_pair]->addToGap(distance);
-                                        err[err_pair]->incrementLinks();
+                                        err[err_pair].addToGap(distance);
+                                        err[err_pair].incrementLinks();
                                     }
                                     ct_problem_pairs++;
                                     if(ct_problem_pairs_hash.find(insert_size) == ct_problem_pairs_hash.end()) {
@@ -817,19 +819,19 @@ void pairContigs(
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(rtig_b) == pair.end() || pair[rtig_b].find(isz) == pair[rtig_b].end() || pair[rtig_b][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
                                         std::cout << "Checkpoint 12.1\n";
-                                        pair[rtig_b][isz][ftig_a] = new Gaps_Links();
+                                        pair[rtig_b][isz][ftig_a] = Gaps_Links();
                                     } else {
                                         std::cout << "Checkpoint 12.2\n";
-                                        pair[rtig_b][isz][ftig_a]->addToGap(distance);
-                                        pair[rtig_b][isz][ftig_a]->incrementLinks();
+                                        pair[rtig_b][isz][ftig_a].addToGap(distance);
+                                        pair[rtig_b][isz][ftig_a].incrementLinks();
                                     }
                                     if(pair.find(rtig_a) == pair.end() || pair[rtig_a].find(isz) == pair[rtig_a].end() || pair[rtig_a][isz].find(ftig_b) == pair[rtig_a][isz].end()) {
                                         std::cout << "Checkpoint 12.3\n";
-                                        pair[rtig_a][isz][ftig_b] = new Gaps_Links();
+                                        pair[rtig_a][isz][ftig_b] = Gaps_Links();
                                     } else {
                                         std::cout << "Checkpoint 12.4\n";
-                                        pair[rtig_a][isz][ftig_b]->addToGap(distance);
-                                        pair[rtig_a][isz][ftig_b]->incrementLinks();
+                                        pair[rtig_a][isz][ftig_b].addToGap(distance);
+                                        pair[rtig_a][isz][ftig_b].incrementLinks();
                                     }
                                     if(tig_a < tig_b) {
                                         order1 = tig_a;
@@ -838,9 +840,9 @@ void pairContigs(
                                         order1 = tig_b;
                                         order2 = tig_a;
                                     }
-                                    simplePair[order1][order2] = new Gaps_Links("01");
-                                    simplePair[order1][order2]->incrementLinks();
-                                    simplePair[order1][order2]->addToGap(distance);
+                                    simplePair[order1][order2] = Gaps_Links("01");
+                                    simplePair[order1][order2].incrementLinks();
+                                    simplePair[order1][order2].addToGap(distance);
                                     
                                     ct_ok_pairs++;
                                     if(ct_ok_pairs_hash.find(insert_size) == ct_ok_pairs_hash.end()) {
@@ -851,10 +853,10 @@ void pairContigs(
                                 } else {
                                     std::string err_pair = rtig_b + "-" + ftig_a;
                                     if(err.find(err_pair) == err.end()) {
-                                        err[err_pair] = new Gaps_Links(distance, 1);
+                                        err[err_pair] = Gaps_Links(distance, 1);
                                     } else {
-                                        err[err_pair]->addToGap(distance);
-                                        err[err_pair]->incrementLinks();
+                                        err[err_pair].addToGap(distance);
+                                        err[err_pair].incrementLinks();
                                     }
                                     ct_problem_pairs++;
                                     if(ct_problem_pairs_hash.find(insert_size) == ct_problem_pairs_hash.end()) {
@@ -867,7 +869,7 @@ void pairContigs(
                             }
                         }
                     } else { // Clone, paired reads located on the same contig -- could be used to investigate misassemblies
-                        if (verbose) std::cout << "Pair (" << trackAll[matePairItr->first] << "-> and " << trackAll[mateListItr->first] << ") located on same contig " << tig_a << " (" << A_length << " nt)\n";
+                        if (verbose) std::cout << "Pair (" << matePairItr->first << " and " << mateListItr->first << ") located on same contig " << tig_a << " (" << A_length << " nt)\n";
                         uint64_t pet_size = 0;
                         if(A_start > B_start && (B_start < B_end) && (A_start > A_end)) {   // B --> <-- A
                             pet_size = A_start - B_start;
@@ -880,7 +882,7 @@ void pairContigs(
                                     ct_ok_contig_hash[insert_size] = ct_ok_contig_hash[insert_size] + 1;
                                 }
                             } else {
-                                std::cout <<"Pairs unsatisfied in distance within a contig.  Pair (" << trackAll[matePairItr->first] << " - " << trackAll[mateListItr->first] << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
+                                std::cout <<"Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
                                 ct_iz_issues++;
                                 if(ct_iz_issues_hash.find(insert_size) == ct_iz_issues_hash.end()) {
                                     ct_iz_issues_hash[insert_size] = 1;
@@ -899,7 +901,7 @@ void pairContigs(
                                     ct_ok_contig_hash[insert_size] = ct_ok_contig_hash[insert_size] + 1;
                                 }
                             } else {
-                                std::cout <<"Pairs unsatisfied in distance within a contig.  Pair (" << trackAll[matePairItr->first] << " - " << trackAll[mateListItr->first] << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+                                std::cout <<"Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
                                 ct_iz_issues++;
                                 if(ct_iz_issues_hash.find(insert_size) == ct_iz_issues_hash.end()) {
                                     ct_iz_issues_hash[insert_size] = 1;
@@ -914,7 +916,7 @@ void pairContigs(
                             } else {
                                 ct_illogical_hash[insert_size] = ct_illogical_hash[insert_size] + 1;
                             }
-                            std::cout << "Pairs unsatisfied in pairing logic within a contig.  Pair (" << trackAll[matePairItr->first] << " - " << trackAll[mateListItr->first] << ") on contig" << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+                            std::cout << "Pairs unsatisfied in pairing logic within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig" << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
                         }
                     }
                 } else { // both pairs assembled
@@ -927,7 +929,7 @@ void pairContigs(
                 }
             }}} else { // if unseen
                 std::cout << "UNSEEN\n";
-                if(matePair[matePairItr->first][mateListItr->first]->getBT() == 0) {
+                if(matePair[matePairItr->first][mateListItr->first].getBT() == false) {
                     std::cout << "UNSEEN getBT() increment ct\n";
                     ct_multiple++;
                 }
@@ -940,13 +942,13 @@ void pairContigs(
     std::cout << "------------- Putative issues with contig pairing - Summary  ----------------\n";
     std::cout << "err map size: " << err.size() << "\n"; 
     sortErr(err);
-    std::map<std::string, Gaps_Links*>::iterator errItr;
+    std::map<std::string, Gaps_Links>::iterator errItr;
     for(errItr = err.begin(); errItr != err.end(); errItr++) {
         double mean_iz = 0;
-        if(errItr->second->getLinks()) {
-            mean_iz = errItr->second->getGaps() / errItr->second->getLinks();
+        if(errItr->second.getLinks()) {
+            mean_iz = errItr->second.getGaps() / errItr->second.getLinks();
         }
-        std::cout << "Pair " << errItr->first << " has " << errItr->second->getLinks() << " Links and mean distance of = " << mean_iz << "\n";
+        std::cout << "Pair " << errItr->first << " has " << errItr->second.getLinks() << " Links and mean distance of = " << mean_iz << "\n";
     }
 
     uint64_t satisfied = ct_ok_pairs + ct_ok_contig;
@@ -996,14 +998,14 @@ void pairContigs(
     // TIGPAIR CHECKPOINT
     std::ofstream tigpairCheckpointFile;
     tigpairCheckpointFile.open (tigpair_checkpoint);
-    std::map<std::string, std::map<uint64_t, std::map<std::string, Gaps_Links *> > >::iterator pairItr;
+    std::map<std::string, std::map<uint64_t, std::map<std::string, Gaps_Links> > >::iterator pairItr;
     std::cout << "size of TIGPAIR: " << pair.size() << "\n";
     for(pairItr = pair.begin(); pairItr != pair.end(); pairItr++) {
-        std::map<uint64_t, std::map<std::string, Gaps_Links *> >::iterator insertSizes;
+        std::map<uint64_t, std::map<std::string, Gaps_Links> >::iterator insertSizes;
         for(insertSizes = pairItr->second.begin(); insertSizes != pairItr->second.end(); insertSizes++) {
-            std::map<std::string, Gaps_Links *>::iterator secPairItr;
+            std::map<std::string, Gaps_Links>::iterator secPairItr;
             for(secPairItr = insertSizes->second.begin(); secPairItr != insertSizes->second.end(); secPairItr++) {
-                tigpairCheckpointFile << insertSizes->first /*distance*/ << "\t" << pairItr->first << "\t" << secPairItr->second  << "\t" << secPairItr->second->getLinks()  << "\t" << secPairItr->second->getGaps() << "\n";
+                tigpairCheckpointFile << insertSizes->first /*distance*/ << "\t" << pairItr->first << "\t" << secPairItr->first  << "\t" << secPairItr->second.getLinks()  << "\t" << secPairItr->second.getGaps() << "\n";
             }
         }
     }
@@ -1061,10 +1063,10 @@ inline bool exists(const std::string& name) {
 
 
 //**********SORTER*********
-bool cmpErr(std::pair<std::string, Gaps_Links*>& a, 
-         std::pair<std::string, Gaps_Links*>& b) 
+bool cmpErr(std::pair<std::string, Gaps_Links>& a, 
+         std::pair<std::string, Gaps_Links>& b) 
 { 
-    return a.second->getLinks() < b.second->getLinks(); 
+    return a.second.getLinks() < b.second.getLinks(); 
 }
 
 bool cmpIS(std::pair<uint64_t, uint64_t>& a, 
@@ -1075,15 +1077,15 @@ bool cmpIS(std::pair<uint64_t, uint64_t>& a,
   
 // // Function to sort the map according 
 // // to value in a (key-value) pairs 
-void sortErr(std::map<std::string, Gaps_Links*>& M) 
+void sortErr(std::map<std::string, Gaps_Links>& M) 
 { 
   
     // Declare vector of pairs 
-    std::vector<std::pair<std::string, Gaps_Links*> > A; 
+    std::vector<std::pair<std::string, Gaps_Links> > A; 
   
     // Copy key-value pair from Map 
     // to vector of pairs 
-    // std::map<std::string, Gaps_Links*>::iterator itr;
+    // std::map<std::string, Gaps_Links>::iterator itr;
     // for(itr = M.begin(); itr != M.end(); itr++) {
     //     A.push_back(itr);
     // }
@@ -1098,7 +1100,7 @@ void sortErr(std::map<std::string, Gaps_Links*>& M)
     for (auto& it : A) { 
   
         std::cout << it.first << ' '
-             << it.second->getLinks(); 
+             << it.second.getLinks(); 
     } 
 } 
 
@@ -1110,7 +1112,7 @@ void sortInsertSize(std::map<uint64_t, uint64_t>& M)
   
     // Copy key-value pair from Map 
     // to vector of pairs 
-    // std::map<std::string, Gaps_Links*>::iterator itr;
+    // std::map<std::string, Gaps_Links>::iterator itr;
     // for(itr = M.begin(); itr != M.end(); itr++) {
     //     A.push_back(itr);
     // }
