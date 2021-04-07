@@ -27,8 +27,12 @@ class BT_IS {
     // uint64_t distance;
     
     public:
-    BT_IS(const BT_IS&) = default;
-    BT_IS(BT_IS&&) = default;
+    // BT_IS(const BT_IS&) = default;
+    // BT_IS(BT_IS&&) = default;
+    BT_IS() {
+        this->bt = 0;
+        this-> is = 0;
+    }
     BT_IS(bool bt, uint64_t is) {
         this->bt = bt;
         this-> is = is;
@@ -306,23 +310,23 @@ class InputParser {
 };
 
 // Helper Methods
-void sortErr(std::map<std::string, Gaps_Links>& M);
-void sortInsertSize(std::map<uint64_t, uint64_t>& M);
+void sortErr(std::unordered_map<std::string, Gaps_Links>& M);
+void sortInsertSize(std::unordered_map<uint64_t, uint64_t>& M);
 void printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os);
 long getFileSize(std::string filename);
 void readContigs(
         std::string assemblyFile,
-        std::map<const uint64_t, KmerInfo >& trackAll,
-        std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair,
-        std::map<std::string, uint64_t>& tigLength,
+        std::unordered_map<uint64_t, KmerInfo >& trackAll,
+        std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
+        std::unordered_map<std::string, uint64_t>& tigLength,
         uint64_t k,
         uint64_t minSize,
         uint64_t hashFcts);
 void pairContigs(
     std::string longReadsFile,
-    std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair,
-    std::map<const uint64_t, KmerInfo > trackAll,
-    std::map<std::string, uint64_t> tigLength,
+    std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
+    std::unordered_map<uint64_t, KmerInfo > trackAll,
+    std::unordered_map<std::string, uint64_t> tigLength,
     std::string issues,
     std::string distribution,
     uint64_t totalPairs,
@@ -447,7 +451,7 @@ int main(int argc, char** argv) {
     // myFilter.storeFilter(outfile);
 
     // k-merize long reads
-    std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair;
+    std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair;
 
     btllib::BloomFilter& filtering = myFilter.get_bloom_filter();
     btllib::SeqReader longReader(linksArgParser.longFile);
@@ -479,8 +483,8 @@ int main(int argc, char** argv) {
     std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
     
     
-    std::map<const uint64_t, KmerInfo> trackAll;
-    std::map<std::string, uint64_t> tigLength;
+    std::unordered_map<uint64_t, KmerInfo> trackAll;
+    std::unordered_map<std::string, uint64_t> tigLength;
     std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
     // Read contigs to find where the long read kmers belong in
     readContigs(linksArgParser.assemblyFile, trackAll, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct);
@@ -512,8 +516,8 @@ int main(int argc, char** argv) {
 }
 
 void kmerizeContig( std::string seq, 
-                    std::map<const uint64_t, KmerInfo>& trackAll,
-                    std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair,
+                    std::unordered_map<uint64_t, KmerInfo>& trackAll,
+                    std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
                     uint64_t k,
                     std::string head,
                     uint64_t hashFcts,
@@ -543,9 +547,9 @@ void kmerizeContig( std::string seq,
 
 void readContigs(
         std::string assemblyFile,
-        std::map<const uint64_t, KmerInfo>& trackAll,
-        std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair,
-        std::map<std::string, uint64_t>& tigLength,
+        std::unordered_map<uint64_t, KmerInfo>& trackAll,
+        std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
+        std::unordered_map<std::string, uint64_t>& tigLength,
         uint64_t k,
         uint64_t minSize,
         uint64_t hashFcts) {
@@ -571,9 +575,9 @@ void readContigs(
 
 void pairContigs(
     std::string longReadsFile,
-    std::map<const uint64_t, std::map<const uint64_t, BT_IS> > matePair,
-    std::map<const uint64_t, KmerInfo> trackAll,
-    std::map<std::string, uint64_t> tigLength,
+    std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
+    std::unordered_map<uint64_t, KmerInfo> trackAll,
+    std::unordered_map<std::string, uint64_t> tigLength,
     std::string issues,
     std::string distribution,
     uint64_t totalPairs,
@@ -583,17 +587,17 @@ void pairContigs(
     float insertStdev) {
 
     uint64_t ct_illogical = 0, ct_ok_contig = 0, ct_ok_pairs = 0, ct_problem_pairs = 0, ct_iz_issues = 0, ct_single = 0, ct_multiple = 0, ct_both = 0, trackInsert = 0;
-    std::map<uint64_t, uint64_t> ct_single_hash, ct_both_hash, ct_illogical_hash, ct_ok_contig_hash, ct_ok_pairs_hash, ct_problem_pairs_hash, ct_iz_issues_hash;
+    std::unordered_map<uint64_t, uint64_t> ct_single_hash, ct_both_hash, ct_illogical_hash, ct_ok_contig_hash, ct_ok_pairs_hash, ct_problem_pairs_hash, ct_iz_issues_hash;
     // Mapping of tiga_head -> insertSize -> tigb_head -> links & gaps
-    std::map<std::string, std::map<uint64_t, std::map<std::string, Gaps_Links> > > pair;
-    std::map<std::string, std::map<std::string, Gaps_Links> >simplePair;
-    std::map<std::string, Gaps_Links> err;
+    std::unordered_map<std::string, std::unordered_map<uint64_t, std::unordered_map<std::string, Gaps_Links> > > pair;
+    std::unordered_map<std::string, std::unordered_map<std::string, Gaps_Links> >simplePair;
+    std::unordered_map<std::string, Gaps_Links> err;
     std::string order1;
     std::string order2;
     if(verbose) std::cout << "Pairing contigs...\n";
     
-    std::map<const uint64_t, BT_IS>::iterator mateListItr;
-    std::map<const uint64_t, std::map<const uint64_t, BT_IS> >::iterator matePairItr;
+    std::unordered_map<uint64_t, BT_IS>::iterator mateListItr;
+    std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> >::iterator matePairItr;
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
             std::cout << "Checkpoint 1 iteration through every matePair\n";
@@ -942,7 +946,7 @@ void pairContigs(
     std::cout << "------------- Putative issues with contig pairing - Summary  ----------------\n";
     std::cout << "err map size: " << err.size() << "\n"; 
     sortErr(err);
-    std::map<std::string, Gaps_Links>::iterator errItr;
+    std::unordered_map<std::string, Gaps_Links>::iterator errItr;
     for(errItr = err.begin(); errItr != err.end(); errItr++) {
         double mean_iz = 0;
         if(errItr->second.getLinks()) {
@@ -969,7 +973,7 @@ void pairContigs(
     std::cout << "\t---\n";
     std::cout << "Total satisfied: " << satisfied << "\tunsatisfied: " << unsatisfied << "\n\nBreakdown by distances (-d):\n";
     sortInsertSize(ct_both_hash);
-    std::map<uint64_t, uint64_t>::iterator itrIS;
+    std::unordered_map<uint64_t, uint64_t>::iterator itrIS;
     std::cout << "ct_both_hash map size: " << err.size() << "\n"; 
     for(itrIS = ct_both_hash.begin(); itrIS != ct_both_hash.end(); itrIS++) {
         std::cout <<  "--------k-mers separated by "<< itrIS->first << " bp (outer distance)--------\n";
@@ -998,12 +1002,12 @@ void pairContigs(
     // TIGPAIR CHECKPOINT
     std::ofstream tigpairCheckpointFile;
     tigpairCheckpointFile.open (tigpair_checkpoint);
-    std::map<std::string, std::map<uint64_t, std::map<std::string, Gaps_Links> > >::iterator pairItr;
+    std::unordered_map<std::string, std::unordered_map<uint64_t, std::unordered_map<std::string, Gaps_Links> > >::iterator pairItr;
     std::cout << "size of TIGPAIR: " << pair.size() << "\n";
     for(pairItr = pair.begin(); pairItr != pair.end(); pairItr++) {
-        std::map<uint64_t, std::map<std::string, Gaps_Links> >::iterator insertSizes;
+        std::unordered_map<uint64_t, std::unordered_map<std::string, Gaps_Links> >::iterator insertSizes;
         for(insertSizes = pairItr->second.begin(); insertSizes != pairItr->second.end(); insertSizes++) {
-            std::map<std::string, Gaps_Links>::iterator secPairItr;
+            std::unordered_map<std::string, Gaps_Links>::iterator secPairItr;
             for(secPairItr = insertSizes->second.begin(); secPairItr != insertSizes->second.end(); secPairItr++) {
                 tigpairCheckpointFile << insertSizes->first /*distance*/ << "\t" << pairItr->first << "\t" << secPairItr->first  << "\t" << secPairItr->second.getLinks()  << "\t" << secPairItr->second.getGaps() << "\n";
             }
@@ -1077,7 +1081,7 @@ bool cmpIS(std::pair<uint64_t, uint64_t>& a,
   
 // // Function to sort the map according 
 // // to value in a (key-value) pairs 
-void sortErr(std::map<std::string, Gaps_Links>& M) 
+void sortErr(std::unordered_map<std::string, Gaps_Links>& M) 
 { 
   
     // Declare vector of pairs 
@@ -1085,7 +1089,7 @@ void sortErr(std::map<std::string, Gaps_Links>& M)
   
     // Copy key-value pair from Map 
     // to vector of pairs 
-    // std::map<std::string, Gaps_Links>::iterator itr;
+    // std::unordered_map<std::string, Gaps_Links>::iterator itr;
     // for(itr = M.begin(); itr != M.end(); itr++) {
     //     A.push_back(itr);
     // }
@@ -1104,7 +1108,7 @@ void sortErr(std::map<std::string, Gaps_Links>& M)
     } 
 } 
 
-void sortInsertSize(std::map<uint64_t, uint64_t>& M) 
+void sortInsertSize(std::unordered_map<uint64_t, uint64_t>& M) 
 { 
   
     // Declare vector of pairs 
@@ -1112,7 +1116,7 @@ void sortInsertSize(std::map<uint64_t, uint64_t>& M)
   
     // Copy key-value pair from Map 
     // to vector of pairs 
-    // std::map<std::string, Gaps_Links>::iterator itr;
+    // std::unordered_map<std::string, Gaps_Links>::iterator itr;
     // for(itr = M.begin(); itr != M.end(); itr++) {
     //     A.push_back(itr);
     // }
