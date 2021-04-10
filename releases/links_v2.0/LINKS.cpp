@@ -531,7 +531,7 @@ void kmerizeContig( std::string seq,
         // roll for the steps
         // for (int j < step)
         std::cout << "Roll no " << std::to_string(i);
-	if(matePair.find(ntHashContig.hashes()[0]) != matePair.end()) {
+	    if(matePair.find(ntHashContig.hashes()[0]) != matePair.end()) {
             tmpCounter++;
             if(trackAll.find(ntHashContig.hashes()[0]) == trackAll.end()) {
                 trackAll[ntHashContig.hashes()[0]] = KmerInfo(head, i, i + k);
@@ -565,9 +565,6 @@ void readContigs(
         if(record.seq.length() >= minSize) {
             std::cout << "Kmerizing contig\n";
             // std::cout << "seq:\n" << record.seq << "\n";
-            std::cout << "k:\n" << k << "\n";
-            std::cout << "hashFcts:\n" << hashFcts << "\n";
-            // std::cout << "head:\n" << record.name << "\n";
             kmerizeContig(record.seq, trackAll, matePair, k, record.name, hashFcts, cttig, tmpCounter);
         }
     }
