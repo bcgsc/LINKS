@@ -496,7 +496,17 @@ int main(int argc, char** argv) {
 
 btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser) {
     btllib::KmerBloomFilter * assemblyBF;
-    if(linksArgParser.bfFile == "") {
+    if(linksArgParser.bfFile != "") {
+        std::cout << "A Bloom filter was supplied (" << linksArgParser.bfFile << ") and will be used instead of building a new one from -f " << linksArgParser.assemblyFile << "\n";
+        if(!does_file_exist(linksArgParser.bfFile)) {
+            std::cout << "\nInvalid file: " << linksArgParser.bfFile <<  " -- fatal\n";
+            exit;
+        } else {
+            std::cout << "Checking Bloom filter file " << linksArgParser.bfFile <<"...ok\n";
+        }
+        std::cout << "Loading bloom filter of size " << getFileSize(linksArgParser.bfFile) << " from " << linksArgParser.bfFile << "\n";
+        assemblyBF = new btllib::KmerBloomFilter(linksArgParser.bfFile);
+    } else {
         uint64_t m = ceil((-1 * (double)bfElements * log(linksArgParser.fpr)) / (log(2) * log(2)));
         uint64_t rem = 64 - (m % 64);
         m = ((uint64_t)(m / 8) + 1) * 8;
@@ -529,15 +539,7 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
         // assemblyruninfo += bfmsg;
         assemblyBF->write("mybffile.out");
         printBloomStats(*assemblyBF, std::cout);
-    } else {
-        std::cout << "A Bloom filter was supplied (" << linksArgParser.bfFile << ") and will be used instead of building a new one from -f " << linksArgParser.assemblyFile << "\n";
-        if(!does_file_exist(linksArgParser.bfFile)) {
-            std::cout << "\nInvalid file: " << linksArgParser.bfFile <<  " -- fatal\n";
-        } else {
-            std::cout << "Checking Bloom filter file " << linksArgParser.bfFile <<"...ok\n";
-        }
-        std::cout << "Loading bloom filter of size " << getFileSize(linksArgParser.bfFile) << " from " << linksArgParser.bfFile << "\n";
-        assemblyBF = new btllib::KmerBloomFilter(linksArgParser.bfFile);
+        
     }
     return assemblyBF;
 }
