@@ -181,6 +181,7 @@ class InputParser {
     std::string bfFile;
     float fpr = 0.001;
     uint64_t bfoff = 0;
+
     // std::string bfout = $base_name . ".bloom";
     // $base_name = $assemblyfile . ".scaff_s-" . $longfile . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
 
@@ -313,7 +314,9 @@ class InputParser {
 void sortErr(std::unordered_map<std::string, Gaps_Links>& M);
 void sortInsertSize(std::unordered_map<uint64_t, uint64_t>& M);
 void printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os);
-long getFileSize(std::string filename);
+bool does_file_exist(std::string fileName);
+btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser);
+uint64_t getFileSize(std::string filename);
 void readContigs(
         std::string assemblyFile,
         std::unordered_map<uint64_t, KmerInfo >& trackAll,
@@ -321,7 +324,7 @@ void readContigs(
         std::unordered_map<std::string, uint64_t>& tigLength,
         uint64_t k,
         uint64_t minSize,
-        uint64_t hashFcts);
+        unsigned hashFcts);
 void pairContigs(
     std::string longReadsFile,
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
@@ -351,8 +354,8 @@ int main(int argc, char** argv) {
     InputParser linksArgParser = InputParser(argc, argv);
 
     //Set Bloom Filter element number based on the size of the assembly file (1 byte = 1 character)
-    std::string path = linksArgParser.assemblyFile;
-    long bfElements = getFileSize(path);
+    std::string assemblyPath = linksArgParser.assemblyFile;
+    uint64_t bfElements = getFileSize(assemblyPath);
 
     // Checking validity of input assemble file
     if(bfElements == -1){
@@ -390,7 +393,9 @@ int main(int argc, char** argv) {
     std::string numnamecorr = linksArgParser.baseName + ".assembly_correspondence.tsv";
     std::string tigpair_checkpoint = linksArgParser.baseName + ".tigpair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
     std::string simplepair_checkpoint = linksArgParser.baseName + ".simplepair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
-    
+    std::string assemblyruninfo = "";
+    std::string reading_tigbloom_message = "";
+
     if(freopen(outlog.c_str(), "w", stderr ) == NULL) {
         std::cout << "Can't write to " << outlog << " -- fatal\n";
         return -1;
@@ -417,50 +422,24 @@ int main(int argc, char** argv) {
     
     std::cout << initMessage;
     std::cerr << initMessage;
+    assemblyruninfo += initMessage;
     //-----------------------------
-
-
-
-    uint64_t m = ceil((-1 * (double)bfElements * log(linksArgParser.fpr)) / (log(2) * log(2)));
-    uint64_t rem = 64 - (m % 64);
-    m = ((uint64_t)(m / 8) + 1) * 8;
-    std::cout << "HASHES CALC: " << std::to_string(((double)m / bfElements)) << " second: " << std::to_string(((double)m / bfElements) * log(2)) << "\n";
-    uint64_t hashFct = floor(((double)m / bfElements) * log(2));
-    std::cout << "- Number of bfElements: " << bfElements << "\n"
-                << "- Input file path: " << path << "\n"
-                << "- Input file: " << linksArgParser.assemblyFile << "\n"
-                << "- kmersize: " << linksArgParser.k << "\n"
-                << "- m: " << m << "\n"
-                << "- fpr: " << linksArgParser.fpr << "\n"
-                << "- hashFct: " << hashFct << "\n";
-
-    // std::cout << "- Filter output file : " << outFileBf << "\n";
-    std::cout << "- Filter output file : " << linksArgParser.k << "\n";
-    btllib::KmerBloomFilter myFilter(m/8, hashFct, linksArgParser.k);
-    btllib::SeqReader assemblyReader(linksArgParser.assemblyFile);
-    int builder = 0;
-    for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
-        if(builder % 100000 == 0) {
-            std::cout << "reading... builder: " << builder << "\n";
-        }
-                builder++;
-
-        myFilter.insert(record.seq);
-    }
-    printBloomStats(myFilter, std::cout);
+    btllib::KmerBloomFilter * myFilter;
+    makeBF(bfElements, linksArgParser);
+    unsigned hashFct = myFilter->get_hash_num();
     // myFilter.storeFilter(outfile);
 
     // k-merize long reads
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair;
 
-    btllib::BloomFilter& filtering = myFilter.get_bloom_filter();
+    btllib::BloomFilter& filtering = myFilter->get_bloom_filter();
     btllib::SeqReader longReader(linksArgParser.longFile);
     uint64_t counter = 0;
     uint64_t totalpairs = 0;
     uint64_t hits = 0;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
-        btllib::NtHash nthash(record.seq, linksArgParser.k, hashFct);
-        btllib::NtHash nthashLead(record.seq, linksArgParser.k, hashFct, linksArgParser.distances + linksArgParser.k);
+        btllib::NtHash nthash(record.seq, linksArgParser.k, myFilter->get_hash_num());
+        btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), linksArgParser.distances + linksArgParser.k);
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
             counter++;
@@ -515,12 +494,60 @@ int main(int argc, char** argv) {
     return 0;
 }
 
+btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser) {
+    btllib::KmerBloomFilter * assemblyBF;
+    if(linksArgParser.bfFile == "") {
+        uint64_t m = ceil((-1 * (double)bfElements * log(linksArgParser.fpr)) / (log(2) * log(2)));
+        uint64_t rem = 64 - (m % 64);
+        m = ((uint64_t)(m / 8) + 1) * 8;
+        std::cout << "HASHES CALC: " << std::to_string(((double)m / bfElements)) << " second: " << std::to_string(((double)m / bfElements) * log(2)) << "\n";
+        unsigned hashFct = floor(((double)m / bfElements) * log(2));
+        std::cout << "- Number of bfElements: " << bfElements << "\n"
+                    << "- Input file path: " << linksArgParser.bfFile << "\n"
+                    << "- Input file: " << linksArgParser.assemblyFile << "\n"
+                    << "- kmersize: " << linksArgParser.k << "\n"
+                    << "- m: " << m << "\n"
+                    << "- fpr: " << linksArgParser.fpr << "\n"
+                    << "- hashFct: " << hashFct << "\n";
+
+        std::string reading_tigbloom_message = "\n\n=>Reading contig/sequence assembly file : " + std::to_string(time(0)) + "\n";
+        // assemblyruninfo += reading_tigbloom_message;
+        // std::cout << "- Filter output file : " << outFileBf << "\n";
+        std::cout << "- Filter output file : " << linksArgParser.k << "\n";
+        assemblyBF = new btllib::KmerBloomFilter(m/8, hashFct, linksArgParser.k);
+        btllib::SeqReader assemblyReader(linksArgParser.assemblyFile);
+        int builder = 0;
+        for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
+            if(builder % 100000 == 0) {
+                std::cout << "reading... builder: " << builder << "\n";
+            }
+                    builder++;
+
+            assemblyBF->insert(record.seq);
+        }
+        std::string bfmsg = "\n\nWriting Bloom filter to disk (" + linksArgParser.bfFile + ") : " + std::to_string(time(0)) + "\n";
+        // assemblyruninfo += bfmsg;
+        assemblyBF->write("mybffile.out");
+        printBloomStats(*assemblyBF, std::cout);
+    } else {
+        std::cout << "A Bloom filter was supplied (" << linksArgParser.bfFile << ") and will be used instead of building a new one from -f " << linksArgParser.assemblyFile << "\n";
+        if(!does_file_exist(linksArgParser.bfFile)) {
+            std::cout << "\nInvalid file: " << linksArgParser.bfFile <<  " -- fatal\n";
+        } else {
+            std::cout << "Checking Bloom filter file " << linksArgParser.bfFile <<"...ok\n";
+        }
+        std::cout << "Loading bloom filter of size " << getFileSize(linksArgParser.bfFile) << " from " << linksArgParser.bfFile << "\n";
+        assemblyBF = new btllib::KmerBloomFilter(linksArgParser.bfFile);
+    }
+    return assemblyBF;
+}
+
 void kmerizeContig( std::string seq, 
                     std::unordered_map<uint64_t, KmerInfo>& trackAll,
                     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
                     uint64_t k,
                     std::string head,
-                    uint64_t hashFcts,
+                    unsigned hashFcts,
                     uint64_t step,
                     uint64_t &tmpCounter) {
 
@@ -553,7 +580,7 @@ void readContigs(
         std::unordered_map<std::string, uint64_t>& tigLength,
         uint64_t k,
         uint64_t minSize,
-        uint64_t hashFcts) {
+        unsigned hashFcts) {
     std::cout << "hashFct in readContig: " << hashFcts << "\n";
     uint64_t cttig = 0;
     btllib::SeqReader contigReader(assemblyFile);
@@ -1042,7 +1069,7 @@ void printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os)
 	   << "\n";
 }
 
-long getFileSize(std::string filename)
+uint64_t getFileSize(std::string filename)
 {
     // This buffer is a stat struct that the information is placed concerning the file.
     struct stat stat_buf;
@@ -1127,8 +1154,13 @@ void sortInsertSize(std::unordered_map<uint64_t, uint64_t>& M)
   
     // Print the sorted value 
     for (auto& it : A) { 
-  
         std::cout << it.first << ' '
              << it.second; 
     } 
 } 
+
+bool does_file_exist(std::string fileName)
+{
+    std::ifstream infile(fileName);
+    return infile.good();
+}
