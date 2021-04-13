@@ -528,16 +528,18 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
         btllib::SeqReader assemblyReader(linksArgParser.assemblyFile);
         int builder = 0;
         for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
-            if(builder % 100000 == 0) {
+            if(builder % 100 == 0) {
                 std::cout << "reading... builder: " << builder << "\n";
             }
-                    builder++;
+            builder++;
 
             assemblyBF->insert(record.seq);
         }
         std::string bfmsg = "\n\nWriting Bloom filter to disk (" + linksArgParser.bfFile + ") : " + std::to_string(time(0)) + "\n";
         // assemblyruninfo += bfmsg;
+        std::cout << bfmsg;
         assemblyBF->write("mybffile.out");
+        std::cout << "Done mybf, printing stats...\n"
         printBloomStats(*assemblyBF, std::cout);
         
     }
