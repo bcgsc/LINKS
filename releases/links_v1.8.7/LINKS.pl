@@ -529,6 +529,7 @@ sub readContigs{
    print $contigs_processed_message;
    print LOG $contigs_processed_message;
    ###
+   my $track_allCounter = 0;
    while(<IN>){
       chomp;
       if(/^\>(.*)/){
@@ -541,9 +542,9 @@ sub readContigs{
 
             my $tiglen = length($seq);
             if($tiglen >= $min_size){
-               $track_all = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
+               $track_all = &kmerizeContig($track_allCounter, uc($seq),$track_all,$matepair,$k,$cttig,0);
                my $revcomp = &reverseComplement($seq);
-               $track_all = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
+               $track_all = &kmerizeContig($track_allCounter, $revcomp,$track_all,$matepair,$k,$cttig,1);
                $tig_length->{$cttig} = $tiglen;
             }
          }
@@ -559,9 +560,9 @@ sub readContigs{
    $|++;
 
    if(length($seq) >= $min_size){
-      $track_all = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
+      $track_all = &kmerizeContig($track_allCounter, uc($seq),$track_all,$matepair,$k,$cttig,0);
       my $revcomp = &reverseComplement($seq);
-      $track_all = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
+      $track_all = &kmerizeContig($track_allCounter, $revcomp,$track_all,$matepair,$k,$cttig,1);
       $tig_length->{$cttig} = length($seq);
    }
    ###
@@ -825,11 +826,14 @@ sub kmerizeContigBloom{
 #----------------
 sub kmerizeContig{
 
-   my ($seq,$track_all,$matepair,$k,$head,$rc) = @_;
+   my ($track_allCounter,$seq,$track_all,$matepair,$k,$head,$rc) = @_;
 
    for(my $pos=0;$pos<=(length($seq)-$k);$pos++){
       my $rd = substr($seq,$pos,$k);
       if(defined $matepair->{$rd}){
+         if(defined $track_all->{$rd}) {
+            $track_allCounter++;
+         }
          $track_all->{$rd}{'tig'}   = $head;
          $track_all->{$rd}{'start'} = $pos;
          $track_all->{$rd}{'end'}   = $pos + $k;
