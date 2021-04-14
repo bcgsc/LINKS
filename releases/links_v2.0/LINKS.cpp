@@ -550,22 +550,22 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
     return assemblyBF;
 }
 
-void inline kmerizeContig( std::string seq, 
+void inline kmerizeContig( std::string *seq, 
                     std::unordered_map<uint64_t, KmerInfo>& trackAll,
-                    std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
+                    std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > *matePair,
                     uint64_t k,
                     std::string head,
                     unsigned hashFcts,
                     uint64_t step,
                     uint64_t &tmpCounter) {
 
-    btllib::NtHash ntHashContig(seq, k, hashFcts);
+    btllib::NtHash ntHashContig(*seq, k, hashFcts);
     int counter = 0;
     std::cout << "hashFct in kmerizeContig: " << hashFcts << "\n";
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
         // roll for every step
         std::cout << "Roll no " << std::to_string(counter) << "\n";
-	    if(matePair.find(ntHashContig.hashes()[0]) != matePair.end()) {
+	    if(matePair->find(ntHashContig.hashes()[0]) != matePair->end()) {
             tmpCounter++;
             if(trackAll.find(ntHashContig.hashes()[0]) == trackAll.end()) {
                 std::cout << "new\n";
@@ -600,7 +600,7 @@ void readContigs(
         if(record.seq.length() >= minSize) {
             std::cout << "Kmerizing contig\n";
             // std::cout << "seq:\n" << record.seq << "\n";
-            kmerizeContig(record.seq, trackAll, matePair, k, record.name, hashFcts, cttig, tmpCounter);
+            kmerizeContig(&record.seq, trackAll, &matePair, k, record.name, hashFcts, cttig, tmpCounter);
         }
     }
     std::cout << "*****THis is the tmpCounter *******: " << tmpCounter << "\n";
