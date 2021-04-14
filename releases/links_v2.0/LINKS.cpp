@@ -565,13 +565,14 @@ void kmerizeContig( std::string seq,
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
         // roll for the steps
         // for (int j < step)
-        std::cout << "Roll no " << std::to_string(i);
+        std::cout << "Roll no " << std::to_string(counter) << "\n";
 	    if(matePair.find(ntHashContig.hashes()[0]) != matePair.end()) {
             tmpCounter++;
             if(trackAll.find(ntHashContig.hashes()[0]) == trackAll.end()) {
+                std::cout << "new\n";
                 trackAll[ntHashContig.hashes()[0]] = KmerInfo(head, i, i + k);
             } else {
-                // std::cout << "kmer found in trackall! Increment multiple\n";
+                std::cout << "kmer found in trackall! Increment multiple\n";
                 trackAll[ntHashContig.hashes()[0]].incrementMultiple();
             }
         }
