@@ -594,7 +594,7 @@ void readContigs(
     btllib::SeqReader contigReader(assemblyFile);
     uint64_t tmpCounter = 0;
     for (btllib::SeqReader::Record record; (record = contigReader.read());) {
-        tigLength.insert({record.name, record.seq.length()});
+        // tigLength.insert({record.name, record.seq.length()});
         cttig++;
         std::cout << "\r" << cttig;
         if(record.seq.length() >= minSize) {
