@@ -427,7 +427,7 @@ int main(int argc, char** argv) {
     btllib::KmerBloomFilter * myFilter;
     makeBF(bfElements, linksArgParser);
     unsigned hashFct = myFilter->get_hash_num();
-    // myFilter.storeFilter(outfile);
+    std::cout << "Made BF hash fcts: " << std::to_string(hashFct) << "\n";
 
     // k-merize long reads
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair;
@@ -437,11 +437,14 @@ int main(int argc, char** argv) {
     uint64_t counter = 0;
     uint64_t totalpairs = 0;
     uint64_t hits = 0;
+    std::cout << "\n\n=>Reading long reads, building hash table : " << std::to_string(time(0)) << "\n";
+    // $assemblyruninfo.=$reading_reads_message;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser.k, myFilter->get_hash_num());
         btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), linksArgParser.distances + linksArgParser.k);
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
+            std::cout << "Counter: " << counter << "\n"; 
             counter++;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
                 hits++;
@@ -539,7 +542,7 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
         // assemblyruninfo += bfmsg;
         std::cout << bfmsg;
         assemblyBF->write("mybffile.out");
-        std::cout << "Done mybf, printing stats...\n"
+        std::cout << "Done mybf, printing stats...\n";
         printBloomStats(*assemblyBF, std::cout);
         
     }
