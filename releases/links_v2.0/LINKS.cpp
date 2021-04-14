@@ -651,6 +651,7 @@ void pairContigs(
 
                 if(trackAll[matePairItr->first].getTig() != "" && trackAll[mateListItr->first].getTig() != "") {
                     // std::cout << "Checkpoint 3 (if both reads are found in trackAll)\n";
+                    std::cout << "1: " << trackAll[matePairItr->first].getTig() << " 2: " << trackAll[mateListItr->first].getTig() << " \n";
                     ct_both++;
                     if(ct_both_hash.find(insert_size) == ct_both_hash.end()) {
                         ct_both_hash[insert_size] = 1;
