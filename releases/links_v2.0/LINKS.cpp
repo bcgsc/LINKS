@@ -425,7 +425,8 @@ int main(int argc, char** argv) {
     assemblyruninfo += initMessage;
     //-----------------------------
     btllib::KmerBloomFilter * myFilter;
-    makeBF(bfElements, linksArgParser);
+    myFilter = makeBF(bfElements, linksArgParser);
+    std::cout << "Made BF \n";
     unsigned hashFct = myFilter->get_hash_num();
     std::cout << "Made BF hash fcts: " << std::to_string(hashFct) << "\n";
 
