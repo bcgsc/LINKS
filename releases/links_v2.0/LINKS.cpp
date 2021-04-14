@@ -563,8 +563,7 @@ void kmerizeContig( std::string seq,
     int counter = 0;
     std::cout << "hashFct in kmerizeContig: " << hashFcts << "\n";
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
-        // roll for the steps
-        // for (int j < step)
+        // roll for every step
         std::cout << "Roll no " << std::to_string(counter) << "\n";
 	    if(matePair.find(ntHashContig.hashes()[0]) != matePair.end()) {
             tmpCounter++;
