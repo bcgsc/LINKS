@@ -610,7 +610,7 @@ void readContigs(
             tmpCounter++;
             if(trackAll.find(ntHashContig.hashes()[0]) == trackAll.end()) {
                 std::cout << "new\n";
-                trackAll[ntHashContig.hashes()[0]] = KmerInfo(record.head, i, i + k);
+                trackAll[ntHashContig.hashes()[0]] = KmerInfo(record.name, i, i + k);
             } else {
                 std::cout << "kmer found in trackall! Increment multiple\n";
                 trackAll[ntHashContig.hashes()[0]].incrementMultiple();
