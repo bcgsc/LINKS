@@ -633,14 +633,14 @@ void pairContigs(
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> >::iterator matePairItr;
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
-            std::cout << "Checkpoint 1 iteration through every matePair\n";
+            // std::cout << "Checkpoint 1 iteration through every matePair\n";
             // seg faults here
             if(mateListItr->second.getBT() == false) {
-                std::cout << "Seg fault 1\n";
+                // std::cout << "Seg fault 1\n";
                 if(trackAll.find(matePairItr->first) != trackAll.end() && trackAll[matePairItr->first].getMultiple() == 1) { 
                     std::cout << "Seg fault 2\n";
                     if(trackAll.find(mateListItr->first) != trackAll.end() && trackAll[mateListItr->first].getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
-                std::cout << "Checkpoint 2 (if both pairss multiple == 1)\n";
+                // std::cout << "Checkpoint 2 (if both pairss multiple == 1)\n";
                 // below indicates this specific pair has been seen (bt = 1)
                 mateListItr->second.setBT(true);
                 uint64_t insert_size = matePair[matePairItr->first][mateListItr->first].getIS();
@@ -650,7 +650,7 @@ void pairContigs(
                 if(verbose) std::cout << "Pair read1Hash=" << matePairItr->first << " read2Hash=" << mateListItr->first << "\n";
 
                 if(trackAll[matePairItr->first].getTig() != "" && trackAll[mateListItr->first].getTig() != "") {
-                    std::cout << "Checkpoint 3 (if both reads are found in trackAll)\n";
+                    // std::cout << "Checkpoint 3 (if both reads are found in trackAll)\n";
                     ct_both++;
                     if(ct_both_hash.find(insert_size) == ct_both_hash.end()) {
                         ct_both_hash[insert_size] = 1;
