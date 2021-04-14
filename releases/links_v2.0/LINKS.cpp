@@ -605,14 +605,14 @@ void readContigs(
     std::cout << "hashFct in kmerizeContig: " << hashFcts << "\n";
     for (size_t i = 0; ntHashContig.roll(); i+=1) {
         // roll for every step
-        std::cout << "Roll no " << std::to_string(counter) << "\n";
+        // std::cout << "Roll no " << std::to_string(counter) << "\n";
 	    if(matePair.find(ntHashContig.hashes()[0]) != matePair.end()) {
             tmpCounter++;
             if(trackAll.find(ntHashContig.hashes()[0]) == trackAll.end()) {
-                std::cout << "new\n";
+                // std::cout << "new\n";
                 trackAll[ntHashContig.hashes()[0]] = KmerInfo(record.name, i, i + k);
             } else {
-                std::cout << "kmer found in trackall! Increment multiple\n";
+                // std::cout << "kmer found in trackall! Increment multiple\n";
                 trackAll[ntHashContig.hashes()[0]].incrementMultiple();
             }
         }
