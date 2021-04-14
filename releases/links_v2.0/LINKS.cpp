@@ -442,7 +442,7 @@ int main(int argc, char** argv) {
     // $assemblyruninfo.=$reading_reads_message;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser.k, myFilter->get_hash_num());
-        btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), linksArgParser.distances + linksArgParser.k);
+        btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), linksArgParser.distances - linksArgParser.k);
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
             std::cout << "Counter: " << counter << "\n"; 
@@ -985,7 +985,7 @@ void pairContigs(
         if(errItr->second.getLinks()) {
             mean_iz = errItr->second.getGaps() / errItr->second.getLinks();
         }
-        std::cout << "Pair " << errItr->first << " has " << errItr->second.getLinks() << " Links and mean distance of = " << mean_iz << "\n";
+        // std::cout << "Pair " << errItr->first << " has " << errItr->second.getLinks() << " Links and mean distance of = " << mean_iz << "\n";
     }
 
     uint64_t satisfied = ct_ok_pairs + ct_ok_contig;
