@@ -561,17 +561,17 @@ void inline kmerizeContig( std::string *seq,
 
     btllib::NtHash ntHashContig(*seq, k, hashFcts);
     int counter = 0;
-    std::cout << "hashFct in kmerizeContig: " << hashFcts << "\n";
+    // std::cout << "hashFct in kmerizeContig: " << hashFcts << "\n";
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
         // roll for every step
-        std::cout << "Roll no " << std::to_string(counter) << "\n";
+        // std::cout << "Roll no " << std::to_string(counter) << "\n";
 	    if(matePair->find(ntHashContig.hashes()[0]) != matePair->end()) {
             tmpCounter++;
             if(trackAll.find(ntHashContig.hashes()[0]) == trackAll.end()) {
-                std::cout << "new\n";
+                // std::cout << "new\n";
                 trackAll[ntHashContig.hashes()[0]] = KmerInfo(head, i, i + k);
             } else {
-                std::cout << "kmer found in trackall! Increment multiple\n";
+                // std::cout << "kmer found in trackall! Increment multiple\n";
                 trackAll[ntHashContig.hashes()[0]].incrementMultiple();
             }
         }
@@ -589,7 +589,7 @@ void readContigs(
         uint64_t k,
         uint64_t minSize,
         unsigned hashFcts) {
-    std::cout << "hashFct in readContig: " << hashFcts << "\n";
+    // std::cout << "hashFct in readContig: " << hashFcts << "\n";
     uint64_t cttig = 0;
     btllib::SeqReader contigReader(assemblyFile);
     uint64_t tmpCounter = 0;
@@ -598,7 +598,7 @@ void readContigs(
         cttig++;
         std::cout << "\r" << cttig;
         if(record.seq.length() >= minSize) {
-            std::cout << "Kmerizing contig\n";
+            // std::cout << "Kmerizing contig\n";
             // std::cout << "seq:\n" << record.seq << "\n";
             kmerizeContig(&record.seq, trackAll, &matePair, k, record.name, hashFcts, cttig, tmpCounter);
         }
