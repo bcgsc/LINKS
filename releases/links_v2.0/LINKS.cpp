@@ -104,19 +104,19 @@ class KmerInfo {
         this->tig = "";
         this->start = 0;
         this->end = 0;
-        this->multiple = 0;
+        this->multiple = 1;
     }
     KmerInfo(uint64_t start, uint64_t end){
         this->tig = "";
         this->start = start;
         this->end = end;
-        this->multiple = 0;
+        this->multiple = 1;
     }
     KmerInfo(std::string tig, uint64_t start, uint64_t end){
         this->tig = tig;
         this->start = start;
         this->end = end;
-        this->multiple = 0;
+        this->multiple = 1;
     }
 
     void setTig(std::string tig) {
@@ -572,7 +572,9 @@ void inline kmerizeContig( std::string *seq,
                 trackAll[ntHashContig.hashes()[0]] = KmerInfo(head, i, i + k);
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
+                // WARNING***** Because we are using canonicals, most of the multiples will be 
                 trackAll[ntHashContig.hashes()[0]].incrementMultiple();
+                std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.hashes()[0]].getMultiple()) << "\n";
             }
         }
         counter++;
