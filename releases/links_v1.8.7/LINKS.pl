@@ -530,7 +530,7 @@ sub readContigs{
    print LOG $contigs_processed_message;
    ###
    my $track_allCounter = 0;
-   my $sum = 0
+   my $sum = 0;
    while(<IN>){
       chomp;
       if(/^\>(.*)/){
@@ -554,8 +554,8 @@ sub readContigs{
       }else{
          $seq .= $_;
       }
-      $sum += track_allCounter
-      print "Trackall is: $track_allCounter \n";
+      $sum += $track_allCounter;
+      print "Trackall is: $sum \n";
    }
    $cttig++;
    print "\r$cttig";
@@ -569,8 +569,8 @@ sub readContigs{
       $tig_length->{$cttig} = length($seq);
    }
    ###
-   $sum += track_allCounter
-   print "Trackall is: $track_allCounter \n";
+   $sum += $track_allCounter;
+   print "Trackall is: $sum \n";
    close IN;
 
    return $track_all,$tig_length;
@@ -836,7 +836,7 @@ sub kmerizeContig{
    for(my $pos=0;$pos<=(length($seq)-$k);$pos++){
       my $rd = substr($seq,$pos,$k);
       if(defined $matepair->{$rd}){
-         if(defined $track_all->{$rd}) {
+         if(not(defined $track_all->{$rd})) {
             $counter++;
          }
          $track_all->{$rd}{'tig'}   = $head;
