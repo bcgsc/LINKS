@@ -1084,15 +1084,19 @@ sub pairContigs{
    my $ct_multiple;
 
    my ($simplepair,$pair,$err,$track_insert);###simplepair is a simple pair to track node to node in a graph
-   my counter1 = 0;
-   my counter2 = 0;
+   my $counter1 = 0;
+   my $counter2 = 0;
+   my $counter3 = 0;
    foreach my $rd (keys %$matepair){ 
-      counter1++;
+      $counter1++;
    }
    foreach my $rd (keys %$track){ 
-      counter2++;
+      $counter2++;
    }
-   print "IN pairContigs matepair size: $counter1, track_all Size: $counter2\n";
+   foreach my $rd (keys %$tig_length){ 
+      $counter3++;
+   }
+   print "IN pairContigs\nmatepair size: $counter1\ntrack_all Size: $counter2\nLongfile:$longfile\n";
 
    print "Pairing contigs...\n" if ($verbose);
 
