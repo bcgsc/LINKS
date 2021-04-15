@@ -1087,6 +1087,7 @@ sub pairContigs{
    my $counter1 = 0;
    my $counter2 = 0;
    my $counter3 = 0;
+   my $Check0Counter = 0;
    my $Check1Counter = 0;
    my $Check2Counter = 0;
    my $Check3Counter = 0;
@@ -1148,7 +1149,7 @@ sub pairContigs{
             print "Pair read1=$read_a read2=$read_b\n" if ($verbose);
 
             if(defined $track->{$read_a}{'tig'} && defined $track->{$read_b}{'tig'}){### both pairs assembled
-
+               $Check0Counter;
                $ct_both++;
                $ct_both_hash->{$insert_size}++;
 
@@ -1368,7 +1369,6 @@ sub pairContigs{
             $ct_multiple++ if( $matepair->{$read_a}{$read_b}{'bt'}==0 );
 	      }
       }#pairing read b
-      print "Check1Counter = $Check1Counter"
    }#read a
 
    ### summary of contig pair issues
@@ -1383,7 +1383,7 @@ sub pairContigs{
    my $satisfied = $ct_ok_pairs + $ct_ok_contig;
    my $unsatisfied = $ct_problem_pairs + $ct_iz_issues + $ct_illogical;
    my $ct_both_reads = $ct_both * 2;
-   print "THESE ARE THE CHECKPOINT COUNTERS\n$Check1Counter \n$Check2Counter \n$Check3Counter \n$Check4Counter \n$Check5Counter \n$Check6Counter \n$Check7Counter \n$Check8Counter \n$Check9Counter \n$Check10Counter \n$Check11Counter \n$Check12Counter \n$Check13Counter \n$Check14Counter \n$Check15Counter \n$Check16Counter \n$Check17Counter \n$Check18Counter \n$Check19Counter \n$Check20Counter \n$Check21Counter \n$Check22Counter \n$Check23Counter \n$Check24Counter \n$Check25Counter \n$Check26Counter \n$Check27Counter \n$Check28Counter";
+   print "THESE ARE THE CHECKPOINT COUNTERS\n$Check0Counter \n$Check1Counter \n$Check2Counter \n$Check3Counter \n$Check4Counter \n$Check5Counter \n$Check6Counter \n$Check7Counter \n$Check8Counter \n$Check9Counter \n$Check10Counter \n$Check11Counter \n$Check12Counter \n$Check13Counter \n$Check14Counter \n$Check15Counter \n$Check16Counter \n$Check17Counter \n$Check18Counter \n$Check19Counter \n$Check20Counter \n$Check21Counter \n$Check22Counter \n$Check23Counter \n$Check24Counter \n$Check25Counter \n$Check26Counter\n";
    print LOG "\n===========PAIRED K-MER STATS===========\n";
    print LOG "Total number of pairs extracted from -s $longfile: $totalpairs\n";
    print LOG "At least one sequence/pair missing from contigs: $ct_single\n";

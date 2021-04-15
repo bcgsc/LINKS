@@ -628,7 +628,35 @@ void pairContigs(
     std::string order1;
     std::string order2;
     if(verbose) std::cout << "Pairing contigs...\n";
-    
+    //******************
+    int Check0Counter = 0;
+    int Check1Counter = 0;
+    int Check2Counter = 0;
+    int Check3Counter = 0;
+    int Check4Counter = 0;
+    int Check5Counter = 0;
+    int Check6Counter = 0;
+    int Check7Counter = 0;
+    int Check8Counter = 0;
+    int Check9Counter = 0;
+    int Check10Counter = 0;
+    int Check11Counter = 0;
+    int Check12Counter = 0;
+    int Check13Counter = 0;
+    int Check14Counter = 0;
+    int Check15Counter = 0;
+    int Check16Counter = 0;
+    int Check17Counter = 0;
+    int Check18Counter = 0;
+    int Check19Counter = 0;
+    int Check20Counter = 0;
+    int Check21Counter = 0;
+    int Check22Counter = 0;
+    int Check23Counter = 0;
+    int Check24Counter = 0;
+    int Check25Counter = 0;
+    int Check26Counter = 0;
+    //******************
     std::unordered_map<uint64_t, BT_IS>::iterator mateListItr;
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> >::iterator matePairItr;
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
@@ -638,6 +666,7 @@ void pairContigs(
             if(mateListItr->second.getBT() == false) {
                 if(trackAll.find(matePairItr->first) != trackAll.end() && trackAll[matePairItr->first].getMultiple() == 1) { 
                     if(trackAll.find(mateListItr->first) != trackAll.end() && trackAll[mateListItr->first].getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
+                Check1Counter++;
                 // std::cout << "Checkpoint 2 (if both pairss multiple == 1)\n";
                 // below indicates this specific pair has been seen (bt = 1)
                 mateListItr->second.setBT(true);
@@ -648,8 +677,9 @@ void pairContigs(
                 if(verbose) std::cout << "Pair read1Hash=" << matePairItr->first << " read2Hash=" << mateListItr->first << "\n";
 
                 if(trackAll[matePairItr->first].getTig() != "" && trackAll[mateListItr->first].getTig() != "") {
+                    Check0Counter++;
                     // std::cout << "Checkpoint 3 (if both reads are found in trackAll)\n";
-                    std::cout << "1: " << trackAll[matePairItr->first].getTig() << " 2: " << trackAll[mateListItr->first].getTig() << " \n";
+                    // std::cout << "1: " << trackAll[matePairItr->first].getTig() << " 2: " << trackAll[mateListItr->first].getTig() << " \n";
                     ct_both++;
                     if(ct_both_hash.find(insert_size) == ct_both_hash.end()) {
                         ct_both_hash[insert_size] = 1;
@@ -674,15 +704,19 @@ void pairContigs(
                     uint64_t B_end = trackAll[mateListItr->first].getEnd();
 
                     if(tig_a != tig_b) { // paired reads located on <> contigs
+                        Check2Counter++;
                         std::cout << "Checkpoint 4 (if tigs are different)\n";
                         //Determine most likely possibility
                         if(trackAll[matePairItr->first].getStart() < trackAll[matePairItr->first].getEnd()) {
+                            Check3Counter++;
                             std::cout << "Checkpoint 5 (A.start < A.end)";
                             if(trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
+                                Check4Counter++;
                                 std::cout << "Checkpoint 6 (B.end < B.start)";
                                 uint64_t distance = getDistance(insert_size, A_length, A_start, B_start);
                                 if(verbose) std::cout << "A-> <-B  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,Bstart\n";
                                 if(distance > min_allowed) {
+                                    Check5Counter++;
                                     std::cout << "Checkpoint 7 distance > min allowed";
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
@@ -719,6 +753,7 @@ void pairContigs(
                                         ct_ok_pairs_hash[insert_size] = ct_ok_pairs_hash[insert_size] + 1;
                                     }
                                 } else {
+                                    Check6Counter++;
                                     std::string err_pair = ftig_a + "-" + ftig_b;
                                     if(err.find(err_pair) == err.end()) {
                                         err[err_pair] = Gaps_Links(distance, 1);
@@ -735,10 +770,12 @@ void pairContigs(
                                     std::cout << "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#" << tig_a << " -> " << std::to_string(distance) << " <- tig#"<< tig_b << ", A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
                                 }
                             } else { // -> -> ::: A-> <-rB  / B-> <-rA 
+                                Check7Counter++;
                                 uint64_t rB_start = B_length - B_start;
                                 uint64_t distance = getDistance(insert_size, A_length, A_start, rB_start);
                                 if(verbose) std::cout << "A-> <-rB  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,rBstart\n";
                                 if(distance >= min_allowed) {
+                                    Check8Counter++;
                                     std::cout << "Checkpoint 10.1\n";
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
@@ -775,6 +812,7 @@ void pairContigs(
                                         ct_ok_pairs_hash[insert_size] = ct_ok_pairs_hash[insert_size] + 1;
                                     }
                                 } else {
+                                    Check9Counter++;
                                     std::string err_pair = ftig_a + "-" + rtig_b;
                                     if(err.find(err_pair) == err.end()) {
                                         err[err_pair] = Gaps_Links(distance, 1);
@@ -792,11 +830,14 @@ void pairContigs(
                                 }
                             }
                         } else {
+                            Check10Counter++;
                             // if ({read_b}{'end'} > {$read_b}{'start'}
                             if(trackAll[mateListItr->first].getEnd() > trackAll[mateListItr->first].getStart()) {
+                                Check11Counter++;
                                 uint64_t distance = getDistance(insert_size, B_length, B_start, A_start);
                                 if(verbose) std::cout << "B-> <-A  WITH " << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Blen, Bstart,Astart\n";
                                 if(distance >= min_allowed) {
+                                    Check12Counter++;
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_b) == pair.end() || pair[ftig_b].find(isz) == pair[ftig_b].end() || pair[ftig_b][isz].find(ftig_a) == pair[ftig_b][isz].end()) {
                                         std::cout << "Checkpoint 11.1\n";
@@ -832,6 +873,7 @@ void pairContigs(
                                         ct_ok_pairs_hash[insert_size] = ct_ok_pairs_hash[insert_size] + 1;
                                     }
                                 } else {
+                                    Check13Counter++;
                                     std::string err_pair = ftig_b + "-" + ftig_a;
                                     if(err.find(err_pair) == err.end()) {
                                         err[err_pair] = Gaps_Links(distance, 1);
@@ -848,10 +890,12 @@ void pairContigs(
                                     std::cout << "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#" << tig_b << " -> " << std::to_string(distance) << " <- tig#"<< tig_a << ", B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
                                 }
                             }  else { // <- <-  :::  rB-> <-A / rA-> <-B
+                                Check14Counter++;
                                 uint64_t rB_start = B_length - B_start;
                                 uint64_t distance = getDistance(insert_size, B_length, rB_start, A_start);
                                 if(verbose) std::cout << "rB-> <-A  WITH r." << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Blen, rBstart,Astart\n";
                                 if(distance >= min_allowed) {
+                                    Check15Counter++;
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(rtig_b) == pair.end() || pair[rtig_b].find(isz) == pair[rtig_b].end() || pair[rtig_b][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
                                         std::cout << "Checkpoint 12.1\n";
@@ -887,6 +931,7 @@ void pairContigs(
                                         ct_ok_pairs_hash[insert_size] = ct_ok_pairs_hash[insert_size] + 1;
                                     }
                                 } else {
+                                    Check16Counter++;
                                     std::string err_pair = rtig_b + "-" + ftig_a;
                                     if(err.find(err_pair) == err.end()) {
                                         err[err_pair] = Gaps_Links(distance, 1);
@@ -905,12 +950,15 @@ void pairContigs(
                             }
                         }
                     } else { // Clone, paired reads located on the same contig -- could be used to investigate misassemblies
+                        Check17Counter++;
                         if (verbose) std::cout << "Pair (" << matePairItr->first << " and " << mateListItr->first << ") located on same contig " << tig_a << " (" << A_length << " nt)\n";
                         uint64_t pet_size = 0;
                         if(A_start > B_start && (B_start < B_end) && (A_start > A_end)) {   // B --> <-- A
+                            Check18Counter++;
                             pet_size = A_start - B_start;
                             trackInsert += pet_size;
                             if(pet_size >= low_iz && pet_size <= up_iz) {
+                                Check19Counter++;
                                 ct_ok_contig++;
                                 if(ct_ok_contig_hash.find(insert_size) == ct_ok_contig_hash.end()) {
                                     ct_ok_contig_hash[insert_size] = 1;
@@ -918,6 +966,7 @@ void pairContigs(
                                     ct_ok_contig_hash[insert_size] = ct_ok_contig_hash[insert_size] + 1;
                                 }
                             } else {
+                                Check20Counter++;
                                 std::cout <<"Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
                                 ct_iz_issues++;
                                 if(ct_iz_issues_hash.find(insert_size) == ct_iz_issues_hash.end()) {
@@ -927,9 +976,11 @@ void pairContigs(
                                 }
                             }
                         } else if(B_start > A_start && (B_start > B_end) && (A_start < A_end)) { // A --> <-- B
+                            Check21Counter++;
                             pet_size = B_start - A_start;
                             trackInsert += pet_size;
                             if(pet_size >= low_iz && pet_size <= up_iz) {
+                                Check22Counter++;
                                 ct_ok_contig++;
                                 if(ct_ok_contig_hash.find(insert_size) == ct_ok_contig_hash.end()) {
                                     ct_ok_contig_hash[insert_size] = 1;
@@ -937,6 +988,7 @@ void pairContigs(
                                     ct_ok_contig_hash[insert_size] = ct_ok_contig_hash[insert_size] + 1;
                                 }
                             } else {
+                                Check23Counter++;
                                 std::cout <<"Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
                                 ct_iz_issues++;
                                 if(ct_iz_issues_hash.find(insert_size) == ct_iz_issues_hash.end()) {
@@ -946,6 +998,7 @@ void pairContigs(
                                 }
                             }
                         } else {
+                            Check24Counter++;
                             ct_illogical++;
                             if(ct_illogical_hash.find(insert_size) == ct_illogical_hash.end()) {
                                 ct_illogical_hash[insert_size] = 1;
@@ -956,6 +1009,7 @@ void pairContigs(
                         }
                     }
                 } else { // both pairs assembled
+                    Check25Counter++;
                     ct_single++;
                     if(ct_single_hash.find(insert_size) == ct_single_hash.end()) {
                         ct_single_hash[insert_size] = 1;
@@ -964,7 +1018,8 @@ void pairContigs(
                     }
                 }
             }}} else { // if unseen
-                std::cout << "UNSEEN\n";
+                Check26Counter++;
+                // std::cout << "UNSEEN\n";
                 if(matePair[matePairItr->first][mateListItr->first].getBT() == false) {
                     std::cout << "UNSEEN getBT() increment ct\n";
                     ct_multiple++;
@@ -990,7 +1045,7 @@ void pairContigs(
     uint64_t satisfied = ct_ok_pairs + ct_ok_contig;
     uint64_t unsatisfied = ct_problem_pairs + ct_iz_issues + ct_illogical;
     uint64_t ct_both_reads = ct_both * 2;
-
+    std::cout << "THESE ARE THE COUNTERS:\n" << std::to_string(Check0Counter) << "\n" <<  std::to_string(Check1Counter) << "\n" <<  std::to_string(Check2Counter) << "\n" <<  std::to_string(Check3Counter) << "\n" <<  std::to_string(Check4Counter) << "\n" <<  std::to_string(Check5Counter) << "\n" <<  std::to_string(Check6Counter) << "\n" <<  std::to_string(Check7Counter) << "\n" <<  std::to_string(Check8Counter) << "\n" <<  std::to_string(Check9Counter) << "\n" << std::to_string(Check10Counter) << "\n" << std::to_string(Check11Counter) << "\n" << std::to_string(Check12Counter) << "\n" << std::to_string(Check13Counter) << "\n" << std::to_string(Check14Counter) << "\n" << std::to_string(Check15Counter) << "\n" << std::to_string(Check16Counter) << "\n" << std::to_string(Check17Counter) << "\n" << std::to_string(Check18Counter) << "\n" << std::to_string(Check19Counter) << "\n" << std::to_string(Check20Counter) << "\n" << std::to_string(Check21Counter) << "\n" << std::to_string(Check22Counter) << "\n" << std::to_string(Check23Counter) << "\n" << std::to_string(Check24Counter) << "\n" << std::to_string(Check25Counter) << "\n" << std::to_string(Check26Counter) << "\n";
     std::cout << "\n===========PAIRED K-MER STATS===========\n";
     std::cout << "Total number of pairs extracted from -s " << longReadsFile << " " << totalPairs << "\n";
     std::cout << "At least one sequence/pair missing from contigs: " << ct_single << "\n";
