@@ -839,6 +839,8 @@ sub kmerizeContig{
          if(not(defined $track_all->{$rd})) {
             print "This is new, incrementing counter: $counter\n";
             $counter++;
+         } else {
+            print "NOT NEW $counter\n";
          }
          $track_all->{$rd}{'tig'}   = $head;
          $track_all->{$rd}{'start'} = $pos;
