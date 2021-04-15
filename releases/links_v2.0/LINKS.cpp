@@ -724,7 +724,7 @@ void pairContigs(
                         if(trackAll[matePairItr->first].getStart() < trackAll[matePairItr->first].getEnd()) {
                             Check3Counter++;
                             // std::cout << "Checkpoint 5 (A.start < A.end)\n";
-                            // std::cout << "End: " << std::to_string(trackAll[mateListItr->first].getEnd()) << "Start: " << std::to_string(trackAll[mateListItr->first].getStart()) << "\n";
+                            std::cout << "End: " << std::to_string(trackAll[mateListItr->first].getEnd()) << "Start: " << std::to_string(trackAll[mateListItr->first].getStart()) << "\n";
                             if(trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
                                 Check4Counter++;
                                 // std::cout << "Checkpoint 6 (B.end < B.start)\n";
@@ -782,7 +782,8 @@ void pairContigs(
                                     } else {
                                         ct_problem_pairs_hash[insert_size] = ct_problem_pairs_hash[insert_size] + 1;
                                     }
-                                    std::cout << "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#" << tig_a << " -> " << std::to_string(distance) << " <- tig#"<< tig_b << ", A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
+                                    // THIS IS NOT A DEBUGGING OUTPUT
+                                    // std::cout << "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#" << tig_a << " -> " << std::to_string(distance) << " <- tig#"<< tig_b << ", A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
                                 }
                             } else { // -> -> ::: A-> <-rB  / B-> <-rA 
                                 Check7Counter++;
