@@ -544,8 +544,12 @@ sub readContigs{
             my $tiglen = length($seq);
             if($tiglen >= $min_size){
                $track_allCounter, $track_all = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
+               print "Is returned right? $track_allCounter\n";
+               $sum += $track_allCounter;
                my $revcomp = &reverseComplement($seq);
                $track_allCounter, $track_all = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
+               print "Is returned right? $track_allCounter\n";
+               $sum += $track_allCounter;
                $tig_length->{$cttig} = $tiglen;
             }
          }
@@ -554,7 +558,6 @@ sub readContigs{
       }else{
          $seq .= $_;
       }
-      $sum += $track_allCounter;
       print "Trackall is: $sum \n";
    }
    $cttig++;
@@ -564,12 +567,15 @@ sub readContigs{
 
    if(length($seq) >= $min_size){
       $track_allCounter, $track_all = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
+      $sum += $track_allCounter;
+      print "Is returned right? $track_allCounter\n";
       my $revcomp = &reverseComplement($seq);
       $track_allCounter, $track_all = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
+      print "Is returned right? $track_allCounter\n";
+      $sum += $track_allCounter;
       $tig_length->{$cttig} = length($seq);
    }
    ###
-   $sum += $track_allCounter;
    print "Trackall is: $sum \n";
    close IN;
 
