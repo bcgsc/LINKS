@@ -570,7 +570,7 @@ sub readContigs{
       $sum += $track_allCounter;
       print "Is returned right? $track_allCounter\n";
       my $revcomp = &reverseComplement($seq);
-      $(track_allCounter, $track_all) = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
+      ($track_allCounter, $track_all) = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
       print "Is returned right? $track_allCounter\n";
       $sum += $track_allCounter;
       $tig_length->{$cttig} = length($seq);
@@ -1087,6 +1087,34 @@ sub pairContigs{
    my $counter1 = 0;
    my $counter2 = 0;
    my $counter3 = 0;
+   my $Check1Counter = 0;
+   my $Check2Counter = 0;
+   my $Check3Counter = 0;
+   my $Check4Counter = 0;
+   my $Check5Counter = 0;
+   my $Check6Counter = 0;
+   my $Check7Counter = 0;
+   my $Check8Counter = 0;
+   my $Check9Counter = 0;
+   my $Check10Counter = 0;
+   my $Check11Counter = 0;
+   my $Check12Counter = 0;
+   my $Check13Counter = 0;
+   my $Check14Counter = 0;
+   my $Check15Counter = 0;
+   my $Check16Counter = 0;
+   my $Check17Counter = 0;
+   my $Check18Counter = 0;
+   my $Check19Counter = 0;
+   my $Check20Counter = 0;
+   my $Check21Counter = 0;
+   my $Check22Counter = 0;
+   my $Check23Counter = 0;
+   my $Check24Counter = 0;
+   my $Check25Counter = 0;
+   my $Check26Counter = 0;
+   my $Check27Counter = 0;
+   my $Check28Counter = 0;
    foreach my $rd (keys %$matepair){ 
       $counter1++;
    }
@@ -1109,7 +1137,7 @@ sub pairContigs{
       foreach my $read_b (keys %$mateslist){
 
           if($matepair->{$read_a}{$read_b}{'bt'}==0 && $track->{$read_a}{'multiple'}==1 && $track->{$read_b}{'multiple'}==1){ ###This has little if no effect, but negative for some odd reason
-
+            $Check1Counter++;
             ##below indicates this specific pair has been seen
             $matepair->{$read_a}{$read_b}{'bt'}=1;
 
@@ -1142,15 +1170,16 @@ sub pairContigs{
                my $B_end = $track->{$read_b}{'end'};
 
                if ($tig_a != $tig_b){####paired reads located on <> contigs
-
+                  $Check2Counter++;
                   ####Determine most likely possibility
                   if ($track->{$read_a}{'start'} < $track->{$read_a}{'end'}){
-
+                     $Check3Counter++;
                      if ($track->{$read_b}{'end'} < $track->{$read_b}{'start'}){####-> <- :::  A-> <-B  /  rB -> <- rA
+                         $Check4Counter++;
                          my $d = &getDistance($insert_size, $A_length, $A_start, $B_start);
                          print "A-> <-B  WITH $tig_a -> <- $tig_b GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Alen, Astart,Bstart\n" if($verbose);
                          if($d >= $min_allowed){
-
+                           $Check5Counter++;
                             my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                             #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
                             #print "CHECKPOINT 1 adding to PAIR\n";
@@ -1172,6 +1201,7 @@ sub pairContigs{
                             $ct_ok_pairs++;
                             $ct_ok_pairs_hash->{$insert_size}++;
                          }else{
+                            $Check6Counter++;
                             my $err_pair = $ftig_a . "-". $ftig_b;
                             $err->{$err_pair}{'links'}++;
                             $err->{$err_pair}{'gaps'} += $d;
@@ -1180,11 +1210,12 @@ sub pairContigs{
                             print PET "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#$tig_a -> $d <- tig#$tig_b, A=$A_length nt (start:$A_start, end:$A_end) B=$B_length nt (start:$B_start, end:$B_end) CALCULATED DISTANCE APART: $d < $min_allowed\n";
                          }
                       }else{#### -> -> ::: A-> <-rB  / B-> <-rA 
+                         $Check7Counter++;
                          my $rB_start = $B_length - $B_start;
                          my $d = &getDistance($insert_size, $A_length, $A_start, $rB_start);
                          print "A-> <-rB  WITH $tig_a -> <- r.$tig_b GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Alen,Astart,rBstart\n" if($verbose);
                          if($d >= $min_allowed){
-
+                           $Check8Counter++;
                             my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                             #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
                             #print "CHECKPOINT 3 adding to PAIR\n";
@@ -1205,6 +1236,7 @@ sub pairContigs{
                             $ct_ok_pairs++;
                             $ct_ok_pairs_hash->{$insert_size}++;
                          }else{
+                            $Check9Counter++;
                             my $err_pair = $ftig_a . "-". $rtig_b;
                             $err->{$err_pair}{'links'}++;
                             $err->{$err_pair}{'gaps'} += $d;
@@ -1214,12 +1246,13 @@ sub pairContigs{
                          }
                       }
                   }else{
-
+                     $Check10Counter++;
                      if ($track->{$read_b}{'end'} > $track->{$read_b}{'start'}){####<-  -> ::: B-> <-A / rA -> <- rB
+                        $Check11Counter++;
                         my $d = &getDistance($insert_size, $B_length, $B_start, $A_start);
                         print "B-> <-A  WITH $tig_b -> <- $tig_a GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Blen,Bstart,Astart\n" if($verbose);
                         if($d >= $min_allowed){
-
+                           $Check12Counter++;
                            my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                            #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
                            print "CHECKPOINT 4 adding to PAIR\n";
@@ -1240,6 +1273,7 @@ sub pairContigs{
                            $ct_ok_pairs++;
                            $ct_ok_pairs_hash->{$insert_size}++;
                         }else{
+                           $Check13Counter++;
                            my $err_pair = $ftig_b . "-". $ftig_a;
                            $err->{$err_pair}{'links'}++;
                            $err->{$err_pair}{'gaps'} += $d;
@@ -1248,11 +1282,12 @@ sub pairContigs{
                            print PET "Pairs unsatisfied in distance within a contig pair.  B-> <-A  WITH tig#$tig_b -> $d <- tig#$tig_a, B=$B_length nt (start:$B_start, end:$B_end) A=$A_length nt (start:$A_start, end:$A_end) CALCULATED DISTANCE APART: $d < $min_allowed\n";
                         }
                      }else{                          ####<- <-  :::  rB-> <-A / rA-> <-B
+                        $Check14Counter++;
                         my $rB_start = $B_length - $B_start;
                         my $d = &getDistance($insert_size, $B_length, $rB_start, $A_start);
                         print "rB-> <-A WITH r.$tig_b -> <- $tig_a GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Blen,rBstart,Astart\n" if($verbose);
                         if($d >= $min_allowed){
-
+                           $Check15Counter++;
                            my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                            #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
                            print "CHECKPOINT 5 adding to PAIR\n";
@@ -1273,6 +1308,7 @@ sub pairContigs{
                            $ct_ok_pairs++;
                            $ct_ok_pairs_hash->{$insert_size}++;
                         }else{
+                           $Check16Counter++;
                            my $err_pair = $rtig_b . "-". $ftig_a;
                            $err->{$err_pair}{'links'}++;
                            $err->{$err_pair}{'gaps'} += $d;
@@ -1283,46 +1319,56 @@ sub pairContigs{
                      }
                   }
                }else{###Clone, paired reads located on the same contig -- could be used to investigate misassemblies
-           
+                  $Check17Counter++;
                   print "Pair ($read_a and $read_b) located on same contig $tig_a ($A_length nt)\n" if ($verbose);
                   my $pet_size = 0;
 
                   if ($A_start > $B_start && ($B_start < $B_end) && ($A_start > $A_end)){    # B --> <-- A
+                     $Check18Counter++;
                      $pet_size = $A_start - $B_start;
                      $track_insert->{$pet_size}++;
                      if($pet_size >= $low_iz && $pet_size <= $up_iz){
+                        $Check19Counter++;
                         $ct_ok_contig++;
                         $ct_ok_contig_hash->{$insert_size}++;
                      }else{
+                        $Check20Counter++;
                         print PET "Pairs unsatisfied in distance within a contig.  Pair ($read_a - $read_b) on contig $tig_a ($A_length nt) Astart:$A_start Aend:$A_end Bstart:$B_start Bend:$B_end CALCULATED DISTANCE APART: $pet_size\n";
                         $ct_iz_issues++;
                         $ct_iz_issues_hash->{$insert_size}++;
                      }
                   }elsif($B_start > $A_start && ($B_start > $B_end) && ($A_start < $A_end)){ # A --> <-- B
+                     $Check21Counter++;
                      $pet_size = $B_start - $A_start;
                      $track_insert->{$pet_size}++;
                      if($pet_size >= $low_iz && $pet_size <= $up_iz){
+                        $Check22Counter++;
                         $ct_ok_contig++;
                         $ct_ok_contig_hash->{$insert_size}++;
                      }else{
+                        $Check23Counter++;
                         print PET "Pairs unsatisfied in distance within a contig.  Pair ($read_a - $read_b) on contig $tig_a ($A_length nt) Astart:$A_start Aend:$A_end Bstart:$B_start Bend:$B_end CALCULATED DISTANCE APART: $pet_size\n";
                         $ct_iz_issues++;
                         $ct_iz_issues_hash->{$insert_size}++;
                      }
                   }else{
+                     $Check24Counter++;
                      $ct_illogical++;
                      $ct_illogical_hash->{$insert_size}++;
                      print PET "Pairs unsatisfied in pairing logic within a contig.  Pair ($read_a - $read_b) on contig $tig_a ($A_length nt) Astart:$A_start Aend:$A_end Bstart:$B_start Bend:$B_end\n";
                   }
                }
             }else{###^both pairs assembled
+               $Check25Counter++;
                $ct_single++;
                $ct_single_hash->{$insert_size}++;
             }
          }else{#if unseen
+            $Check26Counter++;
             $ct_multiple++ if( $matepair->{$read_a}{$read_b}{'bt'}==0 );
 	      }
       }#pairing read b
+      print "Check1Counter = $Check1Counter"
    }#read a
 
    ### summary of contig pair issues
@@ -1337,7 +1383,7 @@ sub pairContigs{
    my $satisfied = $ct_ok_pairs + $ct_ok_contig;
    my $unsatisfied = $ct_problem_pairs + $ct_iz_issues + $ct_illogical;
    my $ct_both_reads = $ct_both * 2;
-
+   print "THESE ARE THE CHECKPOINT COUNTERS\n$Check1Counter \n$Check2Counter \n$Check3Counter \n$Check4Counter \n$Check5Counter \n$Check6Counter \n$Check7Counter \n$Check8Counter \n$Check9Counter \n$Check10Counter \n$Check11Counter \n$Check12Counter \n$Check13Counter \n$Check14Counter \n$Check15Counter \n$Check16Counter \n$Check17Counter \n$Check18Counter \n$Check19Counter \n$Check20Counter \n$Check21Counter \n$Check22Counter \n$Check23Counter \n$Check24Counter \n$Check25Counter \n$Check26Counter \n$Check27Counter \n$Check28Counter";
    print LOG "\n===========PAIRED K-MER STATS===========\n";
    print LOG "Total number of pairs extracted from -s $longfile: $totalpairs\n";
    print LOG "At least one sequence/pair missing from contigs: $ct_single\n";
