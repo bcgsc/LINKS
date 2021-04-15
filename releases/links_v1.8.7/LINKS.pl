@@ -543,11 +543,11 @@ sub readContigs{
 
             my $tiglen = length($seq);
             if($tiglen >= $min_size){
-               $track_allCounter, $track_all = &kmerizeContig($track_allCounter, uc($seq),$track_all,$matepair,$k,$cttig,0);
+               ($track_allCounter, $track_all) = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
                print "Is returned right? $track_allCounter\n";
                $sum += $track_allCounter;
                my $revcomp = &reverseComplement($seq);
-               $track_allCounter, $track_all = &kmerizeContig($track_allCounter, $revcomp,$track_all,$matepair,$k,$cttig,1);
+               ($track_allCounter, $track_all) = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
                print "Is returned right? $track_allCounter\n";
                $sum += $track_allCounter;
                $tig_length->{$cttig} = $tiglen;
@@ -566,11 +566,11 @@ sub readContigs{
    $|++;
 
    if(length($seq) >= $min_size){
-      $track_allCounter, $track_all = &kmerizeContig($track_allCounter, uc($seq),$track_all,$matepair,$k,$cttig,0);
+      ($track_allCounter, $track_all) = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
       $sum += $track_allCounter;
       print "Is returned right? $track_allCounter\n";
       my $revcomp = &reverseComplement($seq);
-      $track_allCounter, $track_all = &kmerizeContig($track_allCounter, $revcomp,$track_all,$matepair,$k,$cttig,1);
+      $(track_allCounter, $track_all) = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
       print "Is returned right? $track_allCounter\n";
       $sum += $track_allCounter;
       $tig_length->{$cttig} = length($seq);
@@ -837,8 +837,8 @@ sub kmerizeContigBloom{
 #----------------
 sub kmerizeContig{
 
-   my ($counter,$seq,$track_all,$matepair,$k,$head,$rc) = @_;
-   # $counter = 0;
+   my ($seq,$track_all,$matepair,$k,$head,$rc) = @_;
+   my $counter = 0;
    for(my $pos=0;$pos<=(length($seq)-$k);$pos++){
       my $rd = substr($seq,$pos,$k);
       if(defined $matepair->{$rd}){
@@ -857,7 +857,7 @@ sub kmerizeContig{
       }
    }
    print "Returning a counter value : $counter\n";
-   return $counter, $track_all;
+   return ($counter, $track_all);
 }
 
 #-----------------------
@@ -1096,7 +1096,7 @@ sub pairContigs{
    foreach my $rd (keys %$tig_length){ 
       $counter3++;
    }
-   print "IN pairContigs\nmatepair size: $counter1\ntrack_all Size: $counter2\nLongfile:$longfile\n";
+   print "IN pairContigs\nLongfile:$longfile\nmatepair size: $counter1\ntrack_all Size: $counter2\ntig_length $counter3\n";
 
    print "Pairing contigs...\n" if ($verbose);
 
