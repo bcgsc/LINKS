@@ -850,7 +850,7 @@ sub kmerizeContig{
          $track_all->{$rd}{'multiple'}++;
       }
    }
-   print "Returning a counter value : $counter\n"
+   print "Returning a counter value : $counter\n";
    return $counter, $track_all;
 }
 
