@@ -1149,7 +1149,8 @@ sub pairContigs{
             print "Pair read1=$read_a read2=$read_b\n" if ($verbose);
 
             if(defined $track->{$read_a}{'tig'} && defined $track->{$read_b}{'tig'}){### both pairs assembled
-               $Check0Counter;
+               print "PERL PAIRCONTIGS BOTH ARE DEFINEDDD\n";
+               $Check0Counter++;
                $ct_both++;
                $ct_both_hash->{$insert_size}++;
 
