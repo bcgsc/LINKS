@@ -837,6 +837,7 @@ sub kmerizeContig{
       my $rd = substr($seq,$pos,$k);
       if(defined $matepair->{$rd}){
          if(not(defined $track_all->{$rd})) {
+            print "This is new, incrementing counter: $counter\n";
             $counter++;
          }
          $track_all->{$rd}{'tig'}   = $head;
