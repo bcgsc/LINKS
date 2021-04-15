@@ -636,9 +636,7 @@ void pairContigs(
             // std::cout << "Checkpoint 1 iteration through every matePair\n";
             // seg faults here
             if(mateListItr->second.getBT() == false) {
-                // std::cout << "Seg fault 1\n";
                 if(trackAll.find(matePairItr->first) != trackAll.end() && trackAll[matePairItr->first].getMultiple() == 1) { 
-                    std::cout << "Seg fault 2\n";
                     if(trackAll.find(mateListItr->first) != trackAll.end() && trackAll[mateListItr->first].getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
                 // std::cout << "Checkpoint 2 (if both pairss multiple == 1)\n";
                 // below indicates this specific pair has been seen (bt = 1)

@@ -530,6 +530,7 @@ sub readContigs{
    print LOG $contigs_processed_message;
    ###
    my $track_allCounter = 0;
+   my $sum = 0
    while(<IN>){
       chomp;
       if(/^\>(.*)/){
@@ -542,9 +543,9 @@ sub readContigs{
 
             my $tiglen = length($seq);
             if($tiglen >= $min_size){
-               $track_all = &kmerizeContig($track_allCounter, uc($seq),$track_all,$matepair,$k,$cttig,0);
+               $track_allCounter, $track_all = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
                my $revcomp = &reverseComplement($seq);
-               $track_all = &kmerizeContig($track_allCounter, $revcomp,$track_all,$matepair,$k,$cttig,1);
+               $track_allCounter, $track_all = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
                $tig_length->{$cttig} = $tiglen;
             }
          }
@@ -553,6 +554,8 @@ sub readContigs{
       }else{
          $seq .= $_;
       }
+      $sum += track_allCounter
+      print "Trackall is: $track_allCounter \n";
    }
    $cttig++;
    print "\r$cttig";
@@ -560,12 +563,14 @@ sub readContigs{
    $|++;
 
    if(length($seq) >= $min_size){
-      $track_all = &kmerizeContig($track_allCounter, uc($seq),$track_all,$matepair,$k,$cttig,0);
+      $track_allCounter, $track_all = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
       my $revcomp = &reverseComplement($seq);
-      $track_all = &kmerizeContig($track_allCounter, $revcomp,$track_all,$matepair,$k,$cttig,1);
+      $track_allCounter, $track_all = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
       $tig_length->{$cttig} = length($seq);
    }
    ###
+   $sum += track_allCounter
+   print "Trackall is: $track_allCounter \n";
    close IN;
 
    return $track_all,$tig_length;
@@ -826,13 +831,13 @@ sub kmerizeContigBloom{
 #----------------
 sub kmerizeContig{
 
-   my ($track_allCounter,$seq,$track_all,$matepair,$k,$head,$rc) = @_;
-
+   my ($seq,$track_all,$matepair,$k,$head,$rc) = @_;
+   my $counter = 0;
    for(my $pos=0;$pos<=(length($seq)-$k);$pos++){
       my $rd = substr($seq,$pos,$k);
       if(defined $matepair->{$rd}){
          if(defined $track_all->{$rd}) {
-            $track_allCounter++;
+            $counter++;
          }
          $track_all->{$rd}{'tig'}   = $head;
          $track_all->{$rd}{'start'} = $pos;
@@ -844,7 +849,7 @@ sub kmerizeContig{
          $track_all->{$rd}{'multiple'}++;
       }
    }
-   return $track_all;
+   return $counter, $track_all;
 }
 
 #-----------------------
