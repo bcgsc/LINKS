@@ -569,6 +569,7 @@ void inline kmerizeContig( std::string *seq,
             tmpCounter++;
             if(trackAll.find(ntHashContig.hashes()[0]) == trackAll.end()) {
                 // std::cout << "new\n";
+                std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
                 trackAll[ntHashContig.hashes()[0]] = KmerInfo(head, i, i + k);
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
