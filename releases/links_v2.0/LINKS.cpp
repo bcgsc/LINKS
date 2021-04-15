@@ -629,6 +629,7 @@ void pairContigs(
     std::string order2;
     if(verbose) std::cout << "Pairing contigs...\n";
     //******************
+    int CheckCounterBase = 0;
     int Check0Counter = 0;
     int Check1Counter = 0;
     int Check2Counter = 0;
@@ -661,6 +662,7 @@ void pairContigs(
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> >::iterator matePairItr;
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
+            CheckCounterBase++;
             // std::cout << "Checkpoint 1 iteration through every matePair\n";
             // seg faults here
             if(mateListItr->second.getBT() == false) {
@@ -1045,7 +1047,7 @@ void pairContigs(
     uint64_t satisfied = ct_ok_pairs + ct_ok_contig;
     uint64_t unsatisfied = ct_problem_pairs + ct_iz_issues + ct_illogical;
     uint64_t ct_both_reads = ct_both * 2;
-    std::cout << "THESE ARE THE COUNTERS:\n" << std::to_string(Check0Counter) << "\n" <<  std::to_string(Check1Counter) << "\n" <<  std::to_string(Check2Counter) << "\n" <<  std::to_string(Check3Counter) << "\n" <<  std::to_string(Check4Counter) << "\n" <<  std::to_string(Check5Counter) << "\n" <<  std::to_string(Check6Counter) << "\n" <<  std::to_string(Check7Counter) << "\n" <<  std::to_string(Check8Counter) << "\n" <<  std::to_string(Check9Counter) << "\n" << std::to_string(Check10Counter) << "\n" << std::to_string(Check11Counter) << "\n" << std::to_string(Check12Counter) << "\n" << std::to_string(Check13Counter) << "\n" << std::to_string(Check14Counter) << "\n" << std::to_string(Check15Counter) << "\n" << std::to_string(Check16Counter) << "\n" << std::to_string(Check17Counter) << "\n" << std::to_string(Check18Counter) << "\n" << std::to_string(Check19Counter) << "\n" << std::to_string(Check20Counter) << "\n" << std::to_string(Check21Counter) << "\n" << std::to_string(Check22Counter) << "\n" << std::to_string(Check23Counter) << "\n" << std::to_string(Check24Counter) << "\n" << std::to_string(Check25Counter) << "\n" << std::to_string(Check26Counter) << "\n";
+    std::cout << "THESE ARE THE COUNTERS:\n" << std::to_string(CheckCounterBase) << "\n" << std::to_string(Check0Counter) << "\n" <<  std::to_string(Check1Counter) << "\n" <<  std::to_string(Check2Counter) << "\n" <<  std::to_string(Check3Counter) << "\n" <<  std::to_string(Check4Counter) << "\n" <<  std::to_string(Check5Counter) << "\n" <<  std::to_string(Check6Counter) << "\n" <<  std::to_string(Check7Counter) << "\n" <<  std::to_string(Check8Counter) << "\n" <<  std::to_string(Check9Counter) << "\n" << std::to_string(Check10Counter) << "\n" << std::to_string(Check11Counter) << "\n" << std::to_string(Check12Counter) << "\n" << std::to_string(Check13Counter) << "\n" << std::to_string(Check14Counter) << "\n" << std::to_string(Check15Counter) << "\n" << std::to_string(Check16Counter) << "\n" << std::to_string(Check17Counter) << "\n" << std::to_string(Check18Counter) << "\n" << std::to_string(Check19Counter) << "\n" << std::to_string(Check20Counter) << "\n" << std::to_string(Check21Counter) << "\n" << std::to_string(Check22Counter) << "\n" << std::to_string(Check23Counter) << "\n" << std::to_string(Check24Counter) << "\n" << std::to_string(Check25Counter) << "\n" << std::to_string(Check26Counter) << "\n";
     std::cout << "\n===========PAIRED K-MER STATS===========\n";
     std::cout << "Total number of pairs extracted from -s " << longReadsFile << " " << totalPairs << "\n";
     std::cout << "At least one sequence/pair missing from contigs: " << ct_single << "\n";

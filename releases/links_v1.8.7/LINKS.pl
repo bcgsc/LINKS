@@ -1087,6 +1087,7 @@ sub pairContigs{
    my $counter1 = 0;
    my $counter2 = 0;
    my $counter3 = 0;
+   my %CheckCounterBase = 0;
    my $Check0Counter = 0;
    my $Check1Counter = 0;
    my $Check2Counter = 0;
@@ -1136,7 +1137,7 @@ sub pairContigs{
       my $mateslist = $matepair->{$read_a};
 
       foreach my $read_b (keys %$mateslist){
-
+            CheckCounterBase++;
           if($matepair->{$read_a}{$read_b}{'bt'}==0 && $track->{$read_a}{'multiple'}==1 && $track->{$read_b}{'multiple'}==1){ ###This has little if no effect, but negative for some odd reason
             $Check1Counter++;
             ##below indicates this specific pair has been seen
@@ -1384,7 +1385,7 @@ sub pairContigs{
    my $satisfied = $ct_ok_pairs + $ct_ok_contig;
    my $unsatisfied = $ct_problem_pairs + $ct_iz_issues + $ct_illogical;
    my $ct_both_reads = $ct_both * 2;
-   print "THESE ARE THE CHECKPOINT COUNTERS\n$Check0Counter \n$Check1Counter \n$Check2Counter \n$Check3Counter \n$Check4Counter \n$Check5Counter \n$Check6Counter \n$Check7Counter \n$Check8Counter \n$Check9Counter \n$Check10Counter \n$Check11Counter \n$Check12Counter \n$Check13Counter \n$Check14Counter \n$Check15Counter \n$Check16Counter \n$Check17Counter \n$Check18Counter \n$Check19Counter \n$Check20Counter \n$Check21Counter \n$Check22Counter \n$Check23Counter \n$Check24Counter \n$Check25Counter \n$Check26Counter\n";
+   print "THESE ARE THE CHECKPOINT COUNTERS\n$CheckCounterBase\n$Check0Counter \n$Check1Counter \n$Check2Counter \n$Check3Counter \n$Check4Counter \n$Check5Counter \n$Check6Counter \n$Check7Counter \n$Check8Counter \n$Check9Counter \n$Check10Counter \n$Check11Counter \n$Check12Counter \n$Check13Counter \n$Check14Counter \n$Check15Counter \n$Check16Counter \n$Check17Counter \n$Check18Counter \n$Check19Counter \n$Check20Counter \n$Check21Counter \n$Check22Counter \n$Check23Counter \n$Check24Counter \n$Check25Counter \n$Check26Counter\n";
    print LOG "\n===========PAIRED K-MER STATS===========\n";
    print LOG "Total number of pairs extracted from -s $longfile: $totalpairs\n";
    print LOG "At least one sequence/pair missing from contigs: $ct_single\n";
