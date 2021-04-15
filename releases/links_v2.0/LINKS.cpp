@@ -630,6 +630,10 @@ void pairContigs(
     if(verbose) std::cout << "Pairing contigs...\n";
     //******************
     int CheckCounterBase = 0;
+    int filter1 = 0;
+    int filter2 = 0;
+    int filter3 = 0;
+    int filter4 = 0;
     int Check0Counter = 0;
     int Check1Counter = 0;
     int Check2Counter = 0;
@@ -666,8 +670,14 @@ void pairContigs(
             // std::cout << "Checkpoint 1 iteration through every matePair\n";
             // seg faults here
             if(mateListItr->second.getBT() == false) {
-                if(trackAll.find(matePairItr->first) != trackAll.end() && trackAll[matePairItr->first].getMultiple() == 1) { 
-                    if(trackAll.find(mateListItr->first) != trackAll.end() && trackAll[mateListItr->first].getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
+                filter1++;
+                if(trackAll.find(matePairItr->first) != trackAll.end()) {
+                    filter2++;
+                    if(trackAll[matePairItr->first].getMultiple() == 1) { 
+                        filter3++;
+                    if(trackAll.find(mateListItr->first) != trackAll.end()){ 
+                        filter4++;
+                        if(trackAll[mateListItr->first].getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
                 Check1Counter++;
                 // std::cout << "Checkpoint 2 (if both pairss multiple == 1)\n";
                 // below indicates this specific pair has been seen (bt = 1)
@@ -1019,7 +1029,7 @@ void pairContigs(
                         ct_single_hash[insert_size] = ct_single_hash[insert_size] + 1;
                     }
                 }
-            }}} else { // if unseen
+            }}}}} else { // if unseen
                 Check26Counter++;
                 // std::cout << "UNSEEN\n";
                 if(matePair[matePairItr->first][mateListItr->first].getBT() == false) {

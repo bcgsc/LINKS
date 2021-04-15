@@ -1087,7 +1087,7 @@ sub pairContigs{
    my $counter1 = 0;
    my $counter2 = 0;
    my $counter3 = 0;
-   my %CheckCounterBase = 0;
+   my $CheckCounterBase = 0;
    my $Check0Counter = 0;
    my $Check1Counter = 0;
    my $Check2Counter = 0;
@@ -1137,7 +1137,7 @@ sub pairContigs{
       my $mateslist = $matepair->{$read_a};
 
       foreach my $read_b (keys %$mateslist){
-            CheckCounterBase++;
+            $CheckCounterBase++;
           if($matepair->{$read_a}{$read_b}{'bt'}==0 && $track->{$read_a}{'multiple'}==1 && $track->{$read_b}{'multiple'}==1){ ###This has little if no effect, but negative for some odd reason
             $Check1Counter++;
             ##below indicates this specific pair has been seen
