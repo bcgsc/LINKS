@@ -572,7 +572,7 @@ void inline kmerizeContig( std::string *seq,
                 trackAll[ntHashContig.hashes()[0]] = KmerInfo(head, i, i + k);
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
-                // WARNING***** Because we are using canonicals, most of the multiples will be 
+                // WARNING***** Because we are using canonicals, most of the multiples will be 2
                 trackAll[ntHashContig.hashes()[0]].incrementMultiple();
                 std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.hashes()[0]].getMultiple()) << "\n";
             }
@@ -723,26 +723,27 @@ void pairContigs(
                         //Determine most likely possibility
                         if(trackAll[matePairItr->first].getStart() < trackAll[matePairItr->first].getEnd()) {
                             Check3Counter++;
-                            std::cout << "Checkpoint 5 (A.start < A.end)";
+                            // std::cout << "Checkpoint 5 (A.start < A.end)\n";
+                            std::cout << "End: " << std::to_string(trackAll[mateListItr->first].getEnd()) << "Start: " << std::to_string(trackAll[mateListItr->first].getStart()) << "\n";
                             if(trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
                                 Check4Counter++;
-                                std::cout << "Checkpoint 6 (B.end < B.start)";
+                                // std::cout << "Checkpoint 6 (B.end < B.start)\n";
                                 uint64_t distance = getDistance(insert_size, A_length, A_start, B_start);
                                 if(verbose) std::cout << "A-> <-B  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,Bstart\n";
                                 if(distance > min_allowed) {
                                     Check5Counter++;
-                                    std::cout << "Checkpoint 7 distance > min allowed";
+                                    // std::cout << "Checkpoint 7 distance > min allowed\n";
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
-                                        std::cout << "Checkpoint 7.1 adding to pair new GAPSLINKS";
+                                        // std::cout << "Checkpoint 7.1 adding to pair new GAPSLINKS\n";
                                         pair[ftig_a][isz][rtig_b] = Gaps_Links();
                                     } else {
-                                        std::cout << "Checkpoint 7.2 adding to pair existing gapslings";
+                                        // std::cout << "Checkpoint 7.2 adding to pair existing gapslings\n";
                                         pair[ftig_a][isz][rtig_b].addToGap(distance);
                                         pair[ftig_a][isz][rtig_b].incrementLinks();
                                     }
                                     if(pair.find(rtig_b) == pair.end() || pair[rtig_b].find(isz) == pair[rtig_b].end() || pair[rtig_b][isz].find(rtig_a) == pair[rtig_b][isz].end()) {
-                                        std::cout << "Checkpoint 7.3 adding to pair new GAPSLINKSs";
+                                        // std::cout << "Checkpoint 7.3 adding to pair new GAPSLINKSs\n";
                                         pair[rtig_b][isz][rtig_a] = Gaps_Links();
                                     } else {
                                         pair[rtig_b][isz][rtig_a].addToGap(distance);
