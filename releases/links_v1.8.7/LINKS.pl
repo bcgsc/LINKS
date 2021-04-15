@@ -838,7 +838,7 @@ sub kmerizeContigBloom{
 sub kmerizeContig{
 
    my ($counter,$seq,$track_all,$matepair,$k,$head,$rc) = @_;
-   $counter = 0;
+   # $counter = 0;
    for(my $pos=0;$pos<=(length($seq)-$k);$pos++){
       my $rd = substr($seq,$pos,$k);
       if(defined $matepair->{$rd}){
