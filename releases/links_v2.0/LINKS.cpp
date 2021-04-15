@@ -719,12 +719,12 @@ void pairContigs(
 
                     if(tig_a != tig_b) { // paired reads located on <> contigs
                         Check2Counter++;
-                        std::cout << "Checkpoint 4 (if tigs are different)\n";
+                        // std::cout << "Checkpoint 4 (if tigs are different)\n";
                         //Determine most likely possibility
                         if(trackAll[matePairItr->first].getStart() < trackAll[matePairItr->first].getEnd()) {
                             Check3Counter++;
                             // std::cout << "Checkpoint 5 (A.start < A.end)\n";
-                            std::cout << "End: " << std::to_string(trackAll[mateListItr->first].getEnd()) << "Start: " << std::to_string(trackAll[mateListItr->first].getStart()) << "\n";
+                            // std::cout << "End: " << std::to_string(trackAll[mateListItr->first].getEnd()) << "Start: " << std::to_string(trackAll[mateListItr->first].getStart()) << "\n";
                             if(trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
                                 Check4Counter++;
                                 // std::cout << "Checkpoint 6 (B.end < B.start)\n";
@@ -1020,7 +1020,8 @@ void pairContigs(
                             } else {
                                 ct_illogical_hash[insert_size] = ct_illogical_hash[insert_size] + 1;
                             }
-                            std::cout << "Pairs unsatisfied in pairing logic within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig" << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+                            // FOLLOWING IS NOT A DEBUGGING PRINT
+                            // std::cout << "Pairs unsatisfied in pairing logic within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig" << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
                         }
                     }
                 } else { // both pairs assembled
