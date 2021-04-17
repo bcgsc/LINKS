@@ -438,7 +438,7 @@ int main(int argc, char** argv) {
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair;
 
     btllib::BloomFilter& filtering = myFilter->get_bloom_filter();
-    btllib::SeqReader longReader(linksArgParser.longFile);
+    btllib::SeqReader longReader(linksArgParser.longFile, 8); // CHECK FOR FLAG MODES
     uint64_t counter = 0;
     uint64_t totalpairs = 0;
     uint64_t hits = 0;
@@ -552,7 +552,7 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
         // std::cout << "- Filter output file : " << outFileBf << "\n";
         std::cout << "- Filter output file : " << linksArgParser.k << "\n";
         assemblyBF = new btllib::KmerBloomFilter(m/8, hashFct, linksArgParser.k);
-        btllib::SeqReader assemblyReader(linksArgParser.assemblyFile);
+        btllib::SeqReader assemblyReader(linksArgParser.assemblyFile, 8);
         int builder = 0;
         for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
             if(builder % 100 == 0) {
@@ -905,8 +905,8 @@ void pairContigs(
                             }
                         } else {
                             Check10Counter++;
-                            // if ({read_b}{'end'} > {$read_b}{'start'}
-                            if(trackAll[mateListItr->first].getEnd() > trackAll[mateListItr->first].getStart()) {
+                            // if ({read_b}{'end'} > {$read_b}{'start'} (forward)
+                            if(trackFor.find(mateListItr->first) != trackFor.end()) {//trackAll[mateListItr->first].getEnd() > trackAll[mateListItr->first].getStart()) {
                                 Check11Counter++;
                                 uint64_t distance = getDistance(insert_size, B_length, B_start, A_start);
                                 if(verbose) std::cout << "B-> <-A  WITH " << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Blen, Bstart,Astart\n";
