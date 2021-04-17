@@ -647,7 +647,7 @@ void readContigs(
         unsigned hashFcts) {
     // std::cout << "hashFct in readContig: " << hashFcts << "\n";
     uint64_t cttig = 0;
-    btllib::SeqReader contigReader(assemblyFile);
+    btllib::SeqReader contigReader(assemblyFile, 8);// CHANGE TO FLAGS LATER
     uint64_t tmpCounter = 0;
     for (btllib::SeqReader::Record record; (record = contigReader.read());) {
         // tigLength.insert({record.name, record.seq.length()});
