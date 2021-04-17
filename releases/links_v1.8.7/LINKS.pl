@@ -1115,8 +1115,6 @@ sub pairContigs{
    my $Check24Counter = 0;
    my $Check25Counter = 0;
    my $Check26Counter = 0;
-   my $Check27Counter = 0;
-   my $Check28Counter = 0;
    foreach my $rd (keys %$matepair){ 
       $counter1++;
    }

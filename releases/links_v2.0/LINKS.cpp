@@ -320,6 +320,8 @@ uint64_t getFileSize(std::string filename);
 void readContigs(
         std::string assemblyFile,
         std::unordered_map<uint64_t, KmerInfo >& trackAll,
+        std::unordered_map<uint64_t, KmerInfo >& trackFor,
+        std::unordered_map<uint64_t, KmerInfo >& trackRev,
         std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
         std::unordered_map<std::string, uint64_t>& tigLength,
         uint64_t k,
@@ -329,6 +331,8 @@ void pairContigs(
     std::string longReadsFile,
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
     std::unordered_map<uint64_t, KmerInfo > trackAll,
+    std::unordered_map<uint64_t, KmerInfo>& trackFor,
+    std::unordered_map<uint64_t, KmerInfo>& trackRev,
     std::unordered_map<std::string, uint64_t> tigLength,
     std::string issues,
     std::string distribution,
@@ -438,28 +442,43 @@ int main(int argc, char** argv) {
     uint64_t counter = 0;
     uint64_t totalpairs = 0;
     uint64_t hits = 0;
+    uint64_t delta = linksArgParser.distances - (2 * linksArgParser.k);
     std::cout << "\n\n=>Reading long reads, building hash table : " << std::to_string(time(0)) << "\n";
     // $assemblyruninfo.=$reading_reads_message;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser.k, myFilter->get_hash_num());
-        btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), linksArgParser.distances - linksArgParser.k);
+        btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), delta);
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
             std::cout << "Counter: " << counter << "\n"; 
             counter++;
-            if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
+            // Forward
+            if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
                 hits++;
                 // If this hash exists in matePair, add the read to the second layer of instead of making a new entry
-                if(matePair[nthash.hashes()[0]].find(nthashLead.hashes()[0]) == matePair[nthash.hashes()[0]].end()) {
-                    matePair[nthash.hashes()[0]][nthashLead.hashes()[0]] = BT_IS(false, linksArgParser.distances);
+                if(matePair[nthash.get_forward_hash()].find(nthashLead.get_reverse_hash()) == matePair[nthash.get_forward_hash()].end()) {
+                    matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()] = BT_IS(false, linksArgParser.distances);
                 } else {
                     // LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser.distances);
                     // Check for existence
                     // frag_dist is an array of distances
-                    matePair[nthash.hashes()[0]][nthashLead.hashes()[0]].setBT(true);
-                    matePair[nthash.hashes()[0]][nthashLead.hashes()[0]].setIS(linksArgParser.distances);
+                    matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setBT(true);
+                    matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setIS(linksArgParser.distances);
                 }
             }
+            // if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
+            //     hits++;
+            //     // If this hash exists in matePair, add the read to the second layer of instead of making a new entry
+            //     if(matePair[nthash.hashes()[0]].find(nthashLead.hashes()[0]) == matePair[nthash.hashes()[0]].end()) {
+            //         matePair[nthash.hashes()[0]][nthashLead.hashes()[0]] = BT_IS(false, linksArgParser.distances);
+            //     } else {
+            //         // LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser.distances);
+            //         // Check for existence
+            //         // frag_dist is an array of distances
+            //         matePair[nthash.hashes()[0]][nthashLead.hashes()[0]].setBT(true);
+            //         matePair[nthash.hashes()[0]][nthashLead.hashes()[0]].setIS(linksArgParser.distances);
+            //     }
+            // }
         }
     }
     totalpairs = hits;
@@ -467,10 +486,12 @@ int main(int argc, char** argv) {
     
     
     std::unordered_map<uint64_t, KmerInfo> trackAll;
+    std::unordered_map<uint64_t, KmerInfo> trackFor;
+    std::unordered_map<uint64_t, KmerInfo> trackRev;
     std::unordered_map<std::string, uint64_t> tigLength;
     std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
     // Read contigs to find where the long read kmers belong in
-    readContigs(linksArgParser.assemblyFile, trackAll, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct);
+    readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct);
     std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
     std::cout << " pairContigs Parameter List : \n\n";
     std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
@@ -487,6 +508,8 @@ int main(int argc, char** argv) {
         linksArgParser.longFile,
         matePair,
         trackAll,
+        trackFor,
+        trackRev,
         tigLength,
         issues,
         distribution,
@@ -549,9 +572,12 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
     }
     return assemblyBF;
 }
-
+// matepair is from long reads Forward & reverse duos
+// trackAll is from contigs Forward and reverse for both
 void inline kmerizeContig( std::string *seq, 
                     std::unordered_map<uint64_t, KmerInfo>& trackAll,
+                    std::unordered_map<uint64_t, KmerInfo>& trackFor,
+                    std::unordered_map<uint64_t, KmerInfo>& trackRev,
                     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > *matePair,
                     uint64_t k,
                     std::string head,
@@ -565,17 +591,42 @@ void inline kmerizeContig( std::string *seq,
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
         // roll for every step
         // std::cout << "Roll no " << std::to_string(counter) << "\n";
-	    if(matePair->find(ntHashContig.hashes()[0]) != matePair->end()) {
+        // Forward part
+	    if(matePair->find(ntHashContig.get_forward_hash()) != matePair->end()) {
             tmpCounter++;
-            if(trackAll.find(ntHashContig.hashes()[0]) == trackAll.end()) {
+            if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
                 // std::cout << "new\n";
                 std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
-                trackAll[ntHashContig.hashes()[0]] = KmerInfo(head, i, i + k);
+                trackAll[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
                 // WARNING***** Because we are using canonicals, most of the multiples will be 2
-                trackAll[ntHashContig.hashes()[0]].incrementMultiple();
-                std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.hashes()[0]].getMultiple()) << "\n";
+                trackAll[ntHashContig.get_forward_hash()].incrementMultiple();
+                std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.get_forward_hash()].getMultiple()) << "\n";
+            }
+            if(trackFor.find(ntHashContig.get_forward_hash()) == trackFor.end()) {
+                trackFor[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
+            } else {
+                trackFor[ntHashContig.get_forward_hash()].incrementMultiple();
+            }
+        }
+        // Reverse part
+        if(matePair->find(ntHashContig.get_reverse_hash()) != matePair->end()) {
+            tmpCounter++;
+            if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
+                // std::cout << "new\n";
+                std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
+                trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k);
+            } else {
+                // std::cout << "kmer found in trackall! Increment multiple\n";
+                // WARNING***** Because we are using canonicals, most of the multiples will be 2
+                trackAll[ntHashContig.get_reverse_hash()].incrementMultiple();
+                std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.get_reverse_hash()].getMultiple()) << "\n";
+            }
+            if(trackRev.find(ntHashContig.get_forward_hash()) == trackRev.end()) {
+                trackRev[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
+            } else {
+                trackRev[ntHashContig.get_forward_hash()].incrementMultiple();
             }
         }
         counter++;
@@ -587,6 +638,8 @@ void inline kmerizeContig( std::string *seq,
 void readContigs(
         std::string assemblyFile,
         std::unordered_map<uint64_t, KmerInfo>& trackAll,
+        std::unordered_map<uint64_t, KmerInfo>& trackFor,
+        std::unordered_map<uint64_t, KmerInfo>& trackRev,
         std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
         std::unordered_map<std::string, uint64_t>& tigLength,
         uint64_t k,
@@ -603,7 +656,7 @@ void readContigs(
         if(record.seq.length() >= minSize) {
             // std::cout << "Kmerizing contig\n";
             // std::cout << "seq:\n" << record.seq << "\n";
-            kmerizeContig(&record.seq, trackAll, &matePair, k, record.name, hashFcts, cttig, tmpCounter);
+            kmerizeContig(&record.seq, trackAll, trackFor, trackRev, &matePair, k, record.name, hashFcts, cttig, tmpCounter);
         }
     }
     std::cout << "*****THis is the tmpCounter *******: " << tmpCounter << "\n";
@@ -613,6 +666,8 @@ void pairContigs(
     std::string longReadsFile,
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
     std::unordered_map<uint64_t, KmerInfo> trackAll,
+    std::unordered_map<uint64_t, KmerInfo>& trackFor,
+    std::unordered_map<uint64_t, KmerInfo>& trackRev,
     std::unordered_map<std::string, uint64_t> tigLength,
     std::string issues,
     std::string distribution,
@@ -722,11 +777,13 @@ void pairContigs(
                         Check2Counter++;
                         // std::cout << "Checkpoint 4 (if tigs are different)\n";
                         //Determine most likely possibility
-                        if(trackAll[matePairItr->first].getStart() < trackAll[matePairItr->first].getEnd()) {
+                        // Checking if forward
+                        if(trackFor.find(matePairItr->first) != trackFor.end()) {//trackAll[matePairItr->first].getStart() < trackAll[matePairItr->first].getEnd()) {
                             Check3Counter++;
                             // std::cout << "Checkpoint 5 (A.start < A.end)\n";
-                            std::cout << "End: " << std::to_string(trackAll[mateListItr->first].getEnd()) << "Start: " << std::to_string(trackAll[mateListItr->first].getStart()) << "\n";
-                            if(trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
+                            // std::cout << "End: " << std::to_string(trackAll[mateListItr->first].getEnd()) << "Start: " << std::to_string(trackAll[mateListItr->first].getStart()) << "\n";
+                            // Checking if reverse
+                            if(trackRev.find(matePairItr->first) != trackRev.end()) {//trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
                                 Check4Counter++;
                                 // std::cout << "Checkpoint 6 (B.end < B.start)\n";
                                 uint64_t distance = getDistance(insert_size, A_length, A_start, B_start);
