@@ -699,6 +699,8 @@ sub kmerize{
    my $tmpCounter2 = 0;
    my $tmpCounter3 = 0;
    my $tmpCounter4 = 0;
+   my $tmpCounter5 = 0;
+   my $tmpCounter6 = 0;
    my $tmpCounter0 = 0;
 
    for(my $pos=$initpos;$pos<=$endposition;$pos+=$step){###MPET
@@ -707,6 +709,8 @@ sub kmerize{
       $tmpCounter2 = 0;
       $tmpCounter3 = 0;
       $tmpCounter4 = 0;
+      $tmpCounter5 = 0;
+      $tmpCounter6 = 0;
       my $rd1 = substr($seq,$pos,$k);
       $rd1 = &reverseComplement($rd1) if($readlength);###MPET
       my $secondstart = $pos + $buffer;###MPET
@@ -716,7 +720,17 @@ sub kmerize{
          $tmpCounter0++;
       }
       print "Before the if statement: $tmpCounter0\n";
-      if(defined $matepair->{$rd2}{$rd1}){my $trd1=$rd2;my $trd2=$rd1;$rd1=$trd1;$rd2=$trd2;}
+      if(defined $matepair->{$rd2}{$rd1}){
+            foreach my $rd (keys %$matepair){ 
+               $tmpCounter5++;
+            }
+            print "Inside the if statement1: $tmpCounter5\n";
+            my $trd1=$rd2;my $trd2=$rd1;$rd1=$trd1;$rd2=$trd2;
+            foreach my $rd (keys %$matepair){ 
+               $tmpCounter6++;
+            }
+            print "Inside the if statement2: $tmpCounter6\n";
+         }
       foreach my $rd (keys %$matepair){ 
          $tmpCounter1++;
       }
