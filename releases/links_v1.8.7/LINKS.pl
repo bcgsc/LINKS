@@ -560,11 +560,11 @@ sub readContigs{
             my $tiglen = length($seq);
             if($tiglen >= $min_size){
                ($track_allCounter, $track_all) = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
-               print "Is returned right? $track_allCounter\n";
+               #print "Is returned right? $track_allCounter\n";
                $sum += $track_allCounter;
                my $revcomp = &reverseComplement($seq);
                ($track_allCounter, $track_all) = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
-               print "Is returned right? $track_allCounter\n";
+               #print "Is returned right? $track_allCounter\n";
                $sum += $track_allCounter;
                $tig_length->{$cttig} = $tiglen;
             }
@@ -574,7 +574,7 @@ sub readContigs{
       }else{
          $seq .= $_;
       }
-      print "Trackall is: $sum \n";
+      #print "Trackall is: $sum \n";
    }
    $cttig++;
    print "\r$cttig";
@@ -584,10 +584,10 @@ sub readContigs{
    if(length($seq) >= $min_size){
       ($track_allCounter, $track_all) = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
       $sum += $track_allCounter;
-      print "Is returned right? $track_allCounter\n";
+      #print "Is returned right? $track_allCounter\n";
       my $revcomp = &reverseComplement($seq);
       ($track_allCounter, $track_all) = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
-      print "Is returned right? $track_allCounter\n";
+      #print "Is returned right? $track_allCounter\n";
       $sum += $track_allCounter;
       $tig_length->{$cttig} = length($seq);
    }
@@ -927,7 +927,7 @@ sub kmerizeContig{
          $track_all->{$rd}{'multiple'}++;
       }
    }
-   print "Returning a counter value : $counter\n";
+   #print "Returning a counter value : $counter\n";
    return ($counter, $track_all);
 }
 
@@ -1213,10 +1213,10 @@ sub pairContigs{
       foreach my $rd (keys %$mateslist){ 
          $readbCounter++;
       }
-      print "****read_b counter is : $readbCounter will I enter loop?\n";
+      #print "****read_b counter is : $readbCounter will I enter loop?\n";
       foreach my $read_b (keys %$mateslist){
             $CheckCounterBase++;
-            # print Dumper(\%$track);
+            print Dumper(\%$track);
           if($matepair->{$read_a}{$read_b}{'bt'}==0) {
              $filter1++;
              if($track->{$read_a}{'multiple'}==1) {
