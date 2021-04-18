@@ -440,7 +440,7 @@ int main(int argc, char** argv) {
 
     btllib::BloomFilter& filtering = myFilter->get_bloom_filter();
     btllib::SeqReader longReader(linksArgParser.longFile, 8); // CHECK FOR FLAG MODES
-    // uint64_t counter = 0;
+    uint64_t counter = 0;
     // uint64_t totalpairs = 0;
     // uint64_t hits = 0;
     uint64_t delta = linksArgParser.distances - (2 * linksArgParser.k);
@@ -449,11 +449,13 @@ int main(int argc, char** argv) {
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser.k, myFilter->get_hash_num());
         btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), delta);
-        std::cout << "\n\n=>Kmerize start in c++ " + std::to_string(time(0)) + "\n";
+        if(counter == 0) {
+            std::cout << "\n\n=>Kmerize start in c++ " + std::to_string(time(0)) + "\n";
+        }
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
             // std::cout << "Counter: " << counter << "\n"; 
-            // counter++;
+            counter++;
             // Forward
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
                 // hits++;
@@ -486,7 +488,9 @@ int main(int argc, char** argv) {
             //     }
             // }
         }
-        std::cout << "\n\n=>Kmerize end in c++ " + std::to_string(time(0)) + "\n";
+        if(counter == 10000) {
+            std::cout << "\n\n=>Kmerize end in c++ " + std::to_string(time(0)) + "\n";
+        }
     }
     // totalpairs = hits;
     // std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
