@@ -759,12 +759,15 @@ sub kmerize{
          foreach my $rd (keys %$matepair){ 
             $tmpCounter4++;
          }
+         my $countermatelist = 0;
          print "KEY SET SIZE AFTER IS: $tmpCounter4\n";
-         # foreach my $rd (keys %$matelist){ 
-         #    $countermatelist++;
-         # }
-         # print "MATELIST READ Size IS : $rd\n";
+         my $matelist = $matepair->{$rd2}
+         foreach my $rd (keys %$matelist){ 
+            $countermatelist++;
+         }
+         print "MATELIST READ Size IS : $rd\n";
          $pairct++;
+
       }
 
    }
