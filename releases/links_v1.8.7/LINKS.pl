@@ -297,15 +297,15 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
          #   ($set,$bin,$sumall,$ctall) = &readBAM($sumall,$ctall,$set,$bin,$_,$encoded,$seedsplit,$r_clip,$q_clip,$c_clip,$e_ascii,$file_ct,$ct_fof_line,$targetwordlen);
          #}else{
          #($set,$bin,$sumall,$ctall) = &readFastaFastq($sumall,$ctall,$set,$bin,$_,$encoded,$seedsplit,$r_clip,$q_clip,$c_clip,$e_ascii,$file_ct,$ct_fof_line,$targetwordlen);
-         my $readone = "ATCGATCGATCGATC";
-         my $readtwo = "ATCGATCGATCGATC";
-         print "TESTING\n";
-         $matepair->{$readone}{$readtwo}{'is'} = $frag_dist;
-         #$matepair->{$rd1}{$rd2}{'rd'}{$head}++;  ### this will be used to track uniqueness in pairing (should expect 1 pair per [long]read and one [long]read with that specific pair. HAS LITTLE TO NO EFFECT BUT REQ MORE MEM
-         $matepair->{$readone}{$readtwo}{'bt'} = 1;
-         foreach my $rd (keys %$matepair){ 
-            $matePairCounter++;
-         }
+         # my $readone = "ATCGATCGATCGATC";
+         # my $readtwo = "ATCGATCGATCGATC";
+         # print "TESTING\n";
+         # $matepair->{$readone}{$readtwo}{'is'} = $frag_dist;
+         # #$matepair->{$rd1}{$rd2}{'rd'}{$head}++;  ### this will be used to track uniqueness in pairing (should expect 1 pair per [long]read and one [long]read with that specific pair. HAS LITTLE TO NO EFFECT BUT REQ MORE MEM
+         # $matepair->{$readone}{$readtwo}{'bt'} = 1;
+         # foreach my $rd (keys %$matepair){ 
+         #    $matePairCounter++;
+         # }
          print "MATEPAIR COUNT IS $matePairCounter BEFORE readFastaFastq\n";
          if(! -e $_){ die "WARNING: Your file $_ does not exist -- fatal.\n";    }
          if($bfoff){
@@ -650,6 +650,7 @@ sub readFastaFastq{
             }
 
             ($matepair,$pairct) = &kmerize(uc($seq),$frag_dist,$k,$matepair,$step,$prevhead,$endposition,$initpos,$pairct,$bloom,$buffer,$readlength);
+            print "\nPAIRCT in loop $pairct.\n";  
             $seq = "";
             $quad=1;
          }
@@ -694,9 +695,12 @@ sub readFastaFastq{
 sub kmerize{
 
    my ($seq,$frag_dist,$k,$matepair,$step,$head,$endposition,$initpos,$pairct,$uniquePairct,$bloom,$buffer,$readlength) = @_;
+   my $tmpCounter1 = 0;
+   my $tmpCounter2 = 0;
 
    for(my $pos=$initpos;$pos<=$endposition;$pos+=$step){###MPET
-
+      $tmpCounter1 = 0;
+      $tmpCounter2 = 0;
       my $rd1 = substr($seq,$pos,$k);
       $rd1 = &reverseComplement($rd1) if($readlength);###MPET
       my $secondstart = $pos + $buffer;###MPET
@@ -710,8 +714,17 @@ sub kmerize{
             $uniquePairct++;
          }
          $matepair->{$rd1}{$rd2}{'is'} = $frag_dist;
+         foreach my $rd (keys %$matepair){ 
+            $tmpCounter1++;
+         }
+         print "KEY SET SIZE AFTER IS: $tmpCounter1\n";
          #$matepair->{$rd1}{$rd2}{'rd'}{$head}++;  ### this will be used to track uniqueness in pairing (should expect 1 pair per [long]read and one [long]read with that specific pair. HAS LITTLE TO NO EFFECT BUT REQ MORE MEM
          $matepair->{$rd1}{$rd2}{'bt'} = 0;
+         foreach my $rd (keys %$matepair){ 
+            $tmpCounter2++;
+         }
+         print "KEY SET SIZE AFTER IS: $tmpCounter2\n";
+
          $pairct++;
       }
 
