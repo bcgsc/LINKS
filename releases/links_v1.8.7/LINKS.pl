@@ -695,77 +695,77 @@ sub readFastaFastq{
 sub kmerize{
 
    my ($seq,$frag_dist,$k,$matepair,$step,$head,$endposition,$initpos,$pairct,$uniquePairct,$bloom,$buffer,$readlength) = @_;
-   my $tmpCounter1 = 0;
-   my $tmpCounter2 = 0;
-   my $tmpCounter3 = 0;
-   my $tmpCounter4 = 0;
-   my $tmpCounter5 = 0;
-   my $tmpCounter6 = 0;
-   my $tmpCounter0 = 0;
+   # my $tmpCounter1 = 0;
+   # my $tmpCounter2 = 0;
+   # my $tmpCounter3 = 0;
+   # my $tmpCounter4 = 0;
+   # my $tmpCounter5 = 0;
+   # my $tmpCounter6 = 0;
+   # my $tmpCounter0 = 0;
 
    for(my $pos=$initpos;$pos<=$endposition;$pos+=$step){###MPET
-      $tmpCounter0 = 0;
-      $tmpCounter1 = 0;
-      $tmpCounter2 = 0;
-      $tmpCounter3 = 0;
-      $tmpCounter4 = 0;
-      $tmpCounter5 = 0;
-      $tmpCounter6 = 0;
+      # $tmpCounter0 = 0;
+      # $tmpCounter1 = 0;
+      # $tmpCounter2 = 0;
+      # $tmpCounter3 = 0;
+      # $tmpCounter4 = 0;
+      # $tmpCounter5 = 0;
+      # $tmpCounter6 = 0;
       my $rd1 = substr($seq,$pos,$k);
       $rd1 = &reverseComplement($rd1) if($readlength);###MPET
       my $secondstart = $pos + $buffer;###MPET
       my $rd2ss = substr($seq,$secondstart,$k);
       my $rd2 = &reverseComplement($rd2ss);
-      foreach my $rd (keys %$matepair){ 
-         $tmpCounter0++;
-      }
-      print "Before the if statement: $tmpCounter0\n";
+      # foreach my $rd (keys %$matepair){ 
+      #    $tmpCounter0++;
+      # }
+      # print "Before the if statement: $tmpCounter0\n";
       if(defined $matepair->{$rd2}{$rd1}){
-            foreach my $rd (keys %$matepair){ 
-               $tmpCounter5++;
-            }
-            print "Inside the if statement1: $tmpCounter5\n";
-            my $matelist = $matepair->{$rd2};
-            my $countermatelist = 0;
-            foreach my $rd (keys %$matelist){ 
-               $countermatelist++;
-            }
-            print "MATELIST READ Size IS : $countermatelist\n";
+            # foreach my $rd (keys %$matepair){ 
+            #    $tmpCounter5++;
+            # }
+            # print "Inside the if statement1: $tmpCounter5\n";
+            # my $matelist = $matepair->{$rd2};
+            # my $countermatelist = 0;
+            # foreach my $rd (keys %$matelist){ 
+            #    $countermatelist++;
+            # }
+            # print "MATELIST READ Size IS : $countermatelist\n";
             my $trd1=$rd2;my $trd2=$rd1;$rd1=$trd1;$rd2=$trd2;
-            foreach my $rd (keys %$matepair){ 
-               $tmpCounter6++;
-            }
-            print "Inside the if statement2: $tmpCounter6\n";
+            # foreach my $rd (keys %$matepair){ 
+            #    $tmpCounter6++;
+            # }
+            # print "Inside the if statement2: $tmpCounter6\n";
          }
-      foreach my $rd (keys %$matepair){ 
-         $tmpCounter1++;
-      }
-      print "Counter3: $tmpCounter1\n";
+      # foreach my $rd (keys %$matepair){ 
+      #    $tmpCounter1++;
+      # }
+      # print "Counter3: $tmpCounter1\n";
       if($bloom->contains($rd1) && $bloom->contains($rd2)){ ###Don't bother hashing k-mer pairs if assembly doesn't have these kmers
          if(not(defined $matepair->{$rd1})) {
             $uniquePairct++;
          }
-         foreach my $rd (keys %$matepair){ 
-            $tmpCounter2++;
-         }
-         print "Before all matepair size: $tmpCounter2\n";
+         # foreach my $rd (keys %$matepair){ 
+         #    $tmpCounter2++;
+         # }
+         # print "Before all matepair size: $tmpCounter2\n";
          $matepair->{$rd1}{$rd2}{'is'} = $frag_dist;
-         foreach my $rd (keys %$matepair){ 
-            $tmpCounter3++;
-         }
-         print "KEY SET SIZE AFTER IS: $tmpCounter3\n";
+         # foreach my $rd (keys %$matepair){ 
+         #    $tmpCounter3++;
+         # }
+         # print "KEY SET SIZE AFTER IS: $tmpCounter3\n";
          #$matepair->{$rd1}{$rd2}{'rd'}{$head}++;  ### this will be used to track uniqueness in pairing (should expect 1 pair per [long]read and one [long]read with that specific pair. HAS LITTLE TO NO EFFECT BUT REQ MORE MEM
          $matepair->{$rd1}{$rd2}{'bt'} = 0;
-         foreach my $rd (keys %$matepair){ 
-            $tmpCounter4++;
-         }
-         my $countermatelist = 0;
-         print "KEY SET SIZE AFTER IS: $tmpCounter4\n";
-         my $matelist = $matepair->{$rd1};
-         foreach my $rd (keys %$matelist){ 
-            $countermatelist++;
-         }
-         print "MATELIST READ Size IS : $countermatelist\n";
+         # foreach my $rd (keys %$matepair){ 
+         #    $tmpCounter4++;
+         # }
+         # my $countermatelist = 0;
+         # print "KEY SET SIZE AFTER IS: $tmpCounter4\n";
+         # my $matelist = $matepair->{$rd1};
+         # foreach my $rd (keys %$matelist){ 
+         #    $countermatelist++;
+         # }
+         # print "MATELIST READ Size IS : $countermatelist\n";
          $pairct++;
 
       }
