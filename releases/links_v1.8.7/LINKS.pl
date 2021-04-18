@@ -1188,6 +1188,10 @@ sub pairContigs{
    my $Check25Counter = 0;
    my $Check26Counter = 0;
    my $readbCounter = 0;
+   my $filter1 = 0;
+   my $filter2 = 0;
+   my $filter3 = 0;
+   my $filter4 = 0;
    foreach my $rd (keys %$matepair){ 
       $counter1++;
    }
@@ -1213,7 +1217,14 @@ sub pairContigs{
       foreach my $read_b (keys %$mateslist){
             $CheckCounterBase++;
             print Dumper(\%$track);
-          if($matepair->{$read_a}{$read_b}{'bt'}==0 && $track->{$read_a}{'multiple'}==1 && $track->{$read_b}{'multiple'}==1){ ###This has little if no effect, but negative for some odd reason
+          if($matepair->{$read_a}{$read_b}{'bt'}==0) {
+             $filter1++;
+             if($track->{$read_a}{'multiple'}==1) {
+                $filter2++;
+                if($track->{$read_b}{'multiple'}==1){ ###This has little if no effect, but negative for some odd reason
+                $filter3++;
+                  if(1) {
+                     $filter4++;
             $Check1Counter++;
             ##below indicates this specific pair has been seen
             $matepair->{$read_a}{$read_b}{'bt'}=1;
@@ -1441,7 +1452,7 @@ sub pairContigs{
                $ct_single++;
                $ct_single_hash->{$insert_size}++;
             }
-         }else{#if unseen
+         }}}}else{#if unseen
             $Check26Counter++;
             $ct_multiple++ if( $matepair->{$read_a}{$read_b}{'bt'}==0 );
 	      }
@@ -1461,6 +1472,7 @@ sub pairContigs{
    my $unsatisfied = $ct_problem_pairs + $ct_iz_issues + $ct_illogical;
    my $ct_both_reads = $ct_both * 2;
    print "MATEPAIR READ_A COUNTER $matePairCounter\n\n";
+   print "Filters: \n$filter1\n$filter2\n$filter3\n$filter4\n\n";
    print "THESE ARE THE CHECKPOINT COUNTERS\n$CheckCounterBase\n$Check0Counter \n$Check1Counter \n$Check2Counter \n$Check3Counter \n$Check4Counter \n$Check5Counter \n$Check6Counter \n$Check7Counter \n$Check8Counter \n$Check9Counter \n$Check10Counter \n$Check11Counter \n$Check12Counter \n$Check13Counter \n$Check14Counter \n$Check15Counter \n$Check16Counter \n$Check17Counter \n$Check18Counter \n$Check19Counter \n$Check20Counter \n$Check21Counter \n$Check22Counter \n$Check23Counter \n$Check24Counter \n$Check25Counter \n$Check26Counter\n";
    print LOG "\n===========PAIRED K-MER STATS===========\n";
    print LOG "Total number of pairs extracted from -s $longfile: $totalpairs\n";
