@@ -431,101 +431,101 @@ int main(int argc, char** argv) {
     //-----------------------------
     btllib::KmerBloomFilter * myFilter;
     myFilter = makeBF(bfElements, linksArgParser);
-    std::cout << "Made BF \n";
-    unsigned hashFct = myFilter->get_hash_num();
-    std::cout << "Made BF hash fcts: " << std::to_string(hashFct) << "\n";
+    // std::cout << "Made BF \n";
+    // unsigned hashFct = myFilter->get_hash_num();
+    // std::cout << "Made BF hash fcts: " << std::to_string(hashFct) << "\n";
 
-    // k-merize long reads
-    std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair;
+    // // k-merize long reads
+    // std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair;
 
-    btllib::BloomFilter& filtering = myFilter->get_bloom_filter();
-    btllib::SeqReader longReader(linksArgParser.longFile, 8); // CHECK FOR FLAG MODES
-    uint64_t counter = 0;
-    uint64_t totalpairs = 0;
-    uint64_t hits = 0;
-    uint64_t delta = linksArgParser.distances - (2 * linksArgParser.k);
-    std::cout << "\n\n=>Reading long reads, building hash table : " << std::to_string(time(0)) << "\n";
-    // $assemblyruninfo.=$reading_reads_message;
-    for (btllib::SeqReader::Record record; (record = longReader.read());) {
-        btllib::NtHash nthash(record.seq, linksArgParser.k, myFilter->get_hash_num());
-        btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), delta);
-        for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
-            // roll for the number of steps
-            // std::cout << "Counter: " << counter << "\n"; 
-            counter++;
-            // Forward
-            if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
-                hits++;
-                // If forward hash is not found in matepair, add it
-                // if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
-                //     matePair[nthash.get_forward_hash()][nthash.get_reverse_hash()] = ;
-                // } else 
-                // If this hash exists in matePair, add the read to the second layer of instead of making a new entry
-                if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
-                    matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()] = BT_IS(false, linksArgParser.distances);
-                } else {
-                    // LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser.distances);
-                    // Check for existence
-                    // frag_dist is an array of distances
-                    matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setBT(true);
-                    matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setIS(linksArgParser.distances);
-                }
-            }
-            // if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
-            //     hits++;
-            //     // If this hash exists in matePair, add the read to the second layer of instead of making a new entry
-            //     if(matePair[nthash.hashes()[0]].find(nthashLead.hashes()[0]) == matePair[nthash.hashes()[0]].end()) {
-            //         matePair[nthash.hashes()[0]][nthashLead.hashes()[0]] = BT_IS(false, linksArgParser.distances);
-            //     } else {
-            //         // LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser.distances);
-            //         // Check for existence
-            //         // frag_dist is an array of distances
-            //         matePair[nthash.hashes()[0]][nthashLead.hashes()[0]].setBT(true);
-            //         matePair[nthash.hashes()[0]][nthashLead.hashes()[0]].setIS(linksArgParser.distances);
-            //     }
-            // }
-        }
-    }
-    totalpairs = hits;
-    std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
+    // btllib::BloomFilter& filtering = myFilter->get_bloom_filter();
+    // btllib::SeqReader longReader(linksArgParser.longFile, 8); // CHECK FOR FLAG MODES
+    // uint64_t counter = 0;
+    // uint64_t totalpairs = 0;
+    // uint64_t hits = 0;
+    // uint64_t delta = linksArgParser.distances - (2 * linksArgParser.k);
+    // std::cout << "\n\n=>Reading long reads, building hash table : " << std::to_string(time(0)) << "\n";
+    // // $assemblyruninfo.=$reading_reads_message;
+    // for (btllib::SeqReader::Record record; (record = longReader.read());) {
+    //     btllib::NtHash nthash(record.seq, linksArgParser.k, myFilter->get_hash_num());
+    //     btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), delta);
+    //     for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
+    //         // roll for the number of steps
+    //         // std::cout << "Counter: " << counter << "\n"; 
+    //         counter++;
+    //         // Forward
+    //         if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
+    //             hits++;
+    //             // If forward hash is not found in matepair, add it
+    //             // if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
+    //             //     matePair[nthash.get_forward_hash()][nthash.get_reverse_hash()] = ;
+    //             // } else 
+    //             // If this hash exists in matePair, add the read to the second layer of instead of making a new entry
+    //             if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
+    //                 matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()] = BT_IS(false, linksArgParser.distances);
+    //             } else {
+    //                 // LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser.distances);
+    //                 // Check for existence
+    //                 // frag_dist is an array of distances
+    //                 matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setBT(true);
+    //                 matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setIS(linksArgParser.distances);
+    //             }
+    //         }
+    //         // if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
+    //         //     hits++;
+    //         //     // If this hash exists in matePair, add the read to the second layer of instead of making a new entry
+    //         //     if(matePair[nthash.hashes()[0]].find(nthashLead.hashes()[0]) == matePair[nthash.hashes()[0]].end()) {
+    //         //         matePair[nthash.hashes()[0]][nthashLead.hashes()[0]] = BT_IS(false, linksArgParser.distances);
+    //         //     } else {
+    //         //         // LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser.distances);
+    //         //         // Check for existence
+    //         //         // frag_dist is an array of distances
+    //         //         matePair[nthash.hashes()[0]][nthashLead.hashes()[0]].setBT(true);
+    //         //         matePair[nthash.hashes()[0]][nthashLead.hashes()[0]].setIS(linksArgParser.distances);
+    //         //     }
+    //         // }
+    //     }
+    // }
+    // totalpairs = hits;
+    // std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
     
     
-    std::unordered_map<uint64_t, KmerInfo> trackAll;
-    std::unordered_map<uint64_t, KmerInfo> trackFor;
-    std::unordered_map<uint64_t, KmerInfo> trackRev;
-    std::unordered_map<std::string, uint64_t> tigLength;
-    std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
-    // Read contigs to find where the long read kmers belong in
-    readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
+    // std::unordered_map<uint64_t, KmerInfo> trackAll;
+    // std::unordered_map<uint64_t, KmerInfo> trackFor;
+    // std::unordered_map<uint64_t, KmerInfo> trackRev;
+    // std::unordered_map<std::string, uint64_t> tigLength;
+    // std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
+    // // Read contigs to find where the long read kmers belong in
+    // readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
 
-    // std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
-    // std::cout << " pairContigs Parameter List : \n\n";
-    // std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
-    // std::cout << " 2- matePair Size " << matePair.size() <<"\n";
-    // std::cout << " 3- trackAll size " << trackAll.size() <<"\n";
-    // std::cout << " 4- trackFor size " << trackFor.size() <<"\n";
-    // std::cout << " 5- trackRev size " << trackRev.size() <<"\n";
-    // std::cout << " 6- tigLength size " << tigLength.size() <<"\n";
-    // std::cout << " 7- issuesName " <<"\n";
-    // std::cout << " 8- distributionName " << distribution <<"\n";
-    // std::cout << " 9- totalPairs " << totalpairs <<"\n";
-    // std::cout << " 10- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
-    // std::cout << " 11- verbose " << linksArgParser.verbose <<"\n";
-    // std::cout << " 12- distributionName " << linksArgParser.insertStdev <<"\n";
-    pairContigs(
-        linksArgParser.longFile,
-        matePair,
-        trackAll,
-        trackFor,
-        trackRev,
-        tigLength,
-        issues,
-        distribution,
-        totalpairs,
-        tigpair_checkpoint,
-        simplepair_checkpoint,
-        linksArgParser.verbose,
-        linksArgParser.insertStdev);
+    // // std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
+    // // std::cout << " pairContigs Parameter List : \n\n";
+    // // std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
+    // // std::cout << " 2- matePair Size " << matePair.size() <<"\n";
+    // // std::cout << " 3- trackAll size " << trackAll.size() <<"\n";
+    // // std::cout << " 4- trackFor size " << trackFor.size() <<"\n";
+    // // std::cout << " 5- trackRev size " << trackRev.size() <<"\n";
+    // // std::cout << " 6- tigLength size " << tigLength.size() <<"\n";
+    // // std::cout << " 7- issuesName " <<"\n";
+    // // std::cout << " 8- distributionName " << distribution <<"\n";
+    // // std::cout << " 9- totalPairs " << totalpairs <<"\n";
+    // // std::cout << " 10- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
+    // // std::cout << " 11- verbose " << linksArgParser.verbose <<"\n";
+    // // std::cout << " 12- distributionName " << linksArgParser.insertStdev <<"\n";
+    // pairContigs(
+    //     linksArgParser.longFile,
+    //     matePair,
+    //     trackAll,
+    //     trackFor,
+    //     trackRev,
+    //     tigLength,
+    //     issues,
+    //     distribution,
+    //     totalpairs,
+    //     tigpair_checkpoint,
+    //     simplepair_checkpoint,
+    //     linksArgParser.verbose,
+    //     linksArgParser.insertStdev);
     return 0;
 }
 
