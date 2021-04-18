@@ -222,7 +222,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
       print LOG $writing_tigbloom_message;
       $assemblyruninfo.=$writing_tigbloom_message;
       $bloom->storeFilter($bfout);
-      exit; # MUST REMOVE, PLACED ONLY FOR BENCHMARKING
+      # exit; # MUST REMOVE, PLACED ONLY FOR BENCHMARKING
     }else{
       my $bffile_message="";
       my $bfreusemessage = "A Bloom filter was supplied ($bf_file) and will be used instead of building a new one from -f $assemblyfile\n";
@@ -314,7 +314,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
             ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
          }else{
             ($matepair,$pairct,$ctrd) = &readFastaFastq($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$bloom,$readlength);
-            
+            # exit; # MUST REMOVE, PLACED ONLY FOR BENCHMARKING
             print "PAIRCT for FILLING MATEPAIR is : $pairct\n";
             foreach my $rd (keys %$matepair){ 
                $matePairCounter++;
@@ -600,6 +600,7 @@ sub readContigs{
 }
 
 #----------------
+sub time_fp { sprintf"%d.%03d\n",Time::HiRes::gettimeofday }
 sub readFastaFastq{
    my $uniquePairct = 0;
    my ($file_ct,$ct_fof_line,$ctrd,$file,$frag_dist,$k,$step,$matepair,$delta,$initpos,$bloom,$readlength) = @_;
@@ -650,9 +651,12 @@ sub readFastaFastq{
                $endposition = $readlength-$k;###MPET
                $buffer = $readlength+1;###MPET
             }
-
+            print "Before kmerize: ";
+            &time_fp();
             ($matepair,$pairct) = &kmerize(uc($seq),$frag_dist,$k,$matepair,$step,$prevhead,$endposition,$initpos,$pairct,$bloom,$buffer,$readlength);
-            print "\nPAIRCT in loop $pairct.\n";  
+            print "After  kmerize: ";
+            &time_fp();
+            # print "\nPAIRCT in loop $pairct.\n";  
             $seq = "";
             $quad=1;
          }
