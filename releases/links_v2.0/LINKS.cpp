@@ -451,7 +451,7 @@ int main(int argc, char** argv) {
         btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), delta);
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
-            std::cout << "Counter: " << counter << "\n"; 
+            // std::cout << "Counter: " << counter << "\n"; 
             counter++;
             // Forward
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
@@ -498,20 +498,20 @@ int main(int argc, char** argv) {
     // Read contigs to find where the long read kmers belong in
     readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
 
-    std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
-    std::cout << " pairContigs Parameter List : \n\n";
-    std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
-    std::cout << " 2- matePair Size " << matePair.size() <<"\n";
-    std::cout << " 3- trackAll size " << trackAll.size() <<"\n";
-    std::cout << " 4- trackFor size " << trackFor.size() <<"\n";
-    std::cout << " 5- trackRev size " << trackRev.size() <<"\n";
-    std::cout << " 6- tigLength size " << tigLength.size() <<"\n";
-    std::cout << " 7- issuesName " <<"\n";
-    std::cout << " 8- distributionName " << distribution <<"\n";
-    std::cout << " 9- totalPairs " << totalpairs <<"\n";
-    std::cout << " 10- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
-    std::cout << " 11- verbose " << linksArgParser.verbose <<"\n";
-    std::cout << " 12- distributionName " << linksArgParser.insertStdev <<"\n";
+    // std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
+    // std::cout << " pairContigs Parameter List : \n\n";
+    // std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
+    // std::cout << " 2- matePair Size " << matePair.size() <<"\n";
+    // std::cout << " 3- trackAll size " << trackAll.size() <<"\n";
+    // std::cout << " 4- trackFor size " << trackFor.size() <<"\n";
+    // std::cout << " 5- trackRev size " << trackRev.size() <<"\n";
+    // std::cout << " 6- tigLength size " << tigLength.size() <<"\n";
+    // std::cout << " 7- issuesName " <<"\n";
+    // std::cout << " 8- distributionName " << distribution <<"\n";
+    // std::cout << " 9- totalPairs " << totalpairs <<"\n";
+    // std::cout << " 10- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
+    // std::cout << " 11- verbose " << linksArgParser.verbose <<"\n";
+    // std::cout << " 12- distributionName " << linksArgParser.insertStdev <<"\n";
     pairContigs(
         linksArgParser.longFile,
         matePair,
