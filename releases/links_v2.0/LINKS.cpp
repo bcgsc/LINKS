@@ -539,7 +539,7 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
         } else {
             std::cout << "Checking Bloom filter file " << linksArgParser.bfFile <<"...ok\n";
         }
-        std::cout << "Loading bloom filter of size " << getFileSize(linksArgParser.bfFile) << " from " << linksArgParser.bfFile << "\n";
+        // std::cout << "Loading bloom filter of size " << getFileSize(linksArgParser.bfFile) << " from " << linksArgParser.bfFile << "\n";
         assemblyBF = new btllib::KmerBloomFilter(linksArgParser.bfFile);
     } else {
         uint64_t m = ceil((-1 * (double)bfElements * log(linksArgParser.fpr)) / (log(2) * log(2)));
@@ -574,7 +574,7 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
         // assemblyruninfo += bfmsg;
         std::cout << bfmsg;
         assemblyBF->write("mybffile.out");
-        std::cout << "Done mybf, printing stats...\n";
+        // std::cout << "Done mybf, printing stats...\n";
         printBloomStats(*assemblyBF, std::cout);
         
     }
@@ -619,7 +619,7 @@ void inline kmerizeContig( std::string *seq,
             } else {
                 trackFor[ntHashContig.get_forward_hash()].incrementMultiple();
             }
-            std::cout << "trackFor size:" << trackFor.size() << "\n";
+            // std::cout << "trackFor size:" << trackFor.size() << "\n";
         }
         // Reverse part
         if(matePair->find(ntHashContig.get_reverse_hash()) != matePair->end()) {
@@ -640,16 +640,16 @@ void inline kmerizeContig( std::string *seq,
             } else {
                 trackRev[ntHashContig.get_reverse_hash()].incrementMultiple();
             }
-            std::cout << "trackRev size:" << trackRev.size() << "\n";
+            // std::cout << "trackRev size:" << trackRev.size() << "\n";
         }
         counter++;
     }
-    std::cout << "trackAll size:" << trackAll.size() << "\n";
-    std::cout << "trackFor size:" << trackFor.size() << "\n";
-    std::cout << "forCounter: " << std::to_string(forCounter) << "\n";
-    std::cout << "trackRev size:" << trackRev.size() << "\n";
-    std::cout << "revCounter: " << std::to_string(revCounter) << "\n";
-    std::cout << "\n\n\n";
+    // std::cout << "trackAll size:" << trackAll.size() << "\n";
+    // std::cout << "trackFor size:" << trackFor.size() << "\n";
+    // std::cout << "forCounter: " << std::to_string(forCounter) << "\n";
+    // std::cout << "trackRev size:" << trackRev.size() << "\n";
+    // std::cout << "revCounter: " << std::to_string(revCounter) << "\n";
+    // std::cout << "\n\n\n";
 }
 
 void readContigs(
@@ -675,10 +675,10 @@ void readContigs(
             // std::cout << "Kmerizing contig\n";
             // std::cout << "seq:\n" << record.seq << "\n";
             kmerizeContig(&record.seq, trackAll, trackFor, trackRev, &matePair, k, record.name, hashFcts, step, tmpCounter);
-            std::cout << "---------in readContigs------\ntrackAll size: " << std::to_string(trackAll.size()) << "\n" << "trackFor size: " << std::to_string(trackFor.size()) << "\n" << "trackRev size: " << std::to_string(trackRev.size()) << "\n";
+            // std::cout << "---------in readContigs------\ntrackAll size: " << std::to_string(trackAll.size()) << "\n" << "trackFor size: " << std::to_string(trackFor.size()) << "\n" << "trackRev size: " << std::to_string(trackRev.size()) << "\n";
         }
     }
-    std::cout << "*****THis is the tmpCounter *******: " << tmpCounter << "\n";
+    // std::cout << "*****THis is the tmpCounter *******: " << tmpCounter << "\n";
 }
 
 void pairContigs(
@@ -741,7 +741,7 @@ void pairContigs(
     //******************
     std::unordered_map<uint64_t, BT_IS>::iterator mateListItr;
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> >::iterator matePairItr;
-    std::cout << "trackAll size: " << std::to_string(trackAll.size()) << "\n" << "trackFor size: " << std::to_string(trackFor.size()) << "\n" << "trackRev size: " << std::to_string(trackRev.size()) << "\n";
+    // std::cout << "trackAll size: " << std::to_string(trackAll.size()) << "\n" << "trackFor size: " << std::to_string(trackFor.size()) << "\n" << "trackRev size: " << std::to_string(trackRev.size()) << "\n";
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
             CheckCounterBase++;
@@ -874,21 +874,21 @@ void pairContigs(
                                 if(verbose) std::cout << "A-> <-rB  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,rBstart\n";
                                 if(distance >= min_allowed) {
                                     Check8Counter++;
-                                    std::cout << "Checkpoint 10.1\n";
+                                    // std::cout << "Checkpoint 10.1\n";
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
-                                        std::cout << "Checkpoint 10.2\n";
+                                        // std::cout << "Checkpoint 10.2\n";
                                         pair[ftig_a][isz][rtig_b] = Gaps_Links();
                                     } else {
-                                        std::cout << "Checkpoint 10.3\n";
+                                        // std::cout << "Checkpoint 10.3\n";
                                         pair[ftig_a][isz][rtig_b].addToGap(distance);
                                         pair[ftig_a][isz][rtig_b].incrementLinks();
                                     }
                                     if(pair.find(ftig_b) == pair.end() || pair[ftig_b].find(isz) == pair[ftig_b].end() || pair[ftig_b][isz].find(rtig_a) == pair[ftig_b][isz].end()) {
-                                        std::cout << "Checkpoint 10.4\n";
+                                        // std::cout << "Checkpoint 10.4\n";
                                         pair[ftig_b][isz][rtig_a] = Gaps_Links();
                                     } else {
-                                        std::cout << "Checkpoint 10.5\n";
+                                        // std::cout << "Checkpoint 10.5\n";
                                         pair[ftig_b][isz][rtig_a].addToGap(distance);
                                         pair[ftig_b][isz][rtig_a].incrementLinks();
                                     }
@@ -938,18 +938,18 @@ void pairContigs(
                                     Check12Counter++;
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_b) == pair.end() || pair[ftig_b].find(isz) == pair[ftig_b].end() || pair[ftig_b][isz].find(ftig_a) == pair[ftig_b][isz].end()) {
-                                        std::cout << "Checkpoint 11.1\n";
+                                        // std::cout << "Checkpoint 11.1\n";
                                         pair[ftig_b][isz][ftig_a] = Gaps_Links();
                                     } else {
-                                        std::cout << "Checkpoint 11.2\n";
+                                        // std::cout << "Checkpoint 11.2\n";
                                         pair[ftig_b][isz][ftig_a].addToGap(distance);
                                         pair[ftig_b][isz][ftig_a].incrementLinks();
                                     }
                                     if(pair.find(rtig_a) == pair.end() || pair[rtig_a].find(isz) == pair[rtig_a].end() || pair[rtig_a][isz].find(rtig_b) == pair[rtig_a][isz].end()) {
-                                        std::cout << "Checkpoint 11.3\n";
+                                        // std::cout << "Checkpoint 11.3\n";
                                         pair[rtig_a][isz][rtig_b] = Gaps_Links();
                                     } else {
-                                        std::cout << "Checkpoint 11.4\n";
+                                        // std::cout << "Checkpoint 11.4\n";
                                         pair[rtig_a][isz][rtig_b].addToGap(distance);
                                         pair[rtig_a][isz][rtig_b].incrementLinks();
                                     }
@@ -996,18 +996,18 @@ void pairContigs(
                                     Check15Counter++;
                                     uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(rtig_b) == pair.end() || pair[rtig_b].find(isz) == pair[rtig_b].end() || pair[rtig_b][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
-                                        std::cout << "Checkpoint 12.1\n";
+                                        // std::cout << "Checkpoint 12.1\n";
                                         pair[rtig_b][isz][ftig_a] = Gaps_Links();
                                     } else {
-                                        std::cout << "Checkpoint 12.2\n";
+                                        // std::cout << "Checkpoint 12.2\n";
                                         pair[rtig_b][isz][ftig_a].addToGap(distance);
                                         pair[rtig_b][isz][ftig_a].incrementLinks();
                                     }
                                     if(pair.find(rtig_a) == pair.end() || pair[rtig_a].find(isz) == pair[rtig_a].end() || pair[rtig_a][isz].find(ftig_b) == pair[rtig_a][isz].end()) {
-                                        std::cout << "Checkpoint 12.3\n";
+                                        // std::cout << "Checkpoint 12.3\n";
                                         pair[rtig_a][isz][ftig_b] = Gaps_Links();
                                     } else {
-                                        std::cout << "Checkpoint 12.4\n";
+                                        // std::cout << "Checkpoint 12.4\n";
                                         pair[rtig_a][isz][ftig_b].addToGap(distance);
                                         pair[rtig_a][isz][ftig_b].incrementLinks();
                                     }
