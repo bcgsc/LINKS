@@ -455,8 +455,12 @@ int main(int argc, char** argv) {
             // Forward
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
                 hits++;
+                // If forward hash is not found in matepair, add it
+                // if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
+                //     matePair[nthash.get_forward_hash()][nthash.get_reverse_hash()] = ;
+                // } else 
                 // If this hash exists in matePair, add the read to the second layer of instead of making a new entry
-                if(matePair[nthash.get_forward_hash()].find(nthashLead.get_reverse_hash()) == matePair[nthash.get_forward_hash()].end()) {
+                if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
                     matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()] = BT_IS(false, linksArgParser.distances);
                 } else {
                     // LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser.distances);
@@ -615,13 +619,13 @@ void inline kmerizeContig( std::string *seq,
             tmpCounter++;
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
                 // std::cout << "new\n";
-                std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
+                // std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
                 trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k);
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
                 // WARNING***** Because we are using canonicals, most of the multiples will be 2
                 trackAll[ntHashContig.get_reverse_hash()].incrementMultiple();
-                std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.get_reverse_hash()].getMultiple()) << "\n";
+                // std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.get_reverse_hash()].getMultiple()) << "\n";
             }
             if(trackRev.find(ntHashContig.get_forward_hash()) == trackRev.end()) {
                 trackRev[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
