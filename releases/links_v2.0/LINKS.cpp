@@ -749,11 +749,11 @@ void pairContigs(
             // seg faults here
             if(mateListItr->second.getBT() == false) {
                 filter1++;
-                if(trackAll.find(matePairItr->first) != trackAll.end()) {
+                // if(trackAll.find(matePairItr->first) != trackAll.end()) {
                     filter2++;
                     if(trackAll[matePairItr->first].getMultiple() == 1) { 
                         filter3++;
-                    if(trackAll.find(mateListItr->first) != trackAll.end()){ 
+                    // if(trackAll.find(mateListItr->first) != trackAll.end()){ 
                         // std::unordered_map<uint64_t, KmerInfo>::iterator tmpItr;
                         // for(tmpItr = trackAll.begin(); tmpItr != trackAll.end(); tmpItr++) {
                         //     std::cout << "Multiple: " << tmpItr->second.getMultiple() << "\n";
@@ -1116,7 +1116,7 @@ void pairContigs(
                         ct_single_hash[insert_size] = ct_single_hash[insert_size] + 1;
                     }
                 }
-            }}}}} else { // if unseen
+            }}} else { // if unseen
                 Check26Counter++;
                 // std::cout << "UNSEEN\n";
                 if(matePair[matePairItr->first][mateListItr->first].getBT() == false) {
