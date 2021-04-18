@@ -1174,6 +1174,7 @@ sub pairContigs{
    my $Check24Counter = 0;
    my $Check25Counter = 0;
    my $Check26Counter = 0;
+   my $readbCounter = 0;
    foreach my $rd (keys %$matepair){ 
       $counter1++;
    }
@@ -1191,8 +1192,12 @@ sub pairContigs{
 
    foreach my $read_a (keys %$matepair){
       $matePairCounter++;
+      $readbCounter = 0;
       my $mateslist = $matepair->{$read_a};
-
+      foreach my $rd (keys %$mateslist){ 
+         $readbCounter++;
+      }
+      print "****read_b counter is : $readbCounter will I enter loop?\n";
       foreach my $read_b (keys %$mateslist){
             $CheckCounterBase++;
           if($matepair->{$read_a}{$read_b}{'bt'}==0 && $track->{$read_a}{'multiple'}==1 && $track->{$read_b}{'multiple'}==1){ ###This has little if no effect, but negative for some odd reason
