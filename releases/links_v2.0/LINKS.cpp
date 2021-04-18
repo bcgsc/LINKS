@@ -627,10 +627,10 @@ void inline kmerizeContig( std::string *seq,
                 trackAll[ntHashContig.get_reverse_hash()].incrementMultiple();
                 // std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.get_reverse_hash()].getMultiple()) << "\n";
             }
-            if(trackRev.find(ntHashContig.get_forward_hash()) == trackRev.end()) {
-                trackRev[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
+            if(trackRev.find(ntHashContig.get_reverse_hash()) == trackRev.end()) {
+                trackRev[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k);
             } else {
-                trackRev[ntHashContig.get_forward_hash()].incrementMultiple();
+                trackRev[ntHashContig.get_reverse_hash()].incrementMultiple();
             }
         }
         counter++;
