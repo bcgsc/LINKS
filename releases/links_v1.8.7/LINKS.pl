@@ -715,7 +715,7 @@ sub kmerize{
       foreach my $rd (keys %$matepair){ 
          $tmpCounter1++;
       }
-      print "Counter3: $tmpCounter3\n";
+      print "Counter3: $tmpCounter1\n";
       if($bloom->contains($rd1) && $bloom->contains($rd2)){ ###Don't bother hashing k-mer pairs if assembly doesn't have these kmers
          if(not(defined $matepair->{$rd1})) {
             $uniquePairct++;
@@ -723,18 +723,18 @@ sub kmerize{
          foreach my $rd (keys %$matepair){ 
             $tmpCounter2++;
          }
-         print "Before all matepair size: $tmpCounter3\n";
+         print "Before all matepair size: $tmpCounter2\n";
          $matepair->{$rd1}{$rd2}{'is'} = $frag_dist;
          foreach my $rd (keys %$matepair){ 
             $tmpCounter3++;
          }
-         print "KEY SET SIZE AFTER IS: $tmpCounter1\n";
+         print "KEY SET SIZE AFTER IS: $tmpCounter3\n";
          #$matepair->{$rd1}{$rd2}{'rd'}{$head}++;  ### this will be used to track uniqueness in pairing (should expect 1 pair per [long]read and one [long]read with that specific pair. HAS LITTLE TO NO EFFECT BUT REQ MORE MEM
          $matepair->{$rd1}{$rd2}{'bt'} = 0;
          foreach my $rd (keys %$matepair){ 
             $tmpCounter4++;
          }
-         print "KEY SET SIZE AFTER IS: $tmpCounter2\n";
+         print "KEY SET SIZE AFTER IS: $tmpCounter4\n";
 
          $pairct++;
       }
