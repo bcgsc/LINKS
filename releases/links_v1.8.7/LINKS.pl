@@ -222,6 +222,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
       print LOG $writing_tigbloom_message;
       $assemblyruninfo.=$writing_tigbloom_message;
       $bloom->storeFilter($bfout);
+      exit; # MUST REMOVE, PLACED ONLY FOR BENCHMARKING
     }else{
       my $bffile_message="";
       my $bfreusemessage = "A Bloom filter was supplied ($bf_file) and will be used instead of building a new one from -f $assemblyfile\n";
@@ -307,7 +308,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
          # foreach my $rd (keys %$matepair){ 
          #    $matePairCounter++;
          # }
-         print "MATEPAIR COUNT IS $matePairCounter BEFORE readFastaFastq\n";
+         # print "MATEPAIR COUNT IS $matePairCounter BEFORE readFastaFastq\n";
          if(! -e $_){ die "WARNING: Your file $_ does not exist -- fatal.\n";    }
          if($bfoff){
             ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
@@ -318,7 +319,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
             foreach my $rd (keys %$matepair){ 
                $matePairCounter++;
             }
-            print "MATEPAIR COUNT IS $matePairCounter after readFastaFastq\n";
+            # print "MATEPAIR COUNT IS $matePairCounter after readFastaFastq\n";
          }
 	 $distpairs+=$pairct;
          #}
@@ -592,7 +593,7 @@ sub readContigs{
       $tig_length->{$cttig} = length($seq);
    }
    ###
-   print "Trackall is: $sum \n";
+   #print "Trackall is: $sum \n";
    close IN;
 
    return $track_all,$tig_length;
