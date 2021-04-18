@@ -730,7 +730,7 @@ sub kmerize{
             foreach my $rd (keys %$matelist){ 
                $countermatelist++;
             }
-            print "MATELIST READ Size IS : $rd\n";
+            print "MATELIST READ Size IS : $countermatelist\n";
             my $trd1=$rd2;my $trd2=$rd1;$rd1=$trd1;$rd2=$trd2;
             foreach my $rd (keys %$matepair){ 
                $tmpCounter6++;
