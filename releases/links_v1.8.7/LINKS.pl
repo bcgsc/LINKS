@@ -699,8 +699,10 @@ sub kmerize{
    my $tmpCounter2 = 0;
    my $tmpCounter3 = 0;
    my $tmpCounter4 = 0;
+   my $tmpCounter0 = 0;
 
    for(my $pos=$initpos;$pos<=$endposition;$pos+=$step){###MPET
+      $tmpCounter0 = 0;
       $tmpCounter1 = 0;
       $tmpCounter2 = 0;
       $tmpCounter3 = 0;
@@ -710,7 +712,10 @@ sub kmerize{
       my $secondstart = $pos + $buffer;###MPET
       my $rd2ss = substr($seq,$secondstart,$k);
       my $rd2 = &reverseComplement($rd2ss);
-
+      foreach my $rd (keys %$matepair){ 
+         $tmpCounter0++;
+      }
+      print "Before the if statement: $tmpCounter0\n";
       if(defined $matepair->{$rd2}{$rd1}){my $trd1=$rd2;my $trd2=$rd1;$rd1=$trd1;$rd2=$trd2;}
       foreach my $rd (keys %$matepair){ 
          $tmpCounter1++;
