@@ -725,6 +725,10 @@ sub kmerize{
                $tmpCounter5++;
             }
             print "Inside the if statement1: $tmpCounter5\n";
+            my $matelist = $matepair->{$rd2};
+            foreach my $rd (keys %$matelist){ 
+               print "MATELIST READ IS : $rd";
+            }
             my $trd1=$rd2;my $trd2=$rd1;$rd1=$trd1;$rd2=$trd2;
             foreach my $rd (keys %$matepair){ 
                $tmpCounter6++;
