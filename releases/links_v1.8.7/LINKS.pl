@@ -273,7 +273,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
       my $delta = $frag_dist - ( 2 * $k);
       my $file_ct = 0;
       my $distpairs = 0;
-
+      my $matePairCounter = 0;
       if(defined $step_array[$array_element]){
          $last_step = $step_array[$array_element];### records the last usable t params, even if array doesn't match with d
       }
@@ -302,7 +302,12 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
             ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
          }else{
             ($matepair,$pairct,$ctrd) = &readFastaFastq($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$bloom,$readlength);
+            
             print "PAIRCT for FILLING MATEPAIR is : $pairct\n"
+            foreach my $rd (keys %$matepair){ 
+               $matePairCounter++;
+            }
+            print "MATEPAIR COUNT IS $matePairCounter after readFastaFastq\n";
          }
 	 $distpairs+=$pairct;
          #}
