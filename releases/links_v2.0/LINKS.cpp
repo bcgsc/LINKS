@@ -754,6 +754,10 @@ void pairContigs(
                     if(trackAll[matePairItr->first].getMultiple() == 1) { 
                         filter3++;
                     if(trackAll.find(mateListItr->first) != trackAll.end()){ 
+                        std::unordered_map<uint64_t, KmerInfo>::iterator tmpItr;
+                        for(tmpItr = trackAll.begin(); tmpItr != trackAll.end(); tmpItr++) {
+                            std::cout << "Multiple: " << tmpItr->second.getMultiple() << "\n";
+                        }
                         filter4++;
                         if(trackAll[mateListItr->first].getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
                 Check1Counter++;
