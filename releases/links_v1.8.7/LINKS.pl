@@ -297,13 +297,22 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
          #   ($set,$bin,$sumall,$ctall) = &readBAM($sumall,$ctall,$set,$bin,$_,$encoded,$seedsplit,$r_clip,$q_clip,$c_clip,$e_ascii,$file_ct,$ct_fof_line,$targetwordlen);
          #}else{
          #($set,$bin,$sumall,$ctall) = &readFastaFastq($sumall,$ctall,$set,$bin,$_,$encoded,$seedsplit,$r_clip,$q_clip,$c_clip,$e_ascii,$file_ct,$ct_fof_line,$targetwordlen);
+         my $readone = "ATCGATCGATCGATC";
+         my $readtwo = "ATCGATCGATCGATC";
+         $matepair->{$readone}{$readtwo}{'is'} = $frag_dist;
+         #$matepair->{$rd1}{$rd2}{'rd'}{$head}++;  ### this will be used to track uniqueness in pairing (should expect 1 pair per [long]read and one [long]read with that specific pair. HAS LITTLE TO NO EFFECT BUT REQ MORE MEM
+         $matepair->{$readone}{$readtwo}{'bt'} = 1;
+         foreach my $rd (keys %$matepair){ 
+            $matePairCounter++;
+         }
+         print "MATEPAIR COUNT IS $matePairCounter BEFORE readFastaFastq\n";
          if(! -e $_){ die "WARNING: Your file $_ does not exist -- fatal.\n";    }
          if($bfoff){
             ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
          }else{
             ($matepair,$pairct,$ctrd) = &readFastaFastq($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$bloom,$readlength);
             
-            print "PAIRCT for FILLING MATEPAIR is : $pairct\n"
+            print "PAIRCT for FILLING MATEPAIR is : $pairct\n";
             foreach my $rd (keys %$matepair){ 
                $matePairCounter++;
             }
