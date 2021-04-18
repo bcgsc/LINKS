@@ -761,7 +761,7 @@ sub kmerize{
          }
          my $countermatelist = 0;
          print "KEY SET SIZE AFTER IS: $tmpCounter4\n";
-         my $matelist = $matepair->{$rd2};
+         my $matelist = $matepair->{$rd1};
          foreach my $rd (keys %$matelist){ 
             $countermatelist++;
          }
