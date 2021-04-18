@@ -765,7 +765,7 @@ sub kmerize{
          foreach my $rd (keys %$matelist){ 
             $countermatelist++;
          }
-         print "MATELIST READ Size IS : $rd\n";
+         print "MATELIST READ Size IS : $countermatelist\n";
          $pairct++;
 
       }
