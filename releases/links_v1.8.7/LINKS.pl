@@ -1216,7 +1216,7 @@ sub pairContigs{
       print "****read_b counter is : $readbCounter will I enter loop?\n";
       foreach my $read_b (keys %$mateslist){
             $CheckCounterBase++;
-            print Dumper(\%$track);
+            # print Dumper(\%$track);
           if($matepair->{$read_a}{$read_b}{'bt'}==0) {
              $filter1++;
              if($track->{$read_a}{'multiple'}==1) {
