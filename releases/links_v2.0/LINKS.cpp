@@ -591,6 +591,8 @@ void inline kmerizeContig( std::string *seq,
 
     btllib::NtHash ntHashContig(*seq, k, hashFcts);
     int counter = 0;
+    int forCounter = 0;
+    int revCounter = 0;
     // std::cout << "hashFct in kmerizeContig: " << hashFcts << "\n";
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
         // roll for every step
@@ -598,6 +600,7 @@ void inline kmerizeContig( std::string *seq,
         // Forward part
 	    if(matePair->find(ntHashContig.get_forward_hash()) != matePair->end()) {
             tmpCounter++;
+            forCounter++;
             if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
                 // std::cout << "new\n";
                 std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
@@ -617,6 +620,7 @@ void inline kmerizeContig( std::string *seq,
         // Reverse part
         if(matePair->find(ntHashContig.get_reverse_hash()) != matePair->end()) {
             tmpCounter++;
+            revCounter++;
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
                 // std::cout << "new\n";
                 // std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
@@ -635,7 +639,11 @@ void inline kmerizeContig( std::string *seq,
         }
         counter++;
     }
-    std::cout << "trackAll size:" << trackAll.size();
+    std::cout << "trackAll size:" << trackAll.size() << "\n";
+    std::cout << "trackFor size:" << trackFor.size() << "\n";
+    std::cout << "forCounter: " << std::to_string(forCounter) << "\n";
+    std::cout << "trackRev size:" << trackRev.size() << "\n";
+    std::cout << "revCounter: " << std::to_string(revCounter) << "\n";
     std::cout << "\n\n\n";
 }
 
