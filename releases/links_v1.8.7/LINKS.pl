@@ -1145,6 +1145,7 @@ sub pairContigs{
    my $counter1 = 0;
    my $counter2 = 0;
    my $counter3 = 0;
+   my $matePairCounter = 0;
    my $CheckCounterBase = 0;
    my $Check0Counter = 0;
    my $Check1Counter = 0;
@@ -1188,8 +1189,8 @@ sub pairContigs{
 
    open(PET, ">$issues") || die "Can't open $issues for writing -- fatal\n";
 
-   foreach my $read_a (keys %$matepair){ 
-
+   foreach my $read_a (keys %$matepair){
+      $matePairCounter++;
       my $mateslist = $matepair->{$read_a};
 
       foreach my $read_b (keys %$mateslist){
@@ -1441,6 +1442,7 @@ sub pairContigs{
    my $satisfied = $ct_ok_pairs + $ct_ok_contig;
    my $unsatisfied = $ct_problem_pairs + $ct_iz_issues + $ct_illogical;
    my $ct_both_reads = $ct_both * 2;
+   print "MATEPAIR READ_A COUNTER $matePairCounter\n\n";
    print "THESE ARE THE CHECKPOINT COUNTERS\n$CheckCounterBase\n$Check0Counter \n$Check1Counter \n$Check2Counter \n$Check3Counter \n$Check4Counter \n$Check5Counter \n$Check6Counter \n$Check7Counter \n$Check8Counter \n$Check9Counter \n$Check10Counter \n$Check11Counter \n$Check12Counter \n$Check13Counter \n$Check14Counter \n$Check15Counter \n$Check16Counter \n$Check17Counter \n$Check18Counter \n$Check19Counter \n$Check20Counter \n$Check21Counter \n$Check22Counter \n$Check23Counter \n$Check24Counter \n$Check25Counter \n$Check26Counter\n";
    print LOG "\n===========PAIRED K-MER STATS===========\n";
    print LOG "Total number of pairs extracted from -s $longfile: $totalpairs\n";
