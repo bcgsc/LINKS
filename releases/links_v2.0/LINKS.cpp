@@ -319,9 +319,9 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
 uint64_t getFileSize(std::string filename);
 void readContigs(
         std::string assemblyFile,
-        std::unordered_map<uint64_t, KmerInfo >& trackAll,
-        std::unordered_map<uint64_t, KmerInfo >& trackFor,
-        std::unordered_map<uint64_t, KmerInfo >& trackRev,
+        std::unordered_map<uint64_t, KmerInfo>& trackAll,
+        std::unordered_map<uint64_t, KmerInfo>& trackFor,
+        std::unordered_map<uint64_t, KmerInfo>& trackRev,
         std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
         std::unordered_map<std::string, uint64_t>& tigLength,
         uint64_t k,
@@ -330,7 +330,7 @@ void readContigs(
 void pairContigs(
     std::string longReadsFile,
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
-    std::unordered_map<uint64_t, KmerInfo > trackAll,
+    std::unordered_map<uint64_t, KmerInfo>& trackAll,
     std::unordered_map<uint64_t, KmerInfo>& trackFor,
     std::unordered_map<uint64_t, KmerInfo>& trackRev,
     std::unordered_map<std::string, uint64_t> tigLength,
@@ -669,7 +669,7 @@ void readContigs(
 void pairContigs(
     std::string longReadsFile,
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
-    std::unordered_map<uint64_t, KmerInfo> trackAll,
+    std::unordered_map<uint64_t, KmerInfo>& trackAll,
     std::unordered_map<uint64_t, KmerInfo>& trackFor,
     std::unordered_map<uint64_t, KmerInfo>& trackRev,
     std::unordered_map<std::string, uint64_t> tigLength,
