@@ -496,18 +496,21 @@ int main(int argc, char** argv) {
     std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
     // Read contigs to find where the long read kmers belong in
     readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct);
+
     std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
     std::cout << " pairContigs Parameter List : \n\n";
     std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
     std::cout << " 2- matePair Size " << matePair.size() <<"\n";
     std::cout << " 3- trackAll size " << trackAll.size() <<"\n";
-    std::cout << " 4- tigLength size " << tigLength.size() <<"\n";
-    std::cout << " 5- issuesName " <<"\n";
-    std::cout << " 6- distributionName " << distribution <<"\n";
-    std::cout << " 7- totalPairs " << totalpairs <<"\n";
-    std::cout << " 8- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
-    std::cout << " 9- verbose " << linksArgParser.verbose <<"\n";
-    std::cout << " 10- distributionName " << linksArgParser.insertStdev <<"\n";
+    std::cout << " 4- trackFor size " << trackFor.size() <<"\n";
+    std::cout << " 5- trackRev size " << trackRev.size() <<"\n";
+    std::cout << " 6- tigLength size " << tigLength.size() <<"\n";
+    std::cout << " 7- issuesName " <<"\n";
+    std::cout << " 8- distributionName " << distribution <<"\n";
+    std::cout << " 9- totalPairs " << totalpairs <<"\n";
+    std::cout << " 10- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
+    std::cout << " 11- verbose " << linksArgParser.verbose <<"\n";
+    std::cout << " 12- distributionName " << linksArgParser.insertStdev <<"\n";
     pairContigs(
         linksArgParser.longFile,
         matePair,
@@ -616,6 +619,7 @@ void inline kmerizeContig( std::string *seq,
             } else {
                 trackFor[ntHashContig.get_forward_hash()].incrementMultiple();
             }
+            std::cout << "trackFor size:" << trackFor.size() << "\n";
         }
         // Reverse part
         if(matePair->find(ntHashContig.get_reverse_hash()) != matePair->end()) {
@@ -636,6 +640,7 @@ void inline kmerizeContig( std::string *seq,
             } else {
                 trackRev[ntHashContig.get_reverse_hash()].incrementMultiple();
             }
+            std::cout << "trackRev size:" << trackRev.size() << "\n";
         }
         counter++;
     }
