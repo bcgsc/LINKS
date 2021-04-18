@@ -20,6 +20,7 @@
 #LINKS is released under the GNU General Public License v3
 
 use strict;
+use Data::Dumper;
 use POSIX;
 use FindBin;
 use lib "/gsc/btl/linuxbrew/Cellar/links-scaffolder/1.8.7_1/libexec/";
