@@ -326,7 +326,8 @@ void readContigs(
         std::unordered_map<std::string, uint64_t>& tigLength,
         uint64_t k,
         uint64_t minSize,
-        unsigned hashFcts);
+        unsigned hashFcts,
+        uint64_t step);
 void pairContigs(
     std::string longReadsFile,
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
@@ -495,7 +496,7 @@ int main(int argc, char** argv) {
     std::unordered_map<std::string, uint64_t> tigLength;
     std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
     // Read contigs to find where the long read kmers belong in
-    readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct);
+    readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
 
     std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
     std::cout << " pairContigs Parameter List : \n\n";
@@ -591,7 +592,6 @@ void inline kmerizeContig( std::string *seq,
                     unsigned hashFcts,
                     uint64_t step,
                     uint64_t &tmpCounter) {
-
     btllib::NtHash ntHashContig(*seq, k, hashFcts);
     int counter = 0;
     int forCounter = 0;
@@ -606,13 +606,13 @@ void inline kmerizeContig( std::string *seq,
             forCounter++;
             if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
                 // std::cout << "new\n";
-                std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
+                // std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
                 trackAll[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
                 // WARNING***** Because we are using canonicals, most of the multiples will be 2
                 trackAll[ntHashContig.get_forward_hash()].incrementMultiple();
-                std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.get_forward_hash()].getMultiple()) << "\n";
+                // std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.get_forward_hash()].getMultiple()) << "\n";
             }
             if(trackFor.find(ntHashContig.get_forward_hash()) == trackFor.end()) {
                 trackFor[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
@@ -661,7 +661,8 @@ void readContigs(
         std::unordered_map<std::string, uint64_t>& tigLength,
         uint64_t k,
         uint64_t minSize,
-        unsigned hashFcts) {
+        unsigned hashFcts, 
+        uint64_t step) {
     // std::cout << "hashFct in readContig: " << hashFcts << "\n";
     uint64_t cttig = 0;
     btllib::SeqReader contigReader(assemblyFile, 8);// CHANGE TO FLAGS LATER
@@ -673,7 +674,8 @@ void readContigs(
         if(record.seq.length() >= minSize) {
             // std::cout << "Kmerizing contig\n";
             // std::cout << "seq:\n" << record.seq << "\n";
-            kmerizeContig(&record.seq, trackAll, trackFor, trackRev, &matePair, k, record.name, hashFcts, cttig, tmpCounter);
+            kmerizeContig(&record.seq, trackAll, trackFor, trackRev, &matePair, k, record.name, hashFcts, step, tmpCounter);
+            std::cout << "---------in readContigs------\ntrackAll size: " << std::to_string(trackAll.size()) << "\n" << "trackFor size: " << std::to_string(trackFor.size()) << "\n" << "trackRev size: " << std::to_string(trackRev.size()) << "\n";
         }
     }
     std::cout << "*****THis is the tmpCounter *******: " << tmpCounter << "\n";
