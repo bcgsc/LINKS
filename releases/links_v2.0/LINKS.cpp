@@ -446,6 +446,7 @@ int main(int argc, char** argv) {
     uint64_t delta = linksArgParser.distances - (2 * linksArgParser.k);
     std::cout << "\n\n=>Reading long reads, building hash table : " << std::to_string(time(0)) << "\n";
     // // $assemblyruninfo.=$reading_reads_message;
+    int breakFlag = 0;
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser.k, myFilter->get_hash_num());
         btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), delta);
@@ -457,6 +458,12 @@ int main(int argc, char** argv) {
             // roll for the number of steps
             // std::cout << "Counter: " << counter << "\n"; 
             // Forward
+            for(int j = 0; j < linksArgParser.step; j++) {
+                if(!nthashLead.roll() || !nthash.roll()) {
+                    breakFlag = 1;
+                }
+            }   
+            if(breakFlag){break;}
             std::cout << "\rCounter: " << counter;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
                 hits++;
@@ -605,9 +612,17 @@ void inline kmerizeContig( std::string *seq,
     int counter = 0;
     int forCounter = 0;
     int revCounter = 0;
+    int breakFlag = 0;
     // std::cout << "hashFct in kmerizeContig: " << hashFcts << "\n";
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
         // roll for every step
+        
+        for(int j = 0; j < step; j++) {
+            if(!ntHashContig.roll()) {
+                breakFlag = 1;
+            }
+        }
+        if(breakFlag) {break;}
         // std::cout << "Roll no " << std::to_string(counter) << "\n";
         // Forward part
 	    if(matePair->find(ntHashContig.get_forward_hash()) != matePair->end()) {
