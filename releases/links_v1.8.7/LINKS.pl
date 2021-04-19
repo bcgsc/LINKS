@@ -313,6 +313,9 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
          if($bfoff){
             ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
          }else{
+            print "Time before starting readFastAFastq: ";
+            &time_fp();
+            print "\n";
             ($matepair,$pairct,$ctrd) = &readFastaFastq($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$bloom,$readlength);
             # exit; # MUST REMOVE, PLACED ONLY FOR BENCHMARKING
             print "PAIRCT for FILLING MATEPAIR is : $pairct\n";
@@ -600,9 +603,10 @@ sub readContigs{
 }
 
 #----------------
-sub time_fp { sprintf"%d.%03d\n",Time::HiRes::gettimeofday }
+sub time_fp { sprintf"%d.%06d\n",Time::HiRes::gettimeofday }
 sub readFastaFastq{
    my $uniquePairct = 0;
+   my $kmerizeCounter = 0;
    my ($file_ct,$ct_fof_line,$ctrd,$file,$frag_dist,$k,$step,$matepair,$delta,$initpos,$bloom,$readlength) = @_;
    ###
    my $readinput_message = "\nReads processed from file $file_ct/$ct_fof_line, $file:\n";
@@ -628,6 +632,12 @@ sub readFastaFastq{
 
    LINE:
    while(<IN>){
+      $kmerizeCounter++;
+      if($kmerizeCounter == 10000) {
+         print "Time after 10000 kmerize: ";
+         &time_fp();
+         print "\n";
+      }
       chomp;
       $quad++;
       #if(/^([ATGC]+\:[ATGC]+)$/i && $quad<4){$quad=2;}###MPET SPECIFIC IGNORE Ns in SEQUENCE (don't have to)
@@ -651,11 +661,7 @@ sub readFastaFastq{
                $endposition = $readlength-$k;###MPET
                $buffer = $readlength+1;###MPET
             }
-            print "Before kmerize: ";
-            &time_fp();
             ($matepair,$pairct) = &kmerize(uc($seq),$frag_dist,$k,$matepair,$step,$prevhead,$endposition,$initpos,$pairct,$bloom,$buffer,$readlength);
-            print "After  kmerize: ";
-            &time_fp();
             # print "\nPAIRCT in loop $pairct.\n";  
             $seq = "";
             $quad=1;
