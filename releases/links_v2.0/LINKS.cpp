@@ -489,7 +489,7 @@ int main(int argc, char** argv) {
             //     }
             // }
         }
-        if(counter % 10000 == 0) {
+        if(counter % 10000 == 0) { 
             std::cout << "\n\n=>Kmerize end in c++ " + std::to_string(time(0)) + "\n";
         }
     }
