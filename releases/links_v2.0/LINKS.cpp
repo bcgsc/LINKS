@@ -529,6 +529,7 @@ int main(int argc, char** argv) {
     std::cout << " 10- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
     std::cout << " 11- verbose " << linksArgParser.verbose <<"\n";
     std::cout << " 12- distributionName " << linksArgParser.insertStdev <<"\n";
+    std::cout << "\n\n=>Before pairContigs c++ " + std::to_string(time(0)) + "\n";
     pairContigs(
         linksArgParser.longFile,
         matePair,
@@ -543,6 +544,7 @@ int main(int argc, char** argv) {
         simplepair_checkpoint,
         linksArgParser.verbose,
         linksArgParser.insertStdev);
+    std::cout << "\n\n=>Before pairContigs c++ " + std::to_string(time(0)) + "\n";
     return 0;
 }
 
