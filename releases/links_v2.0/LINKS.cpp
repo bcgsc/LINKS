@@ -430,7 +430,9 @@ int main(int argc, char** argv) {
     assemblyruninfo += initMessage;
     //-----------------------------
     btllib::KmerBloomFilter * myFilter;
+    std::cout << "\n\n=>Before makeBF in c++ " + std::to_string(time(0)) + "\n";
     myFilter = makeBF(bfElements, linksArgParser);
+    std::cout << "\n\n=>After makeBF in c++ " + std::to_string(time(0)) + "\n";
     // std::cout << "Made BF \n";
     unsigned hashFct = myFilter->get_hash_num();
     // std::cout << "Made BF hash fcts: " << std::to_string(hashFct) << "\n";
@@ -447,12 +449,10 @@ int main(int argc, char** argv) {
     std::cout << "\n\n=>Reading long reads, building hash table : " << std::to_string(time(0)) << "\n";
     // // $assemblyruninfo.=$reading_reads_message;
     int breakFlag = 0;
+    std::cout << "\n\n=>Kmerize start in c++ " + std::to_string(time(0)) + "\n";
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser.k, myFilter->get_hash_num());
         btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), delta);
-        if(counter == 0) {
-            std::cout << "\n\n=>Kmerize start in c++ " + std::to_string(time(0)) + "\n";
-        }
         counter++;
         breakFlag = 0;
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
@@ -523,7 +523,7 @@ int main(int argc, char** argv) {
     std::cout << " 4- trackFor size " << trackFor.size() <<"\n";
     std::cout << " 5- trackRev size " << trackRev.size() <<"\n";
     std::cout << " 6- tigLength size " << tigLength.size() <<"\n";
-    std::cout << " 7- issuesName " <<"\n";
+    std::cout << " 7- issuesName " << issues <<"\n";
     std::cout << " 8- distributionName " << distribution <<"\n";
     std::cout << " 9- totalPairs " << totalpairs <<"\n";
     std::cout << " 10- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
@@ -764,6 +764,8 @@ void pairContigs(
     int Check25Counter = 0;
     int Check26Counter = 0;
     //******************
+    std::ofstream issuesFile;
+    issuesFile.open (issues);
     std::unordered_map<uint64_t, BT_IS>::iterator mateListItr;
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> >::iterator matePairItr;
     // std::cout << "trackAll size: " << std::to_string(trackAll.size()) << "\n" << "trackFor size: " << std::to_string(trackFor.size()) << "\n" << "trackRev size: " << std::to_string(trackRev.size()) << "\n";
@@ -890,7 +892,7 @@ void pairContigs(
                                         ct_problem_pairs_hash[insert_size] = ct_problem_pairs_hash[insert_size] + 1;
                                     }
                                     // THIS IS NOT A DEBUGGING OUTPUT
-                                    // std::cout << "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#" << tig_a << " -> " << std::to_string(distance) << " <- tig#"<< tig_b << ", A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
+                                    issuesFile << "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#" << tig_a << " -> " << std::to_string(distance) << " <- tig#"<< tig_b << ", A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
                                 }
                             } else { // -> -> ::: A-> <-rB  / B-> <-rA 
                                 Check7Counter++;
@@ -949,7 +951,7 @@ void pairContigs(
                                     } else {
                                         ct_problem_pairs_hash[insert_size] = ct_problem_pairs_hash[insert_size] + 1;
                                     }
-                                    std::cout << "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#" << tig_a << " -> " << std::to_string(distance) << " <- tig#r."<< tig_b << ", A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
+                                    issuesFile << "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#" << tig_a << " -> " << std::to_string(distance) << " <- tig#r."<< tig_b << ", A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
                                 }
                             }
                         } else {
@@ -1010,7 +1012,7 @@ void pairContigs(
                                     } else {
                                         ct_problem_pairs_hash[insert_size] = ct_problem_pairs_hash[insert_size] + 1;
                                     }
-                                    std::cout << "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#" << tig_b << " -> " << std::to_string(distance) << " <- tig#"<< tig_a << ", B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
+                                    issuesFile << "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#" << tig_b << " -> " << std::to_string(distance) << " <- tig#"<< tig_a << ", B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
                                 }
                             }  else { // <- <-  :::  rB-> <-A / rA-> <-B
                                 Check14Counter++;
@@ -1068,7 +1070,7 @@ void pairContigs(
                                     } else {
                                         ct_problem_pairs_hash[insert_size] = ct_problem_pairs_hash[insert_size] + 1;
                                     }
-                                    std::cout << "Pairs unsatisfied in distance within a contig pair.  rB-> <-A  WITH tig#r." << tig_b << " -> " << std::to_string(distance) << " <- tig#"<< tig_a << ", B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
+                                    issuesFile << "Pairs unsatisfied in distance within a contig pair.  rB-> <-A  WITH tig#r." << tig_b << " -> " << std::to_string(distance) << " <- tig#"<< tig_a << ", B=" << B_length << " nt (start:" << B_start << ", end:" << B_end << ") A=" << A_length << " nt (start:" << A_start << ", end:" << A_end << ") CALCULATED DISTANCE APART: " << distance << " < " << min_allowed << "\n";
                                 }
                             }
                         }
@@ -1090,7 +1092,7 @@ void pairContigs(
                                 }
                             } else {
                                 Check20Counter++;
-                                std::cout <<"Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
+                                issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
                                 ct_iz_issues++;
                                 if(ct_iz_issues_hash.find(insert_size) == ct_iz_issues_hash.end()) {
                                     ct_iz_issues_hash[insert_size] = 1;
@@ -1112,7 +1114,7 @@ void pairContigs(
                                 }
                             } else {
                                 Check23Counter++;
-                                std::cout <<"Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+                                issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
                                 ct_iz_issues++;
                                 if(ct_iz_issues_hash.find(insert_size) == ct_iz_issues_hash.end()) {
                                     ct_iz_issues_hash[insert_size] = 1;
@@ -1129,7 +1131,7 @@ void pairContigs(
                                 ct_illogical_hash[insert_size] = ct_illogical_hash[insert_size] + 1;
                             }
                             // FOLLOWING IS NOT A DEBUGGING PRINT
-                            // std::cout << "Pairs unsatisfied in pairing logic within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig" << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+                            issuesFile << "Pairs unsatisfied in pairing logic within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig" << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
                         }
                     }
                 } else { // both pairs assembled
