@@ -452,10 +452,10 @@ int main(int argc, char** argv) {
         if(counter == 0) {
             std::cout << "\n\n=>Kmerize start in c++ " + std::to_string(time(0)) + "\n";
         }
+        counter++;
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
             // std::cout << "Counter: " << counter << "\n"; 
-            counter++;
             // Forward
             std::cout << "\rCounter: " << counter;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
