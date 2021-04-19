@@ -457,6 +457,7 @@ int main(int argc, char** argv) {
             // std::cout << "Counter: " << counter << "\n"; 
             counter++;
             // Forward
+            std::cout << "\r" << counter << std::endl;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
                 // hits++;
                 // If forward hash is not found in matepair, add it
@@ -488,7 +489,7 @@ int main(int argc, char** argv) {
             //     }
             // }
         }
-        if(counter == 10000) {
+        if(counter == 300) {
             std::cout << "\n\n=>Kmerize end in c++ " + std::to_string(time(0)) + "\n";
         }
     }
