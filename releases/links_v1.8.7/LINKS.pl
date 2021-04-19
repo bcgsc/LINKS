@@ -314,8 +314,8 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
             ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
          }else{
             print "Time before starting readFastAFastq: ";
-            &time_fp();
-            print "\n";
+            $datestring = localtime();
+            print "$datestring\n";
             ($matepair,$pairct,$ctrd) = &readFastaFastq($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$bloom,$readlength);
             # exit; # MUST REMOVE, PLACED ONLY FOR BENCHMARKING
             print "PAIRCT for FILLING MATEPAIR is : $pairct\n";
@@ -633,10 +633,10 @@ sub readFastaFastq{
    LINE:
    while(<IN>){
       $kmerizeCounter++;
-      if($kmerizeCounter == 10000) {
-         print "Time after 10000 kmerize: ";
-         &time_fp();
-         print "\n";
+      if($kmerizeCounter % 20000 == 0) {
+         print "Time before starting readFastAFastq: ";
+         $datestring = localtime();
+         print "$datestring\n";
       }
       chomp;
       $quad++;

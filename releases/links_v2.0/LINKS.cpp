@@ -441,8 +441,8 @@ int main(int argc, char** argv) {
     btllib::BloomFilter& filtering = myFilter->get_bloom_filter();
     btllib::SeqReader longReader(linksArgParser.longFile, 8); // CHECK FOR FLAG MODES
     uint64_t counter = 0;
-    // uint64_t totalpairs = 0;
-    // uint64_t hits = 0;
+    uint64_t totalpairs = 0;
+    uint64_t hits = 0;
     uint64_t delta = linksArgParser.distances - (2 * linksArgParser.k);
     std::cout << "\n\n=>Reading long reads, building hash table : " << std::to_string(time(0)) << "\n";
     // // $assemblyruninfo.=$reading_reads_message;
@@ -459,7 +459,7 @@ int main(int argc, char** argv) {
             // Forward
             std::cout << "\rCounter: " << counter;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
-                // hits++;
+                hits++;
                 // If forward hash is not found in matepair, add it
                 // if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
                 //     matePair[nthash.get_forward_hash()][nthash.get_reverse_hash()] = ;
@@ -489,22 +489,24 @@ int main(int argc, char** argv) {
             //     }
             // }
         }
-        if(counter == 20000) {
+        if(counter % 200 == 0) {
             std::cout << "\n\n=>Kmerize end in c++ " + std::to_string(time(0)) + "\n";
         }
     }
-    // totalpairs = hits;
+    std::cout << "\n\n=>Kmerize end in c++ " + std::to_string(time(0)) + "\n";
+    totalpairs = hits;
     // std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
     
     
-    // std::unordered_map<uint64_t, KmerInfo> trackAll;
-    // std::unordered_map<uint64_t, KmerInfo> trackFor;
-    // std::unordered_map<uint64_t, KmerInfo> trackRev;
-    // std::unordered_map<std::string, uint64_t> tigLength;
+    std::unordered_map<uint64_t, KmerInfo> trackAll;
+    std::unordered_map<uint64_t, KmerInfo> trackFor;
+    std::unordered_map<uint64_t, KmerInfo> trackRev;
+    std::unordered_map<std::string, uint64_t> tigLength;
     // std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
     // // Read contigs to find where the long read kmers belong in
-    // readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
-
+    std::cout << "\n\n=>Before readContigs c++ " + std::to_string(time(0)) + "\n";
+    readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
+    std::cout << "\n\n=>After readContigs c++ " + std::to_string(time(0)) + "\n";
     // // std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
     // // std::cout << " pairContigs Parameter List : \n\n";
     // // std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
@@ -519,20 +521,20 @@ int main(int argc, char** argv) {
     // // std::cout << " 10- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
     // // std::cout << " 11- verbose " << linksArgParser.verbose <<"\n";
     // // std::cout << " 12- distributionName " << linksArgParser.insertStdev <<"\n";
-    // pairContigs(
-    //     linksArgParser.longFile,
-    //     matePair,
-    //     trackAll,
-    //     trackFor,
-    //     trackRev,
-    //     tigLength,
-    //     issues,
-    //     distribution,
-    //     totalpairs,
-    //     tigpair_checkpoint,
-    //     simplepair_checkpoint,
-    //     linksArgParser.verbose,
-    //     linksArgParser.insertStdev);
+    pairContigs(
+        linksArgParser.longFile,
+        matePair,
+        trackAll,
+        trackFor,
+        trackRev,
+        tigLength,
+        issues,
+        distribution,
+        totalpairs,
+        tigpair_checkpoint,
+        simplepair_checkpoint,
+        linksArgParser.verbose,
+        linksArgParser.insertStdev);
     return 0;
 }
 
