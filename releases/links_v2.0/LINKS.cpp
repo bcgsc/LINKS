@@ -457,7 +457,7 @@ int main(int argc, char** argv) {
             // std::cout << "Counter: " << counter << "\n"; 
             counter++;
             // Forward
-            std::cout << "\r" << counter << std::endl;
+            std::cout << "\rCounter: " << counter;
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
                 // hits++;
                 // If forward hash is not found in matepair, add it
