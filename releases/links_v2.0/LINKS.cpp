@@ -454,6 +454,7 @@ int main(int argc, char** argv) {
             std::cout << "\n\n=>Kmerize start in c++ " + std::to_string(time(0)) + "\n";
         }
         counter++;
+        breakFlag = 0;
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
             // std::cout << "Counter: " << counter << "\n"; 
