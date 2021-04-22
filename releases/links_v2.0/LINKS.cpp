@@ -455,6 +455,7 @@ int main(int argc, char** argv) {
     btllib::BloomFilter& filtering = myFilter->get_bloom_filter();
     btllib::SeqReader longReader(linksArgParser.longFile, 8); // CHECK FOR FLAG MODES
     uint64_t counter = 0;
+    uint64_t innercounter = 0;
     uint64_t totalpairs = 0;
     uint64_t hits = 0;
     uint64_t delta = linksArgParser.distances - (2 * linksArgParser.k);
@@ -469,7 +470,8 @@ int main(int argc, char** argv) {
         breakFlag = 0;
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
-            std::cout << "Counter: " << counter << "\n"; 
+            std::cout << Inner"Counter: " << innercounter << "\n"; 
+            innercounter++;
             // Forward
             for(int j = 0; j < linksArgParser.step; j++) {
                 if(!nthashLead.roll() || !nthash.roll()) {
