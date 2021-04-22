@@ -714,7 +714,7 @@ sub kmerize{
    # my $tmpCounter5 = 0;
    # my $tmpCounter6 = 0;
    # my $tmpCounter0 = 0;
-
+   my $notDefCounter = 0;
    for(my $pos=$initpos;$pos<=$endposition;$pos+=$step){###MPET
       # $tmpCounter0 = 0;
       # $tmpCounter1 = 0;
@@ -748,6 +748,8 @@ sub kmerize{
             #    $tmpCounter6++;
             # }
             # print "Inside the if statement2: $tmpCounter6\n";
+         } else {
+            $notDefCounter++;
          }
       # foreach my $rd (keys %$matepair){ 
       #    $tmpCounter1++;
