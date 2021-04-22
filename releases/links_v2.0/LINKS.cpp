@@ -473,7 +473,7 @@ int main(int argc, char** argv) {
             std::cout << "InnerCounter: " << innercounter << "\n"; 
             innercounter++;
             // Forward
-            for(int j = 0; j < linksArgParser.step; j++) {
+            for(int j = 1; j < linksArgParser.step; j++) {
                 std::cout << "Rolling one more time\n";
                 if(!nthashLead.roll() || !nthash.roll()) {
                     breakFlag = 1;
@@ -653,7 +653,7 @@ void inline kmerizeContig( std::string *seq,
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
         // roll for every step
         
-        for(int j = 0; j < step; j++) {
+        for(int j = 1; j < step; j++) {
             if(!ntHashContig.roll()) {
                 breakFlag = 1;
             }
