@@ -470,7 +470,7 @@ int main(int argc, char** argv) {
         breakFlag = 0;
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
-            std::cout << Inner"Counter: " << innercounter << "\n"; 
+            std::cout << "InnerCounter: " << innercounter << "\n"; 
             innercounter++;
             // Forward
             for(int j = 0; j < linksArgParser.step; j++) {
