@@ -462,6 +462,7 @@ int main(int argc, char** argv) {
             for(int j = 0; j < linksArgParser.step; j++) {
                 if(!nthashLead.roll() || !nthash.roll()) {
                     breakFlag = 1;
+                    std::cout << "setting break flag\n";
                 }
             }   
             if(breakFlag){break;}
@@ -598,6 +599,17 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
         
     }
     return assemblyBF;
+}
+void readFastaFastq() {
+
+}
+void kmerize(std::string *seq,
+                uint64_t frag_dist,
+                uint64_t k,
+                std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > *matePair,
+                uint64_t step,
+                ) {
+
 }
 // matepair is from long reads Forward & reverse duos
 // trackAll is from contigs Forward and reverse for both
