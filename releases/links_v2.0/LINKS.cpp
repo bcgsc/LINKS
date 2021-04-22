@@ -704,12 +704,12 @@ void inline kmerizeContig( std::string *seq,
         }
         counter++;
     }
-    // std::cout << "trackAll size:" << trackAll.size() << "\n";
-    // std::cout << "trackFor size:" << trackFor.size() << "\n";
-    // std::cout << "forCounter: " << std::to_string(forCounter) << "\n";
-    // std::cout << "trackRev size:" << trackRev.size() << "\n";
-    // std::cout << "revCounter: " << std::to_string(revCounter) << "\n";
-    // std::cout << "\n\n\n";
+    std::cout << "trackAll size:" << trackAll.size() << "\n";
+    std::cout << "trackFor size:" << trackFor.size() << "\n";
+    std::cout << "forCounter: " << std::to_string(forCounter) << "\n";
+    std::cout << "trackRev size:" << trackRev.size() << "\n";
+    std::cout << "revCounter: " << std::to_string(revCounter) << "\n";
+    std::cout << "\n\n\n";
 }
 
 void readContigs(
@@ -831,7 +831,7 @@ void pairContigs(
                 int low_iz = insert_size + min_allowed; // check int
                 int up_iz = insert_size - min_allowed; // check int
                 if(verbose) std::cout << "Pair read1Hash=" << matePairItr->first << " read2Hash=" << mateListItr->first << "\n";
-                std::cout << "Tig1: " << trackAll[matePairItr->first].getTig() << "Tig2: " << trackAll[mateListItr->first].getTig() << "\n";
+                std::cout << "Tig1: " << trackAll[matePairItr->first].getTig() << "Tig2: " << trackAll[mateListItr->first].getTig() << "HASH: " << std::to_string(mateListItr->first) << "\n";
                 if(trackAll[matePairItr->first].getTig() != "" && trackAll[mateListItr->first].getTig() != "") {
                     Check0Counter++;
                     // std::cout << "Checkpoint 3 (if both reads are found in trackAll)\n";
