@@ -689,7 +689,7 @@ void inline kmerizeContig( std::string *seq,
             revCounter++;
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
                 // std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
-                std::cout << "Added head to trackRev: " << head << " \n";
+                
                 trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k);
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
@@ -698,6 +698,7 @@ void inline kmerizeContig( std::string *seq,
                 // std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.get_reverse_hash()].getMultiple()) << "\n";
             }
             if(trackRev.find(ntHashContig.get_reverse_hash()) == trackRev.end()) {
+                std::cout << "Added head to trackRev: " << head << " \n";
                 trackRev[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k);
             } else {
                 trackRev[ntHashContig.get_reverse_hash()].incrementMultiple();
