@@ -469,7 +469,7 @@ int main(int argc, char** argv) {
         breakFlag = 0;
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
-            // std::cout << "Counter: " << counter << "\n"; 
+            std::cout << "Counter: " << counter << "\n"; 
             // Forward
             for(int j = 0; j < linksArgParser.step; j++) {
                 if(!nthashLead.roll() || !nthash.roll()) {
