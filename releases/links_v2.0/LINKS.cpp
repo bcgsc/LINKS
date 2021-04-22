@@ -683,11 +683,13 @@ void inline kmerizeContig( std::string *seq,
         }
         // Reverse part
         if(matePair->find(ntHashContig.get_reverse_hash()) != matePair->end()) {
+            std::cout << "Rev hash found in matePair! Adding to trackRev...\n";
+
             tmpCounter++;
             revCounter++;
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
-                // std::cout << "new\n";
                 // std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
+                std::cout << "Added head to trackRev: " << head << " \n";
                 trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k);
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
