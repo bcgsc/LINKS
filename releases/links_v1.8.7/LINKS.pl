@@ -313,9 +313,9 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
          if($bfoff){
             ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
          }else{
-            print "Time before starting readFastAFastq: ";
-            $datestring = localtime();
-            print "$datestring\n";
+            # print "Time before starting readFastAFastq: ";
+            # $datestring = localtime();
+            # print "$datestring\n";
             ($matepair,$pairct,$ctrd) = &readFastaFastq($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$bloom,$readlength);
             # exit; # MUST REMOVE, PLACED ONLY FOR BENCHMARKING
             print "PAIRCT for FILLING MATEPAIR is : $pairct\n";
@@ -633,11 +633,11 @@ sub readFastaFastq{
    LINE:
    while(<IN>){
       $kmerizeCounter++;
-      if($kmerizeCounter % 20000 == 0) {
-         print "Time before starting readFastAFastq: ";
-         $datestring = localtime();
-         print "$datestring\n";
-      }
+      # if($kmerizeCounter % 20000 == 0) {
+      #    print "Time before starting readFastAFastq: ";
+      #    $datestring = localtime();
+      #    print "$datestring\n";
+      # }
       chomp;
       $quad++;
       #if(/^([ATGC]+\:[ATGC]+)$/i && $quad<4){$quad=2;}###MPET SPECIFIC IGNORE Ns in SEQUENCE (don't have to)
@@ -754,9 +754,9 @@ sub kmerize{
       # }
       # print "Counter3: $tmpCounter1\n";
       if($bloom->contains($rd1) && $bloom->contains($rd2)){ ###Don't bother hashing k-mer pairs if assembly doesn't have these kmers
-         if(not(defined $matepair->{$rd1})) {
-            $uniquePairct++;
-         }
+         # if(not(defined $matepair->{$rd1})) {
+         #    $uniquePairct++;
+         # }
          # foreach my $rd (keys %$matepair){ 
          #    $tmpCounter2++;
          # }

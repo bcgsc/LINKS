@@ -497,9 +497,9 @@ int main(int argc, char** argv) {
             //     }
             // }
         }
-        if(counter % 10000 == 0) { 
-            std::cout << "\n\n=>Kmerize end in cpp " + std::to_string(time(0)) + "\n";
-        }
+        // if(counter % 10000 == 0) { 
+        //     std::cout << "\n\n=>Kmerize end in cpp " + std::to_string(time(0)) + "\n";
+        // }
     }
     std::cout << "\n\n=>Kmerize end in c++ " + std::to_string(time(0)) + "\n";
     totalpairs = hits;
@@ -544,7 +544,7 @@ int main(int argc, char** argv) {
         simplepair_checkpoint,
         linksArgParser.verbose,
         linksArgParser.insertStdev);
-    std::cout << "\n\n=>Before pairContigs c++ " + std::to_string(time(0)) + "\n";
+    std::cout << "\n\n=>After pairContigs c++ " + std::to_string(time(0)) + "\n";
     return 0;
 }
 
