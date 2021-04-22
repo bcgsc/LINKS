@@ -474,6 +474,7 @@ int main(int argc, char** argv) {
             innercounter++;
             // Forward
             for(int j = 0; j < linksArgParser.step; j++) {
+                std::cout << "Rolling one more time\n";
                 if(!nthashLead.roll() || !nthash.roll()) {
                     breakFlag = 1;
                     std::cout << "setting break flag\n";
