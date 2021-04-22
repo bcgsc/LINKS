@@ -317,6 +317,18 @@ void printBloomStats(btllib::KmerBloomFilter& bloom, std::ostream& os);
 bool does_file_exist(std::string fileName);
 btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser);
 uint64_t getFileSize(std::string filename);
+void kmerize(std::string *seq,
+                uint64_t frag_dist,
+                uint64_t k,
+                std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > *matePair,
+                uint64_t step,
+                std::string head,
+                uint64_t endPosition,
+                uint64_t initPosition,
+                uint64_t pairct,
+                btllib::KmerBloomFilter *bloom,
+                uint64_t delta,
+                uint64_t readLength);
 void readContigs(
         std::string assemblyFile,
         std::unordered_map<uint64_t, KmerInfo>& trackAll,
@@ -608,7 +620,13 @@ void kmerize(std::string *seq,
                 uint64_t k,
                 std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > *matePair,
                 uint64_t step,
-                ) {
+                std::string head,
+                uint64_t endPosition,
+                uint64_t initPosition,
+                uint64_t pairct,
+                btllib::KmerBloomFilter *bloom,
+                uint64_t delta,
+                uint64_t readLength) {
 
 }
 // matepair is from long reads Forward & reverse duos
