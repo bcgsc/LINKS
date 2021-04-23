@@ -663,26 +663,26 @@ void inline kmerizeContig( std::string *seq,
         
         
         // Forward part
-	    // if(matePair->find(ntHashContig.get_forward_hash()) != matePair->end()) {
-        tmpCounter++;
-        forCounter++;
-        if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
-            // std::cout << "new\n";
-            // std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
-            trackAll[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
-        } else {
-            // std::cout << "kmer found in trackall! Increment multiple\n";
-            // WARNING***** Because we are using canonicals, most of the multiples will be 2
-            trackAll[ntHashContig.get_forward_hash()].incrementMultiple();
-            // std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.get_forward_hash()].getMultiple()) << "\n";
-        }
-        if(trackFor.find(ntHashContig.get_forward_hash()) == trackFor.end()) {
-            trackFor[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
-        } else {
-            trackFor[ntHashContig.get_forward_hash()].incrementMultiple();
-        }
+	    if(matePair->find(ntHashContig.get_forward_hash()) != matePair->end()) {
+            tmpCounter++;
+            forCounter++;
+            if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
+                // std::cout << "new\n";
+                // std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
+                trackAll[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
+            } else {
+                // std::cout << "kmer found in trackall! Increment multiple\n";
+                // WARNING***** Because we are using canonicals, most of the multiples will be 2
+                trackAll[ntHashContig.get_forward_hash()].incrementMultiple();
+                // std::cout << "Multiple : " << std::to_string(trackAll[ntHashContig.get_forward_hash()].getMultiple()) << "\n";
+            }
+            if(trackFor.find(ntHashContig.get_forward_hash()) == trackFor.end()) {
+                trackFor[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k);
+            } else {
+                trackFor[ntHashContig.get_forward_hash()].incrementMultiple();
+            }
         // std::cout << "trackFor size:" << trackFor.size() << "\n";
-        // }
+        }
 
 
         // Reverse part
