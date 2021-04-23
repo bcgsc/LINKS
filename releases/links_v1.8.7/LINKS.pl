@@ -928,10 +928,10 @@ sub kmerizeContig{
       my $rd = substr($seq,$pos,$k);
       no autovivification;
       if(defined $matepair->{$rd}){
-         if(not(defined $track_all->{$rd})) {
-            # print "This is new, incrementing counter: $counter\n";
-            $counter++;
-         }
+         # if(not(defined $track_all->{$rd})) {
+         #    # print "This is new, incrementing counter: $counter\n";
+         #    $counter++;
+         # }
          $track_all->{$rd}{'tig'}   = $head;
          $track_all->{$rd}{'start'} = $pos;
          $track_all->{$rd}{'end'}   = $pos + $k;
@@ -1488,7 +1488,7 @@ sub pairContigs{
    my $ct_both_reads = $ct_both * 2;
    print "MATEPAIR READ_A COUNTER $matePairCounter\n\n";
    print "Filters: \n$filter1\n$filter2\n$filter3\n$filter4\n\n";
-   print "THESE ARE THE CHECKPOINT COUNTERS\n$CheckCounterBase\n$Check0Counter \n$Check1Counter \n$Check2Counter \n$Check3Counter \n$Check4Counter \n$Check5Counter \n$Check6Counter \n$Check7Counter \n$Check8Counter \n$Check9Counter \n$Check10Counter \n$Check11Counter \n$Check12Counter \n$Check13Counter \n$Check14Counter \n$Check15Counter \n$Check16Counter \n$Check17Counter \n$Check18Counter \n$Check19Counter \n$Check20Counter \n$Check21Counter \n$Check22Counter \n$Check23Counter \n$Check24Counter \n$Check25Counter \n$Check26Counter\n";
+   print "THESE ARE THE CHECKPOINT COUNTERS\n CheckCounterBase: $CheckCounterBase\n Check0Counter: $Check0Counter \n Check1Counter: $Check1Counter \n Check2Counter: $Check2Counter \n Check3Counter: $Check3Counter \n Check4Counter: $Check4Counter \n Check5Counter: $Check5Counter \n Check6Counter: $Check6Counter \n Check7Counter: $Check7Counter \n Check8Counter: $Check8Counter \n Check9Counter: $Check9Counter \n Check10Counter: $Check10Counter \n Check11Counter: $Check11Counter \n$Check12Counter \n$Check13Counter \n$Check14Counter \n$Check15Counter \n$Check16Counter \n$Check17Counter \n$Check18Counter \n$Check19Counter \n$Check20Counter \n$Check21Counter \n$Check22Counter \n$Check23Counter \n$Check24Counter \n$Check25Counter \n$Check26Counter\n";
    print LOG "\n===========PAIRED K-MER STATS===========\n";
    print LOG "Total number of pairs extracted from -s $longfile: $totalpairs\n";
    print LOG "At least one sequence/pair missing from contigs: $ct_single\n";
