@@ -732,7 +732,7 @@ sub kmerize{
       #    $tmpCounter0++;
       # }
       # print "Before the if statement: $tmpCounter0\n";
-      no autovivification;
+      # no autovivification;
       if(defined $matepair->{$rd2}{$rd1}){
             # foreach my $rd (keys %$matepair){ 
             #    $tmpCounter5++;
@@ -926,7 +926,7 @@ sub kmerizeContig{
    my $counter = 0;
    for(my $pos=0;$pos<=(length($seq)-$k);$pos++){
       my $rd = substr($seq,$pos,$k);
-      no autovivification;
+      # no autovivification;
       if(defined $matepair->{$rd}){
          # if(not(defined $track_all->{$rd})) {
          #    # print "This is new, incrementing counter: $counter\n";
