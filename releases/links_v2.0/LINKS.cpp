@@ -483,7 +483,7 @@ int main(int argc, char** argv) {
             if(breakFlag){break;}
             std::cout << "\rCounter: " << counter;
             if(matePair.find(nthashLead.get_reverse_hash()) == matePair.end()) {
-                matePair[nthashLead.get_reverse_hash()][nthash.get_forward_hash()] = BT_IS(false, linksArgParser.distances);
+                matePair[nthashLead.get_reverse_hash()];
             }
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
                 hits++;
