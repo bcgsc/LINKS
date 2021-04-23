@@ -482,6 +482,9 @@ int main(int argc, char** argv) {
             }   
             if(breakFlag){break;}
             std::cout << "\rCounter: " << counter;
+            if(matePair.find(nthashLead.get_reverse_hash()) == matePair.end()) {
+                matePair[nthashLead.get_reverse_hash()][nthash.get_forward_hash()] = BT_IS(false, linksArgParser.distances);
+            }
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
                 hits++;
                 // If forward hash is not found in matepair, add it
@@ -630,7 +633,7 @@ void kmerize(std::string *seq,
                 btllib::KmerBloomFilter *bloom,
                 uint64_t delta,
                 uint64_t readLength) {
-
+//TODO: change from main method to here
 }
 // matepair is from long reads Forward & reverse duos
 // trackAll is from contigs Forward and reverse for both
