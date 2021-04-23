@@ -661,7 +661,7 @@ void inline kmerizeContig( std::string *seq,
         if(breakFlag) {break;}
         // std::cout << "Roll no " << std::to_string(counter) << "\n";
         // Forward part
-	    if(matePair->find(ntHashContig.get_forward_hash()) != matePair->end()) {
+	    // if(matePair->find(ntHashContig.get_forward_hash()) != matePair->end()) {
             tmpCounter++;
             forCounter++;
             if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
@@ -680,9 +680,9 @@ void inline kmerizeContig( std::string *seq,
                 trackFor[ntHashContig.get_forward_hash()].incrementMultiple();
             }
             // std::cout << "trackFor size:" << trackFor.size() << "\n";
-        }
+        // }
         // Reverse part
-        if(matePair->find(ntHashContig.get_reverse_hash()) != matePair->end()) {
+        // if(matePair->find(ntHashContig.get_reverse_hash()) != matePair->end()) {
             std::cout << "Rev hash found in matePair! Adding to trackRev...\n";
 
             tmpCounter++;
@@ -704,7 +704,7 @@ void inline kmerizeContig( std::string *seq,
                 trackRev[ntHashContig.get_reverse_hash()].incrementMultiple();
             }
             // std::cout << "trackRev size:" << trackRev.size() << "\n";
-        }
+        // }
         counter++;
     }
     std::cout << "trackAll size:" << trackAll.size() << "\n";
