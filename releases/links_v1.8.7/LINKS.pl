@@ -40,6 +40,14 @@ my $readFastAFastq_debug_counter_2 = 0;
 my $readFastAFastq_debug_counter_3 = 0;
 my $readFastAFastq_debug_counter_4 = 0;
 my $readFastAFastq_debug_counter_5 = 0;
+
+my $readContigs_debug_counter_1 = 0;
+my $readContigs_debug_counter_2 = 0;
+my $readContigs_debug_counter_3 = 0;
+my $readContigs_debug_counter_4 = 0;
+my $readContigs_debug_counter_5 = 0;
+my $readContigs_debug_counter_6 = 0;
+my $readContigs_debug_counter_7 = 0;
 #-------------------------------------------------
 
 if(! $opt_f || ! $opt_s){
@@ -341,9 +349,22 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
       $array_element++;
    }### iterate through distances
 
+   ## MURATHAN DEBUG 3.4.21
    print "$readFastAFastq_debug_counter_1  readFastAFastq_debug_counter_1\n";
    print "$readFastAFastq_debug_counter_2  readFastAFastq_debug_counter_2\n";
    print "$readFastAFastq_debug_counter_3  readFastAFastq_debug_counter_3\n";
+
+   foreach my $rd (keys %$matepair){ 
+      $readFastAFastq_debug_counter_4++;
+      my $datam = $matepair->{$rd};
+      foreach my $rd2 (keys %$datam){
+         $readFastAFastq_debug_counter_5++;
+      }
+   }
+   print "$readFastAFastq_debug_counter_4  readFastAFastq_debug_counter_4\n";
+   #$readFastAFastq_debug_counter_5 = $matepair.size();
+   print "$readFastAFastq_debug_counter_5 readFastAFastq_debug_counter_5\n";
+   ## MURATHAN DEBUG 3.4.21
 
    my $totalkmerpairmessage = "\nExtractedx $totalpairs $k-mer pairs overall. This is the set that will be used for scaffolding\n";
    print $totalkmerpairmessage;
@@ -360,6 +381,24 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    my ($track_all);
    ($track_all,$tig_length) = &readContigs($assemblyfile,$matepair,$k,$min_size);
 
+   ## MURATHAN DEBUG 4.4.21 
+   
+   ## trackall debug
+   foreach my $rd (keys %$track_all){ 
+      $readContigs_debug_counter_6++;
+      my $datam = $track_all->{$rd};
+      if($datam->{start} > $datam->{end}){
+         $readContigs_debug_counter_7++;
+      }
+   }
+
+   print "$readContigs_debug_counter_1  readContigs_debug_counter_1\n";
+   print "$readContigs_debug_counter_2  readContigs_debug_counter_2\n";
+   print "$readContigs_debug_counter_3  readContigs_debug_counter_3\n";
+   print "$readContigs_debug_counter_4  readContigs_debug_counter_4\n";
+   print "$readContigs_debug_counter_5  readContigs_debug_counter_5\n";
+   print "$readContigs_debug_counter_6  readContigs_debug_counter_6\n";
+   print "$readContigs_debug_counter_7  readContigs_debug_counter_7\n";
    #-------------------------------------------------
    $date = `date`;
    chomp($date);
@@ -571,6 +610,7 @@ sub readContigs{
 
             my $tiglen = length($seq);
             if($tiglen >= $min_size){
+               $readContigs_debug_counter_4++;
                ($track_allCounter, $track_all) = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
                #print "Is returned right? $track_allCounter\n";
                $sum += $track_allCounter;
@@ -594,6 +634,7 @@ sub readContigs{
    $|++;
 
    if(length($seq) >= $min_size){
+      $readContigs_debug_counter_5++;
       ($track_allCounter, $track_all) = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
       $sum += $track_allCounter;
       #print "Is returned right? $track_allCounter\n";
@@ -604,6 +645,7 @@ sub readContigs{
       $tig_length->{$cttig} = length($seq);
    }
    ###
+   print "$sum trackall sum\n";
    #print "Trackall is: $sum \n";
    close IN;
 
@@ -938,20 +980,19 @@ sub kmerizeContig{
    my $counter = 0;
    for(my $pos=0;$pos<=(length($seq)-$k);$pos++){
       my $rd = substr($seq,$pos,$k);
-<<<<<<< HEAD
+      $readContigs_debug_counter_1++;
       # ---- no autovivification;
-=======
-      # no autovivification;
->>>>>>> de15420805600de730fdab9c8583a2ed84d0d5cb
       if(defined $matepair->{$rd}){
          # if(not(defined $track_all->{$rd})) {
          #    # print "This is new, incrementing counter: $counter\n";
          #    $counter++;
          # }
+         $readContigs_debug_counter_2++;
          $track_all->{$rd}{'tig'}   = $head;
          $track_all->{$rd}{'start'} = $pos;
          $track_all->{$rd}{'end'}   = $pos + $k;
          if($rc==1){
+            $readContigs_debug_counter_3++;
             $track_all->{$rd}{'start'} = length($seq) - $pos;
             $track_all->{$rd}{'end'}   = length($seq) - ($pos + $k);
          }

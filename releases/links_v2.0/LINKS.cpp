@@ -21,8 +21,8 @@ std::string version = "2.0";
 unsigned readFastAFastq_debug_counter_1 = 0;
 unsigned readFastAFastq_debug_counter_2 = 0;
 unsigned readFastAFastq_debug_counter_3 = 0;
-//unsigned readFastAFastq_debug_counter_1 = 0;
-//unsigned readFastAFastq_debug_counter_1 = 0;
+unsigned readFastAFastq_debug_counter_4 = 0;
+unsigned readFastAFastq_debug_counter_5 = 0;
 
 class BT_IS {
     private:
@@ -533,20 +533,26 @@ int main(int argc, char** argv) {
     std::cout << "\n\n=>Kmerize end in c++ " + std::to_string(time(0)) + "\n";
     totalpairs = hits;
     //std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
-    unsigned matePairTotalCount = 0;
+    //unsigned matePairTotalCount = 0;
     for (auto& it: matePair) {
     // Do stuff
-        matePairTotalCount += it.second.size();
+        readFastAFastq_debug_counter_4 += it.second.size();
+        readFastAFastq_debug_counter_5 += it.second.size();
         if(it.second.size() == 0){
-           matePairTotalCount++;
+           readFastAFastq_debug_counter_4++;
         }
     }
-    std::cout << "matepair first dim size:  " << matePair.size() << std::endl;
-    std::cout << "matePairTotalCount: " << matePairTotalCount << std::endl;
+
+    // MURATHAN DEBUG 3.5.21
+    //std::cout << "matepair first dim size:  " << matePair.size() << std::endl;
+    //std::cout << "matePairTotalCount: " << matePairTotalCount << std::endl;
 
     std::cout << "readFastAFastq_debug_counter_1 " + std::to_string(readFastAFastq_debug_counter_1) + "\n"; 
     std::cout << "readFastAFastq_debug_counter_2 " + std::to_string(readFastAFastq_debug_counter_2) + "\n"; 
-    std::cout << "readFastAFastq_debug_counter_3 " + std::to_string(readFastAFastq_debug_counter_3) + "\n"; 
+    std::cout << "readFastAFastq_debug_counter_3 " + std::to_string(readFastAFastq_debug_counter_3) + "\n";
+    std::cout << "readFastAFastq_debug_counter_4 " + std::to_string(readFastAFastq_debug_counter_4) + "\n";
+    std::cout << "readFastAFastq_debug_counter_5 " + std::to_string(readFastAFastq_debug_counter_5) + "\n";
+    // MURATHAN DEBUG 3.5.21
 
     std::unordered_map<uint64_t, KmerInfo> trackAll;
     std::unordered_map<uint64_t, KmerInfo> trackFor;
@@ -906,7 +912,7 @@ void pairContigs(
                             // std::cout << "Checkpoint 5 (A.start < A.end)\n";
                             // std::cout << "End: " << std::to_string(trackAll[mateListItr->first].getEnd()) << "Start: " << std::to_string(trackAll[mateListItr->first].getStart()) << "\n";
                             // Checking if reverse
-                            if(trackRev.find(mateListItr->first) != trackRev.end()) {//trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
+                            if(trackRev.find(matePairItr->first) != trackRev.end()) {//trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
                                 Check4Counter++;
                                 // std::cout << "Checkpoint 6 (B.end < B.start)\n";
                                 uint64_t distance = getDistance(insert_size, A_length, A_start, B_start);
@@ -1246,7 +1252,7 @@ void pairContigs(
 
     /*
     std::cout << "THESE ARE THE FILTERINGS:\n"<< "filter 1: "<< std::to_string(filter1) << "\n" << "filter 2: "<< std::to_string(filter2) << "\n" << "filter 3: "<< std::to_string(filter3) << "\n" << "filter 4: "<< std::to_string(filter4) << "\n";
-    std::cout << "THESE ARE THE COUNTERS:\n" << "CounterBase: " << std::to_string(CheckCounterBase) << "\n" << "Counter0: " << std::to_string(Check0Counter) << "\n"  << "Counter1: " <<  std::to_string(Check1Counter) << "\n"  << "Counter2: " <<  std::to_string(Check2Counter) << "\n"  << "Counter3: "  <<  std::to_string(Check3Counter) << "\n"  << "Counter4: "  <<  std::to_string(Check4Counter) << "\n"  << "Counter5: "  <<  std::to_string(Check5Counter) << "\n"  << "Counter6: "  <<  std::to_string(Check6Counter) << "\n"  << "Counter7: "  <<  std::to_string(Check7Counter) << "\n"  << "Counter8: "  <<  std::to_string(Check8Counter) << "\n"  << "Counter9: "  <<  std::to_string(Check9Counter) << "\n"  << "Counter10: "  << std::to_string(Check10Counter) << "\n"  << "Counter11: "  << std::to_string(Check11Counter) << "\n" << std::to_string(Check12Counter) << "\n" << std::to_string(Check13Counter) << "\n" << std::to_string(Check14Counter) << "\n" << std::to_string(Check15Counter) << "\n" << std::to_string(Check16Counter) << "\n" << std::to_string(Check17Counter) << "\n" << std::to_string(Check18Counter) << "\n" << std::to_string(Check19Counter) << "\n" << std::to_string(Check20Counter) << "\n" << std::to_string(Check21Counter) << "\n" << std::to_string(Check22Counter) << "\n" << std::to_string(Check23Counter) << "\n" << std::to_string(Check24Counter) << "\n" << std::to_string(Check25Counter) << "\n" << std::to_string(Check26Counter) << "\n";
+    std::cout << "THESE ARE THE COUNTERS:\n" << std::to_string(CheckCounterBase) << "\n" << std::to_string(Check0Counter) << "\n" <<  std::to_string(Check1Counter) << "\n" <<  std::to_string(Check2Counter) << "\n" <<  std::to_string(Check3Counter) << "\n" <<  std::to_string(Check4Counter) << "\n" <<  std::to_string(Check5Counter) << "\n" <<  std::to_string(Check6Counter) << "\n" <<  std::to_string(Check7Counter) << "\n" <<  std::to_string(Check8Counter) << "\n" <<  std::to_string(Check9Counter) << "\n" << std::to_string(Check10Counter) << "\n" << std::to_string(Check11Counter) << "\n" << std::to_string(Check12Counter) << "\n" << std::to_string(Check13Counter) << "\n" << std::to_string(Check14Counter) << "\n" << std::to_string(Check15Counter) << "\n" << std::to_string(Check16Counter) << "\n" << std::to_string(Check17Counter) << "\n" << std::to_string(Check18Counter) << "\n" << std::to_string(Check19Counter) << "\n" << std::to_string(Check20Counter) << "\n" << std::to_string(Check21Counter) << "\n" << std::to_string(Check22Counter) << "\n" << std::to_string(Check23Counter) << "\n" << std::to_string(Check24Counter) << "\n" << std::to_string(Check25Counter) << "\n" << std::to_string(Check26Counter) << "\n";
     std::cout << "\n===========PAIRED K-MER STATS===========\n";
     std::cout << "Total number of pairs extracted from -s " << longReadsFile << " " << totalPairs << "\n";
     std::cout << "At least one sequence/pair missing from contigs: " << ct_single << "\n";
