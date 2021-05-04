@@ -18,6 +18,11 @@
 #define BASE_TEN 10
 std::string version = "2.0";
 
+unsigned readFastAFastq_debug_counter_1 = 0;
+unsigned readFastAFastq_debug_counter_2 = 0;
+unsigned readFastAFastq_debug_counter_3 = 0;
+//unsigned readFastAFastq_debug_counter_1 = 0;
+//unsigned readFastAFastq_debug_counter_1 = 0;
 
 class BT_IS {
     private:
@@ -462,7 +467,7 @@ int main(int argc, char** argv) {
     std::cout << "\n\n=>Reading long reads, building hash table : " << std::to_string(time(0)) << "\n";
     // // $assemblyruninfo.=$reading_reads_message;
     int breakFlag = 0;
-    std::cout << "\n\n=>Kmerize start in c++ " + std::to_string(time(0)) + "\n";
+    //std::cout << "\n\n=>Kmerize start in c++ " + std::to_string(time(0)) + "\n";
     for (btllib::SeqReader::Record record; (record = longReader.read());) {
         btllib::NtHash nthash(record.seq, linksArgParser.k, myFilter->get_hash_num());
         btllib::NtHash nthashLead(record.seq, linksArgParser.k, myFilter->get_hash_num(), delta);
@@ -470,7 +475,8 @@ int main(int argc, char** argv) {
         breakFlag = 0;
         for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=linksArgParser.step) {
             // roll for the number of steps
-            // std::cout << "InnerCounter: " << innercounter << "\n"; 
+            // std::cout << "InnerCounter: " << innercounter << "\n";
+            readFastAFastq_debug_counter_1++;
             innercounter++;
             // Forward
             for(int j = 1; j < linksArgParser.step; j++) {
@@ -486,6 +492,7 @@ int main(int argc, char** argv) {
                 matePair[nthashLead.get_reverse_hash()];
             }
             if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
+                readFastAFastq_debug_counter_2++;
                 hits++;
                 // If forward hash is not found in matepair, add it
                 // if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
@@ -501,6 +508,9 @@ int main(int argc, char** argv) {
                     matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setBT(true);
                     matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setIS(linksArgParser.distances);
                 }
+            }else{
+                readFastAFastq_debug_counter_3++;
+                //std::cout << "not in bloom\n";
             }
             // if(filtering.contains(nthash.hashes()) && filtering.contains(nthashLead.hashes())) {
             //     hits++;
@@ -522,33 +532,49 @@ int main(int argc, char** argv) {
     }
     std::cout << "\n\n=>Kmerize end in c++ " + std::to_string(time(0)) + "\n";
     totalpairs = hits;
-    // std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
-    
-    
+    //std::cout << hits << " match percentage: % " << "matePair size: " << (double)matePair.size()<< "   " << (double)matePair.size()/counter * 100.0 << " counter: " << counter << " \n";
+    unsigned matePairTotalCount = 0;
+    for (auto& it: matePair) {
+    // Do stuff
+        matePairTotalCount += it.second.size();
+        if(it.second.size() == 0){
+           matePairTotalCount++;
+        }
+    }
+    std::cout << "matepair first dim size:  " << matePair.size() << std::endl;
+    std::cout << "matePairTotalCount: " << matePairTotalCount << std::endl;
+
+    std::cout << "readFastAFastq_debug_counter_1 " + std::to_string(readFastAFastq_debug_counter_1) + "\n"; 
+    std::cout << "readFastAFastq_debug_counter_2 " + std::to_string(readFastAFastq_debug_counter_2) + "\n"; 
+    std::cout << "readFastAFastq_debug_counter_3 " + std::to_string(readFastAFastq_debug_counter_3) + "\n"; 
+
     std::unordered_map<uint64_t, KmerInfo> trackAll;
     std::unordered_map<uint64_t, KmerInfo> trackFor;
     std::unordered_map<uint64_t, KmerInfo> trackRev;
     std::unordered_map<std::string, uint64_t> tigLength;
     // std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
     // // Read contigs to find where the long read kmers belong in
-    std::cout << "\n\n=>Before readContigs c++ " + std::to_string(time(0)) + "\n";
+    std::cout << "innercounter: " << innercounter << std::endl; 
+    std::cout << "After reading long reads hit size: " << totalpairs << std::endl; 
+    //std::cout << "\n\n=>Before readContigs c++ " + std::to_string(time(0)) + "\n";
     readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
-    std::cout << "\n\n=>After readContigs c++ " + std::to_string(time(0)) + "\n";
-    std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
-    std::cout << " pairContigs Parameter List : \n\n";
-    std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
-    std::cout << " 2- matePair Size " << matePair.size() <<"\n";
-    std::cout << " 3- trackAll size " << trackAll.size() <<"\n";
-    std::cout << " 4- trackFor size " << trackFor.size() <<"\n";
-    std::cout << " 5- trackRev size " << trackRev.size() <<"\n";
-    std::cout << " 6- tigLength size " << tigLength.size() <<"\n";
-    std::cout << " 7- issuesName " << issues <<"\n";
-    std::cout << " 8- distributionName " << distribution <<"\n";
-    std::cout << " 9- totalPairs " << totalpairs <<"\n";
-    std::cout << " 10- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
-    std::cout << " 11- verbose " << linksArgParser.verbose <<"\n";
-    std::cout << " 12- distributionName " << linksArgParser.insertStdev <<"\n";
-    std::cout << "\n\n=>Before pairContigs c++ " + std::to_string(time(0)) + "\n";
+    //std::cout << "\n\n=>After readContigs c++ " + std::to_string(time(0)) + "\n";
+    
+    //std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
+    //std::cout << " pairContigs Parameter List : \n\n";
+    //std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
+    //std::cout << " 2- matePair Size " << matePair.size() <<"\n";
+    //std::cout << " 3- trackAll size " << trackAll.size() <<"\n";
+    //std::cout << " 4- trackFor size " << trackFor.size() <<"\n";
+    //std::cout << " 5- trackRev size " << trackRev.size() <<"\n";
+    //std::cout << " 6- tigLength size " << tigLength.size() <<"\n";
+    //std::cout << " 7- issuesName " << issues <<"\n";
+    //std::cout << " 8- distributionName " << distribution <<"\n";
+    //std::cout << " 9- totalPairs " << totalpairs <<"\n";
+    //std::cout << " 10- tigpair_checkpoint " << tigpair_checkpoint <<"\n";
+    //std::cout << " 11- verbose " << linksArgParser.verbose <<"\n";
+    //std::cout << " 12- distributionName " << linksArgParser.insertStdev <<"\n";
+    //std::cout << "\n\n=>Before pairContigs c++ " + std::to_string(time(0)) + "\n";
     pairContigs(
         linksArgParser.longFile,
         matePair,
@@ -563,7 +589,7 @@ int main(int argc, char** argv) {
         simplepair_checkpoint,
         linksArgParser.verbose,
         linksArgParser.insertStdev);
-    std::cout << "\n\n=>After pairContigs c++ " + std::to_string(time(0)) + "\n";
+    // --  std::cout << "\n\n=>After pairContigs c++ " + std::to_string(time(0)) + "\n";
     return 0;
 }
 
@@ -714,12 +740,13 @@ void inline kmerizeContig( std::string *seq,
         }
         counter++;
     }
-    std::cout << "trackAll size:" << trackAll.size() << "\n";
-    std::cout << "trackFor size:" << trackFor.size() << "\n";
-    std::cout << "forCounter: " << std::to_string(forCounter) << "\n";
-    std::cout << "trackRev size:" << trackRev.size() << "\n";
-    std::cout << "revCounter: " << std::to_string(revCounter) << "\n";
-    std::cout << "\n\n\n";
+    // 29.4
+    //std::cout << "trackAll size:" << trackAll.size() << "\n";
+    //std::cout << "trackFor size:" << trackFor.size() << "\n";
+    //std::cout << "forCounter: " << std::to_string(forCounter) << "\n";
+    //std::cout << "trackRev size:" << trackRev.size() << "\n";
+    //std::cout << "revCounter: " << std::to_string(revCounter) << "\n";
+    //std::cout << "\n\n\n";
 }
 
 void readContigs(
@@ -1216,6 +1243,8 @@ void pairContigs(
     uint64_t satisfied = ct_ok_pairs + ct_ok_contig;
     uint64_t unsatisfied = ct_problem_pairs + ct_iz_issues + ct_illogical;
     uint64_t ct_both_reads = ct_both * 2;
+
+    /*
     std::cout << "THESE ARE THE FILTERINGS:\n"<< "filter 1: "<< std::to_string(filter1) << "\n" << "filter 2: "<< std::to_string(filter2) << "\n" << "filter 3: "<< std::to_string(filter3) << "\n" << "filter 4: "<< std::to_string(filter4) << "\n";
     std::cout << "THESE ARE THE COUNTERS:\n" << std::to_string(CheckCounterBase) << "\n" << std::to_string(Check0Counter) << "\n" <<  std::to_string(Check1Counter) << "\n" <<  std::to_string(Check2Counter) << "\n" <<  std::to_string(Check3Counter) << "\n" <<  std::to_string(Check4Counter) << "\n" <<  std::to_string(Check5Counter) << "\n" <<  std::to_string(Check6Counter) << "\n" <<  std::to_string(Check7Counter) << "\n" <<  std::to_string(Check8Counter) << "\n" <<  std::to_string(Check9Counter) << "\n" << std::to_string(Check10Counter) << "\n" << std::to_string(Check11Counter) << "\n" << std::to_string(Check12Counter) << "\n" << std::to_string(Check13Counter) << "\n" << std::to_string(Check14Counter) << "\n" << std::to_string(Check15Counter) << "\n" << std::to_string(Check16Counter) << "\n" << std::to_string(Check17Counter) << "\n" << std::to_string(Check18Counter) << "\n" << std::to_string(Check19Counter) << "\n" << std::to_string(Check20Counter) << "\n" << std::to_string(Check21Counter) << "\n" << std::to_string(Check22Counter) << "\n" << std::to_string(Check23Counter) << "\n" << std::to_string(Check24Counter) << "\n" << std::to_string(Check25Counter) << "\n" << std::to_string(Check26Counter) << "\n";
     std::cout << "\n===========PAIRED K-MER STATS===========\n";
@@ -1231,6 +1260,7 @@ void pairContigs(
     std::cout << "\tUnsatisfied in distance within a given contig pair (i.e. calculated distances out-of-bounds): " << ct_problem_pairs << "\n";
     std::cout << "\t---\n";
     std::cout << "Total satisfied: " << satisfied << "\tunsatisfied: " << unsatisfied << "\n\nBreakdown by distances (-d):\n";
+    */
     sortInsertSize(ct_both_hash);
     std::unordered_map<uint64_t, uint64_t>::iterator itrIS;
     std::cout << "ct_both_hash map size: " << err.size() << "\n"; 
@@ -1239,6 +1269,7 @@ void pairContigs(
         int64_t maopt = -1 * (insertStdev * itrIS->first);
         int64_t low_izopt = itrIS->first + maopt;
         int64_t up_izopt = itrIS->first - maopt;
+        /*
         std::cout <<  "MIN: " << low_izopt << " MAX: " << up_izopt << "  as defined by  " << itrIS->first << "  *  " << insertStdev << " \n";
         std::cout <<  "At least one sequence/pair missing:  " << ct_single_hash[itrIS->first] << " \n";
         std::cout <<  "Assembled pairs:  " << itrIS->second << " \n";
@@ -1248,6 +1279,7 @@ void pairContigs(
         std::cout <<  "\t---\n";
         std::cout <<  "\tSatisfied in distance/logic within a given contig pair (pre-scaffold):  " << ct_ok_pairs_hash[itrIS->first] << " \n";
         std::cout <<  "\tUnsatisfied in distance within a given contig pair (i.e. calculated distances out-of-bounds):  " << ct_problem_pairs_hash[itrIS->first] << " \n";
+        */
     }
     std::cout << "============================================\n";
     std::ofstream distFile;

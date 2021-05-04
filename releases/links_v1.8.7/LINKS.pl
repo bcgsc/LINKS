@@ -35,7 +35,11 @@ my $last_step  = $step; ### default for last_step set as step
 my $version = "[v1.8.6]";
 my $dev = "rwarren\@bcgsc.ca";
 my $ARCKS_RUN = 0;### MEANS ONLY LINKS PROCESS
-
+my $readFastAFastq_debug_counter_1 = 0;
+my $readFastAFastq_debug_counter_2 = 0;
+my $readFastAFastq_debug_counter_3 = 0;
+my $readFastAFastq_debug_counter_4 = 0;
+my $readFastAFastq_debug_counter_5 = 0;
 #-------------------------------------------------
 
 if(! $opt_f || ! $opt_s){
@@ -308,7 +312,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
          # foreach my $rd (keys %$matepair){ 
          #    $matePairCounter++;
          # }
-         # print "MATEPAIR COUNT IS $matePairCounter BEFORE readFastaFastq\n";
+         print "MATEPAIR COUNT IS $matePairCounter BEFORE readFastaFastq\n";
          if(! -e $_){ die "WARNING: Your file $_ does not exist -- fatal.\n";    }
          if($bfoff){
             ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
@@ -322,7 +326,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
             foreach my $rd (keys %$matepair){ 
                $matePairCounter++;
             }
-            # print "MATEPAIR COUNT IS $matePairCounter after readFastaFastq\n";
+            print "MATEPAIR COUNT IS $matePairCounter after readFastaFastq\n";
          }
 	 $distpairs+=$pairct;
          #}
@@ -330,14 +334,18 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
       }### FOF ends
       close FOF;
 
-      my $kmerpairmessage = "\nExtracted $distpairs $k-mer pairs at -d $frag_dist, from all $ctrd sequences provided in $longfile\n\n";
+      my $kmerpairmessage = "\nExtracteddd $distpairs $k-mer pairs at -d $frag_dist, from all $ctrd sequences provided in $longfile\n\n";
       print $kmerpairmessage;
       print LOG $kmerpairmessage;
       $totalpairs+=$distpairs;
       $array_element++;
    }### iterate through distances
 
-   my $totalkmerpairmessage = "\nExtracted $totalpairs $k-mer pairs overall. This is the set that will be used for scaffolding\n";
+   print "$readFastAFastq_debug_counter_1  readFastAFastq_debug_counter_1\n";
+   print "$readFastAFastq_debug_counter_2  readFastAFastq_debug_counter_2\n";
+   print "$readFastAFastq_debug_counter_3  readFastAFastq_debug_counter_3\n";
+
+   my $totalkmerpairmessage = "\nExtractedx $totalpairs $k-mer pairs overall. This is the set that will be used for scaffolding\n";
    print $totalkmerpairmessage;
    print LOG $totalkmerpairmessage;
 
@@ -716,6 +724,7 @@ sub kmerize{
    # my $tmpCounter0 = 0;
    my $notDefCounter = 0;
    for(my $pos=$initpos;$pos<=$endposition;$pos+=$step){###MPET
+      $readFastAFastq_debug_counter_1++;
       # $tmpCounter0 = 0;
       # $tmpCounter1 = 0;
       # $tmpCounter2 = 0;
@@ -732,7 +741,7 @@ sub kmerize{
       #    $tmpCounter0++;
       # }
       # print "Before the if statement: $tmpCounter0\n";
-      no autovivification;
+      # ---------  no autovivification;
       if(defined $matepair->{$rd2}{$rd1}){
             # foreach my $rd (keys %$matepair){ 
             #    $tmpCounter5++;
@@ -757,6 +766,7 @@ sub kmerize{
       # }
       # print "Counter3: $tmpCounter1\n";
       if($bloom->contains($rd1) && $bloom->contains($rd2)){ ###Don't bother hashing k-mer pairs if assembly doesn't have these kmers
+         $readFastAFastq_debug_counter_2++;
          # if(not(defined $matepair->{$rd1})) {
          #    $uniquePairct++;
          # }
@@ -784,7 +794,9 @@ sub kmerize{
          $pairct++;
 
       }
-
+      else{
+         $readFastAFastq_debug_counter_3++;
+      }
    }
    return $matepair,$pairct,$uniquePairct;
 }
@@ -926,7 +938,7 @@ sub kmerizeContig{
    my $counter = 0;
    for(my $pos=0;$pos<=(length($seq)-$k);$pos++){
       my $rd = substr($seq,$pos,$k);
-      no autovivification;
+      # ---- no autovivification;
       if(defined $matepair->{$rd}){
          if(not(defined $track_all->{$rd})) {
             # print "This is new, incrementing counter: $counter\n";
