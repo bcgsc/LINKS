@@ -24,6 +24,14 @@ unsigned readFastAFastq_debug_counter_3 = 0;
 unsigned readFastAFastq_debug_counter_4 = 0;
 unsigned readFastAFastq_debug_counter_5 = 0;
 
+unsigned readContigs_debug_counter_1 = 0;
+unsigned readContigs_debug_counter_2 = 0;
+unsigned readContigs_debug_counter_3 = 0;
+unsigned readContigs_debug_counter_4 = 0;
+unsigned readContigs_debug_counter_5 = 0;
+unsigned readContigs_debug_counter_6 = 0;
+unsigned readContigs_debug_counter_7 = 0;
+
 class BT_IS {
     private:
     bool bt;
@@ -565,7 +573,27 @@ int main(int argc, char** argv) {
     //std::cout << "\n\n=>Before readContigs c++ " + std::to_string(time(0)) + "\n";
     readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
     //std::cout << "\n\n=>After readContigs c++ " + std::to_string(time(0)) + "\n";
-    
+  
+    for (auto& it: trackFor) {
+    // Do stuff
+        readContigs_debug_counter_6++;
+    }
+    for (auto& it: trackRev) {
+    // Do stuff
+        readContigs_debug_counter_7++;
+    }
+    std::cout << "trackFor size " << trackFor.size() << std::endl;
+    std::cout << "trackRev size " << trackRev.size() << std::endl;
+
+
+    std::cout << "readContigs_debug_counter_1 " + std::to_string(readContigs_debug_counter_1) + "\n";
+    std::cout << "readContigs_debug_counter_2 " + std::to_string(readContigs_debug_counter_2) + "\n";
+    std::cout << "readContigs_debug_counter_3 " + std::to_string(readContigs_debug_counter_3) + "\n";
+    //std::cout << "readContigs_debug_counter_4 " + std::to_string(readContigs_debug_counter_4) + "\n";
+    std::cout << "readContigs_debug_counter_6 " + std::to_string(readContigs_debug_counter_6) + "\n";
+    std::cout << "readContigs_debug_counter_7 " + std::to_string(readContigs_debug_counter_7) + "\n";
+
+
     //std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
     //std::cout << " pairContigs Parameter List : \n\n";
     //std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
@@ -679,7 +707,7 @@ void inline kmerizeContig( std::string *seq,
                     unsigned hashFcts,
                     uint64_t step,
                     uint64_t &tmpCounter) {
-    btllib::NtHash ntHashContig(*seq, k, hashFcts);
+    btllib::NtHash ntHashContig(*seq, k, hashFcts); // hashFunc can be 1 after first step
     int counter = 0;
     int forCounter = 0;
     int revCounter = 0;
@@ -687,7 +715,7 @@ void inline kmerizeContig( std::string *seq,
     // std::cout << "hashFct in kmerizeContig: " << hashFcts << "\n";
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
         // roll for every step
-        
+
         for(int j = 1; j < step; j++) {
             if(!ntHashContig.roll()) {
                 breakFlag = 1;
@@ -695,12 +723,13 @@ void inline kmerizeContig( std::string *seq,
         }
         if(breakFlag) {break;}
         // std::cout << "Roll no " << std::to_string(counter) << "\n";
-        
+        readContigs_debug_counter_1++;
         
         // Forward part
 	    if(matePair->find(ntHashContig.get_forward_hash()) != matePair->end()) {
             tmpCounter++;
             forCounter++;
+            readContigs_debug_counter_2++;
             if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
                 // std::cout << "new\n";
                 // std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
@@ -723,7 +752,7 @@ void inline kmerizeContig( std::string *seq,
         // Reverse part
         if(matePair->find(ntHashContig.get_reverse_hash()) != matePair->end()) {
             // std::cout << "Rev hash found in matePair! Adding to trackRev...\n";
-
+            readContigs_debug_counter_3++;
             tmpCounter++;
             revCounter++;
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
