@@ -48,6 +48,14 @@ my $readContigs_debug_counter_4 = 0;
 my $readContigs_debug_counter_5 = 0;
 my $readContigs_debug_counter_6 = 0;
 my $readContigs_debug_counter_7 = 0;
+
+my $pairContigs_debug_counter_1 = 0;
+my $pairContigs_debug_counter_2 = 0;
+my $pairContigs_debug_counter_3 = 0;
+my $pairContigs_debug_counter_4 = 0;
+my $pairContigs_debug_counter_5 = 0;
+my $pairContigs_debug_counter_6 = 0;
+my $pairContigs_debug_counter_7 = 0;
 #-------------------------------------------------
 
 if(! $opt_f || ! $opt_s){
@@ -350,6 +358,11 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    }### iterate through distances
 
    ## MURATHAN DEBUG 3.4.21
+   print "$readFastAFastq_debug_counter_1 total kmers iterated in read\n";
+   print "$readFastAFastq_debug_counter_2 rd1 rd2 found in bloom\n";
+   print "$readFastAFastq_debug_counter_3 rd1 rd2not found in bloom\n";
+   print "$readFastAFastq_debug_counter_4 total kmers iterated in read\n";
+
    print "$readFastAFastq_debug_counter_1  readFastAFastq_debug_counter_1\n";
    print "$readFastAFastq_debug_counter_2  readFastAFastq_debug_counter_2\n";
    print "$readFastAFastq_debug_counter_3  readFastAFastq_debug_counter_3\n";
@@ -392,6 +405,13 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
       }
    }
 
+   print "readContigs_debug_counter_1: total kmer from contigs\n";
+   print "readContigs_debug_counter_2: total kmers found in contigs\n";
+   print "readContigs_debug_counter_3: total reverse kmera found in contigs\n";
+   print "readContigs_debug_counter_6: all kmers in trackall\n";
+   print "readContigs_debug_counter_7: all reverse kmers in trackall\n";
+   print "\n";
+
    print "$readContigs_debug_counter_1  readContigs_debug_counter_1\n";
    print "$readContigs_debug_counter_2  readContigs_debug_counter_2\n";
    print "$readContigs_debug_counter_3  readContigs_debug_counter_3\n";
@@ -409,6 +429,13 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    $assemblyruninfo.= $sc_start_message . "\n";
    ($contigpairs,$simplepair) = &pairContigs($longfile,$matepair,$track_all,$tig_length,$issues,$distribution,$totalpairs,$tigpair_checkpoint,$simplepair_checkpoint,$verbose);
    #-------------------------------------------------
+   
+   print "$pairContigs_debug_counter_1  pairContigs_debug_counter_1\n";
+   print "$pairContigs_debug_counter_2  pairContigs_debug_counter_2\n";
+   print "$pairContigs_debug_counter_3  pairContigs_debug_counter_3\n";
+   print "$pairContigs_debug_counter_4  pairContigs_debug_counter_4\n";
+   print "$pairContigs_debug_counter_5  pairContigs_debug_counter_5\n";
+   print "$pairContigs_debug_counter_6  pairContigs_debug_counter_6\n";
 
    ### Read contig names and sequences from the FASTA file.
    ($tighash, $tignames, $tig_length) = &readContigsMemory($assemblyfile);
@@ -1285,16 +1312,21 @@ sub pairContigs{
       foreach my $rd (keys %$mateslist){ 
          $readbCounter++;
       }
+      $pairContigs_debug_counter_1++;
       #print "****read_b counter is : $readbCounter will I enter loop?\n";
       foreach my $read_b (keys %$mateslist){
             $CheckCounterBase++;
+            $pairContigs_debug_counter_2++;
             #print Dumper(\%$track);
           if($matepair->{$read_a}{$read_b}{'bt'}==0) {
-             $filter1++;
+             $filter1++; #matepair is not seen
+             $pairContigs_debug_counter_3++;
              if($track->{$read_a}{'multiple'}==1) {
-                $filter2++;
+                $filter2++; #first mate is singleton in assembly
+                $pairContigs_debug_counter_4++;
                 if($track->{$read_b}{'multiple'}==1){ ###This has little if no effect, but negative for some odd reason
-                $filter3++;
+                $filter3++; # first and second mate are singleton in assembly
+                   $pairContigs_debug_counter_5++;
                   if(1) {
                      $filter4++;
             $Check1Counter++;
@@ -1309,6 +1341,7 @@ sub pairContigs{
 
             if(defined $track->{$read_a}{'tig'} && defined $track->{$read_b}{'tig'}){### both pairs assembled
                # print "PERL PAIRCONTIGS BOTH ARE DEFINEDDD\n";
+               $pairContigs_debug_counter_6++; ## both pairs are found in assembly
                $Check0Counter++;
                $ct_both++;
                $ct_both_hash->{$insert_size}++;

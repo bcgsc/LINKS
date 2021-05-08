@@ -32,6 +32,14 @@ unsigned readContigs_debug_counter_5 = 0;
 unsigned readContigs_debug_counter_6 = 0;
 unsigned readContigs_debug_counter_7 = 0;
 
+unsigned pairContigs_debug_counter_1 = 0;
+unsigned pairContigs_debug_counter_2 = 0;
+unsigned pairContigs_debug_counter_3 = 0;
+unsigned pairContigs_debug_counter_4 = 0;
+unsigned pairContigs_debug_counter_5 = 0;
+unsigned pairContigs_debug_counter_6 = 0;
+unsigned pairContigs_debug_counter_7 = 0;
+
 class BT_IS {
     private:
     bool bt;
@@ -513,7 +521,10 @@ int main(int argc, char** argv) {
                     // LongReadKmer * leadPair = new LongReadKmer(nthashLead.hashes()[0], linksArgParser.distances);
                     // Check for existence
                     // frag_dist is an array of distances
-                    matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setBT(true);
+                    //matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setBT(true);
+                    
+                    // ---murathan change 7.5.21
+                    matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setBT(false);
                     matePair[nthash.get_forward_hash()][nthashLead.get_reverse_hash()].setIS(linksArgParser.distances);
                 }
             }else{
@@ -568,30 +579,35 @@ int main(int argc, char** argv) {
     std::unordered_map<std::string, uint64_t> tigLength;
     // std::cout << "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions :" << dt << "\n";
     // // Read contigs to find where the long read kmers belong in
-    std::cout << "innercounter: " << innercounter << std::endl; 
-    std::cout << "After reading long reads hit size: " << totalpairs << std::endl; 
+    //std::cout << "innercounter: " << innercounter << std::endl; 
+    //std::cout << "After reading long reads hit size: " << totalpairs << std::endl; 
     //std::cout << "\n\n=>Before readContigs c++ " + std::to_string(time(0)) + "\n";
     readContigs(linksArgParser.assemblyFile, trackAll, trackFor, trackRev, matePair, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
     //std::cout << "\n\n=>After readContigs c++ " + std::to_string(time(0)) + "\n";
   
     for (auto& it: trackFor) {
     // Do stuff
-        readContigs_debug_counter_6++;
+        readContigs_debug_counter_4++;
     }
     for (auto& it: trackRev) {
     // Do stuff
-        readContigs_debug_counter_7++;
+        readContigs_debug_counter_5++;
     }
     std::cout << "trackFor size " << trackFor.size() << std::endl;
     std::cout << "trackRev size " << trackRev.size() << std::endl;
 
+    std::cout << "\nreadContigs_debug_counter_1: total kmer read from contig\n";
+    std::cout << "readContigs_debug_counter_2: where forward has found in matepair\n";
+    std::cout << "readContigs_debug_counter_1: where reverse hash found in matepair\n";
+    std::cout << "readContigs_debug_counter_4: trackFor size\n";
+    std::cout << "readContigs_debug_counter_5: trackRev size\n";
 
     std::cout << "readContigs_debug_counter_1 " + std::to_string(readContigs_debug_counter_1) + "\n";
     std::cout << "readContigs_debug_counter_2 " + std::to_string(readContigs_debug_counter_2) + "\n";
     std::cout << "readContigs_debug_counter_3 " + std::to_string(readContigs_debug_counter_3) + "\n";
     //std::cout << "readContigs_debug_counter_4 " + std::to_string(readContigs_debug_counter_4) + "\n";
-    std::cout << "readContigs_debug_counter_6 " + std::to_string(readContigs_debug_counter_6) + "\n";
-    std::cout << "readContigs_debug_counter_7 " + std::to_string(readContigs_debug_counter_7) + "\n";
+    std::cout << "readContigs_debug_counter_4 " + std::to_string(readContigs_debug_counter_4) + "\n";
+    std::cout << "readContigs_debug_counter_5 " + std::to_string(readContigs_debug_counter_5) + "\n";
 
 
     //std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
@@ -623,6 +639,22 @@ int main(int argc, char** argv) {
         simplepair_checkpoint,
         linksArgParser.verbose,
         linksArgParser.insertStdev);
+
+    std::cout << "pairContigs_debug_counter_1: all matepair iteration\n";
+    std::cout << "pairContigs_debug_counter_2: matepair is not seen\n";
+    std::cout << "pairContigs_debug_counter_3: second mate is found in assembly\n";
+    std::cout << "pairContigs_debug_counter_4: second mate is singleton \n";
+    std::cout << "pairContigs_debug_counter_5: first mate is in assembly\n";
+    std::cout << "pairContigs_debug_counter_6: first mate is in singleton\n";
+    std::cout << "pairContigs_debug_counter_7: both contigs found in trackall\n";
+
+    std::cout << "pairContigs_debug_counter_1 " + std::to_string(pairContigs_debug_counter_1) + "\n";
+    std::cout << "pairContigs_debug_counter_2 " + std::to_string(pairContigs_debug_counter_2) + "\n";
+    std::cout << "pairContigs_debug_counter_3 " + std::to_string(pairContigs_debug_counter_3) + "\n";
+    std::cout << "pairContigs_debug_counter_4 " + std::to_string(pairContigs_debug_counter_4) + "\n";
+    std::cout << "pairContigs_debug_counter_5 " + std::to_string(pairContigs_debug_counter_5) + "\n";
+    std::cout << "pairContigs_debug_counter_6 " + std::to_string(pairContigs_debug_counter_6) + "\n";
+    std::cout << "pairContigs_debug_counter_7 " + std::to_string(pairContigs_debug_counter_7) + "\n";
     // --  std::cout << "\n\n=>After pairContigs c++ " + std::to_string(time(0)) + "\n";
     return 0;
 }
@@ -879,22 +911,28 @@ void pairContigs(
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
             CheckCounterBase++;
+            pairContigs_debug_counter_1++; // all matepair iteration
             // std::cout << "Checkpoint 1 iteration through every matePair\n";
             // seg faults here
             if(mateListItr->second.getBT() == false) {
-                filter1++;
+                //filter1++;
+                pairContigs_debug_counter_2++; // matepair is not seen
                 if(trackAll.find(matePairItr->first) != trackAll.end()) {
-                    filter2++;
+                    pairContigs_debug_counter_3++;
+                    filter2++; // second mate is found in assembly
                     if(trackAll[matePairItr->first].getMultiple() == 1) { 
-                        filter3++;
+                        pairContigs_debug_counter_4++;
+                        filter3++; // second mate is singleton 
                     if(trackAll.find(mateListItr->first) != trackAll.end()){ 
                         // std::unordered_map<uint64_t, KmerInfo>::iterator tmpItr;
                         // for(tmpItr = trackAll.begin(); tmpItr != trackAll.end(); tmpItr++) {
                         //     std::cout << "Multiple: " << tmpItr->second.getMultiple() << "\n";
                         // }
+                        pairContigs_debug_counter_5++; // first mate is in assembly
                         filter4++;
                         if(trackAll[mateListItr->first].getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
                 Check1Counter++;
+                pairContigs_debug_counter_6++;// first mate is in singleton
                 // std::cout << "Checkpoint 2 (if both pairss multiple == 1)\n";
                 // below indicates this specific pair has been seen (bt = 1)
                 mateListItr->second.setBT(true);
@@ -906,6 +944,7 @@ void pairContigs(
                 // std::cout << "Tig1: " << trackAll[matePairItr->first].getTig() << "Tig2: " << trackAll[mateListItr->first].getTig() << "HASH: " << std::to_string(mateListItr->first) << "\n";
                 if(trackAll[matePairItr->first].getTig() != "" && trackAll[mateListItr->first].getTig() != "") {
                     Check0Counter++;
+                    pairContigs_debug_counter_7++; //both contigs found in trackall
                     // std::cout << "Checkpoint 3 (if both reads are found in trackAll)\n";
                     // std::cout << "1: " << trackAll[matePairItr->first].getTig() << " 2: " << trackAll[mateListItr->first].getTig() << " \n";
                     ct_both++;
