@@ -56,6 +56,13 @@ my $pairContigs_debug_counter_4 = 0;
 my $pairContigs_debug_counter_5 = 0;
 my $pairContigs_debug_counter_6 = 0;
 my $pairContigs_debug_counter_7 = 0;
+my $pairContigs_debug_counter_8 = 0;
+my $pairContigs_debug_counter_9 = 0;
+my $pairContigs_debug_counter_10 = 0;
+my $pairContigs_debug_counter_11 = 0;
+my $pairContigs_debug_counter_12 = 0;
+my $pairContigs_debug_counter_13 = 0;
+my $pairContigs_debug_counter_14 = 0;
 #-------------------------------------------------
 
 if(! $opt_f || ! $opt_s){
@@ -436,6 +443,14 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    print "$pairContigs_debug_counter_4  pairContigs_debug_counter_4\n";
    print "$pairContigs_debug_counter_5  pairContigs_debug_counter_5\n";
    print "$pairContigs_debug_counter_6  pairContigs_debug_counter_6\n";
+   print "$pairContigs_debug_counter_7  pairContigs_debug_counter_7\n";
+   print "$pairContigs_debug_counter_8  pairContigs_debug_counter_8\n";
+   print "$pairContigs_debug_counter_9  pairContigs_debug_counter_9\n";
+   print "$pairContigs_debug_counter_10  pairContigs_debug_counter_10\n";
+   print "$pairContigs_debug_counter_11  pairContigs_debug_counter_11\n";
+   print "$pairContigs_debug_counter_12  pairContigs_debug_counter_12\n";
+   print "$pairContigs_debug_counter_13  pairContigs_debug_counter_13\n";
+   print "$pairContigs_debug_counter_14  pairContigs_debug_counter_14\n";
 
    ### Read contig names and sequences from the FASTA file.
    ($tighash, $tignames, $tig_length) = &readContigsMemory($assemblyfile);
@@ -1365,11 +1380,14 @@ sub pairContigs{
 
                if ($tig_a != $tig_b){####paired reads located on <> contigs
                   $Check2Counter++;
+                  $pairContigs_debug_counter_8++; 
                   ####Determine most likely possibility
                   if ($track->{$read_a}{'start'} < $track->{$read_a}{'end'}){
                      $Check3Counter++;
+                     $pairContigs_debug_counter_9++;
                      if ($track->{$read_b}{'end'} < $track->{$read_b}{'start'}){####-> <- :::  A-> <-B  /  rB -> <- rA
                          $Check4Counter++;
+                         $pairContigs_debug_counter_10++;
                          my $d = &getDistance($insert_size, $A_length, $A_start, $B_start);
                          print "A-> <-B  WITH $tig_a -> <- $tig_b GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Alen, Astart,Bstart\n" if($verbose);
                          if($d >= $min_allowed){
@@ -1405,6 +1423,7 @@ sub pairContigs{
                          }
                       }else{#### -> -> ::: A-> <-rB  / B-> <-rA 
                          $Check7Counter++;
+                         $pairContigs_debug_counter_11++;
                          my $rB_start = $B_length - $B_start;
                          my $d = &getDistance($insert_size, $A_length, $A_start, $rB_start);
                          print "A-> <-rB  WITH $tig_a -> <- r.$tig_b GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Alen,Astart,rBstart\n" if($verbose);
@@ -1440,9 +1459,11 @@ sub pairContigs{
                          }
                       }
                   }else{
+                     $pairContigs_debug_counter_12++;
                      $Check10Counter++;
                      if ($track->{$read_b}{'end'} > $track->{$read_b}{'start'}){####<-  -> ::: B-> <-A / rA -> <- rB
                         $Check11Counter++;
+                        $pairContigs_debug_counter_13++;
                         my $d = &getDistance($insert_size, $B_length, $B_start, $A_start);
                         print "B-> <-A  WITH $tig_b -> <- $tig_a GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Blen,Bstart,Astart\n" if($verbose);
                         if($d >= $min_allowed){
@@ -1477,6 +1498,7 @@ sub pairContigs{
                         }
                      }else{                          ####<- <-  :::  rB-> <-A / rA-> <-B
                         $Check14Counter++;
+                        $pairContigs_debug_counter_14++;
                         my $rB_start = $B_length - $B_start;
                         my $d = &getDistance($insert_size, $B_length, $rB_start, $A_start);
                         print "rB-> <-A WITH r.$tig_b -> <- $tig_a GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Blen,rBstart,Astart\n" if($verbose);

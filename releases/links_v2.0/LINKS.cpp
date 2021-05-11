@@ -39,6 +39,13 @@ unsigned pairContigs_debug_counter_4 = 0;
 unsigned pairContigs_debug_counter_5 = 0;
 unsigned pairContigs_debug_counter_6 = 0;
 unsigned pairContigs_debug_counter_7 = 0;
+unsigned pairContigs_debug_counter_8 = 0;
+unsigned pairContigs_debug_counter_9 = 0;
+unsigned pairContigs_debug_counter_10 = 0;
+unsigned pairContigs_debug_counter_11 = 0;
+unsigned pairContigs_debug_counter_12 = 0;
+unsigned pairContigs_debug_counter_13 = 0;
+unsigned pairContigs_debug_counter_14 = 0;
 
 class BT_IS {
     private:
@@ -655,6 +662,13 @@ int main(int argc, char** argv) {
     std::cout << "pairContigs_debug_counter_5 " + std::to_string(pairContigs_debug_counter_5) + "\n";
     std::cout << "pairContigs_debug_counter_6 " + std::to_string(pairContigs_debug_counter_6) + "\n";
     std::cout << "pairContigs_debug_counter_7 " + std::to_string(pairContigs_debug_counter_7) + "\n";
+    std::cout << "pairContigs_debug_counter_8 " + std::to_string(pairContigs_debug_counter_8) + "\n";
+    std::cout << "pairContigs_debug_counter_9 " + std::to_string(pairContigs_debug_counter_9) + "\n";
+    std::cout << "pairContigs_debug_counter_10 " + std::to_string(pairContigs_debug_counter_10) + "\n";
+    std::cout << "pairContigs_debug_counter_11 " + std::to_string(pairContigs_debug_counter_11) + "\n";
+    std::cout << "pairContigs_debug_counter_12 " + std::to_string(pairContigs_debug_counter_12) + "\n";
+    std::cout << "pairContigs_debug_counter_13 " + std::to_string(pairContigs_debug_counter_13) + "\n";
+    std::cout << "pairContigs_debug_counter_14 " + std::to_string(pairContigs_debug_counter_14) + "\n";
     // --  std::cout << "\n\n=>After pairContigs c++ " + std::to_string(time(0)) + "\n";
     return 0;
 }
@@ -744,6 +758,7 @@ void inline kmerizeContig( std::string *seq,
     int forCounter = 0;
     int revCounter = 0;
     int breakFlag = 0;
+    unsigned seq_length = seq->length();
     // std::cout << "hashFct in kmerizeContig: " << hashFcts << "\n";
     for (size_t i = 0; ntHashContig.roll(); i+=step) {
         // roll for every step
@@ -790,7 +805,9 @@ void inline kmerizeContig( std::string *seq,
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
                 // std::cout << "start: " << std::to_string(i) << "end: " << std::to_string(i+k)<< "\n";
                 
-                trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k);
+                // edit by Murathan 11.5.21
+                //trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k);
+                trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, seq_length - i, seq_length - (i + k));
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
                 // WARNING***** Because we are using canonicals, most of the multiples will be 2
@@ -799,7 +816,7 @@ void inline kmerizeContig( std::string *seq,
             }
             if(trackRev.find(ntHashContig.get_reverse_hash()) == trackRev.end()) {
                 // std::cout << "Added head to trackRev: " << head << " \n";
-                trackRev[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k);
+                trackRev[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k); /// dont use
             } else {
                 trackRev[ntHashContig.get_reverse_hash()].incrementMultiple();
             }
@@ -971,16 +988,39 @@ void pairContigs(
                     uint64_t B_end = trackAll[mateListItr->first].getEnd();
 
                     if(tig_a != tig_b) { // paired reads located on <> contigs
+                        // MURATHAN DEBUG 11.5.21
+                        pairContigs_debug_counter_8++;
+                        if(A_start < A_end){
+                            pairContigs_debug_counter_9++;
+                            if(B_start > B_end){
+                                pairContigs_debug_counter_10++;
+                            }else{
+                               pairContigs_debug_counter_11++;
+                            }
+                        }else{
+                            pairContigs_debug_counter_12++;
+                            if(B_end > B_start){
+                                pairContigs_debug_counter_13++;
+                            }else{
+                                pairContigs_debug_counter_14++;
+                            }
+                        }
+
                         Check2Counter++;
                         // std::cout << "Checkpoint 4 (if tigs are different)\n";
                         //Determine most likely possibility
                         // Checking if forward
-                        if(trackFor.find(matePairItr->first) != trackFor.end()) {//trackAll[matePairItr->first].getStart() < trackAll[matePairItr->first].getEnd()) {
+                        // MURATHAN FIX 11.5.21
+                        if(A_start < A_end){
+                        //if(trackFor.find(matePairItr->first) != trackFor.end()) {//trackAll[matePairItr->first].getStart() < trackAll[matePairItr->first].getEnd()) {
+                        
                             Check3Counter++;
                             // std::cout << "Checkpoint 5 (A.start < A.end)\n";
                             // std::cout << "End: " << std::to_string(trackAll[mateListItr->first].getEnd()) << "Start: " << std::to_string(trackAll[mateListItr->first].getStart()) << "\n";
                             // Checking if reverse
-                            if(trackRev.find(matePairItr->first) != trackRev.end()) {//trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
+                            // MURATHAN FIX 11.5.21
+                            if(B_start > B_end){
+                            //if(trackRev.find(matePairItr->first) != trackRev.end()) {//trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
                                 Check4Counter++;
                                 // std::cout << "Checkpoint 6 (B.end < B.start)\n";
                                 uint64_t distance = getDistance(insert_size, A_length, A_start, B_start);
@@ -1103,7 +1143,9 @@ void pairContigs(
                         } else {
                             Check10Counter++;
                             // if ({read_b}{'end'} > {$read_b}{'start'} (forward)
-                            if(trackFor.find(mateListItr->first) != trackFor.end()) {//trackAll[mateListItr->first].getEnd() > trackAll[mateListItr->first].getStart()) {
+                            // MURATHAN FIX 11.5.21
+                            if(B_end > B_start){
+                            //if(trackFor.find(mateListItr->first) != trackFor.end()) {//trackAll[mateListItr->first].getEnd() > trackAll[mateListItr->first].getStart()) {
                                 Check11Counter++;
                                 uint64_t distance = getDistance(insert_size, B_length, B_start, A_start);
                                 if(verbose) std::cout << "B-> <-A  WITH " << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Blen, Bstart,Astart\n";
@@ -1318,7 +1360,7 @@ void pairContigs(
     uint64_t unsatisfied = ct_problem_pairs + ct_iz_issues + ct_illogical;
     uint64_t ct_both_reads = ct_both * 2;
 
-    /*
+    
     std::cout << "THESE ARE THE FILTERINGS:\n"<< "filter 1: "<< std::to_string(filter1) << "\n" << "filter 2: "<< std::to_string(filter2) << "\n" << "filter 3: "<< std::to_string(filter3) << "\n" << "filter 4: "<< std::to_string(filter4) << "\n";
     std::cout << "THESE ARE THE COUNTERS:\n" << std::to_string(CheckCounterBase) << "\n" << std::to_string(Check0Counter) << "\n" <<  std::to_string(Check1Counter) << "\n" <<  std::to_string(Check2Counter) << "\n" <<  std::to_string(Check3Counter) << "\n" <<  std::to_string(Check4Counter) << "\n" <<  std::to_string(Check5Counter) << "\n" <<  std::to_string(Check6Counter) << "\n" <<  std::to_string(Check7Counter) << "\n" <<  std::to_string(Check8Counter) << "\n" <<  std::to_string(Check9Counter) << "\n" << std::to_string(Check10Counter) << "\n" << std::to_string(Check11Counter) << "\n" << std::to_string(Check12Counter) << "\n" << std::to_string(Check13Counter) << "\n" << std::to_string(Check14Counter) << "\n" << std::to_string(Check15Counter) << "\n" << std::to_string(Check16Counter) << "\n" << std::to_string(Check17Counter) << "\n" << std::to_string(Check18Counter) << "\n" << std::to_string(Check19Counter) << "\n" << std::to_string(Check20Counter) << "\n" << std::to_string(Check21Counter) << "\n" << std::to_string(Check22Counter) << "\n" << std::to_string(Check23Counter) << "\n" << std::to_string(Check24Counter) << "\n" << std::to_string(Check25Counter) << "\n" << std::to_string(Check26Counter) << "\n";
     std::cout << "\n===========PAIRED K-MER STATS===========\n";
@@ -1334,7 +1376,7 @@ void pairContigs(
     std::cout << "\tUnsatisfied in distance within a given contig pair (i.e. calculated distances out-of-bounds): " << ct_problem_pairs << "\n";
     std::cout << "\t---\n";
     std::cout << "Total satisfied: " << satisfied << "\tunsatisfied: " << unsatisfied << "\n\nBreakdown by distances (-d):\n";
-    */
+    
     sortInsertSize(ct_both_hash);
     std::unordered_map<uint64_t, uint64_t>::iterator itrIS;
     std::cout << "ct_both_hash map size: " << err.size() << "\n"; 
