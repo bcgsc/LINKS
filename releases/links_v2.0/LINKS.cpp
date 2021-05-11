@@ -382,7 +382,7 @@ void pairContigs(
     std::string simplepair_checkpoint,
     bool verbose,
     float insertStdev);
-uint64_t getDistance(
+int getDistance(
     uint64_t insert_size,
     uint64_t length_i,
     uint64_t start_i,
@@ -1023,7 +1023,8 @@ void pairContigs(
                             //if(trackRev.find(matePairItr->first) != trackRev.end()) {//trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
                                 Check4Counter++;
                                 // std::cout << "Checkpoint 6 (B.end < B.start)\n";
-                                uint64_t distance = getDistance(insert_size, A_length, A_start, B_start);
+                                int distance = getDistance(insert_size, A_length, A_start, B_start);
+                                std::cout << "distance: " << distance << " min allowed: " << min_allowed << std::endl;
                                 if(verbose) std::cout << "A-> <-B  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,Bstart\n";
                                 if(distance > min_allowed) {
                                     Check5Counter++;
@@ -1083,7 +1084,7 @@ void pairContigs(
                             } else { // -> -> ::: A-> <-rB  / B-> <-rA 
                                 Check7Counter++;
                                 uint64_t rB_start = B_length - B_start;
-                                uint64_t distance = getDistance(insert_size, A_length, A_start, rB_start);
+                                int distance = getDistance(insert_size, A_length, A_start, rB_start);
                                 if(verbose) std::cout << "A-> <-rB  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,rBstart\n";
                                 if(distance >= min_allowed) {
                                     Check8Counter++;
@@ -1147,7 +1148,7 @@ void pairContigs(
                             if(B_end > B_start){
                             //if(trackFor.find(mateListItr->first) != trackFor.end()) {//trackAll[mateListItr->first].getEnd() > trackAll[mateListItr->first].getStart()) {
                                 Check11Counter++;
-                                uint64_t distance = getDistance(insert_size, B_length, B_start, A_start);
+                                int distance = getDistance(insert_size, B_length, B_start, A_start);
                                 if(verbose) std::cout << "B-> <-A  WITH " << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Blen, Bstart,Astart\n";
                                 if(distance >= min_allowed) {
                                     Check12Counter++;
@@ -1205,7 +1206,7 @@ void pairContigs(
                             }  else { // <- <-  :::  rB-> <-A / rA-> <-B
                                 Check14Counter++;
                                 uint64_t rB_start = B_length - B_start;
-                                uint64_t distance = getDistance(insert_size, B_length, rB_start, A_start);
+                                int distance = getDistance(insert_size, B_length, rB_start, A_start);
                                 if(verbose) std::cout << "rB-> <-A  WITH r." << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Blen, rBstart,Astart\n";
                                 if(distance >= min_allowed) {
                                     Check15Counter++;
@@ -1362,7 +1363,7 @@ void pairContigs(
 
     
     std::cout << "THESE ARE THE FILTERINGS:\n"<< "filter 1: "<< std::to_string(filter1) << "\n" << "filter 2: "<< std::to_string(filter2) << "\n" << "filter 3: "<< std::to_string(filter3) << "\n" << "filter 4: "<< std::to_string(filter4) << "\n";
-    std::cout << "THESE ARE THE COUNTERS:\n" << std::to_string(CheckCounterBase) << "\n" << std::to_string(Check0Counter) << "\n" <<  std::to_string(Check1Counter) << "\n" <<  std::to_string(Check2Counter) << "\n" <<  std::to_string(Check3Counter) << "\n" <<  std::to_string(Check4Counter) << "\n" <<  std::to_string(Check5Counter) << "\n" <<  std::to_string(Check6Counter) << "\n" <<  std::to_string(Check7Counter) << "\n" <<  std::to_string(Check8Counter) << "\n" <<  std::to_string(Check9Counter) << "\n" << std::to_string(Check10Counter) << "\n" << std::to_string(Check11Counter) << "\n" << std::to_string(Check12Counter) << "\n" << std::to_string(Check13Counter) << "\n" << std::to_string(Check14Counter) << "\n" << std::to_string(Check15Counter) << "\n" << std::to_string(Check16Counter) << "\n" << std::to_string(Check17Counter) << "\n" << std::to_string(Check18Counter) << "\n" << std::to_string(Check19Counter) << "\n" << std::to_string(Check20Counter) << "\n" << std::to_string(Check21Counter) << "\n" << std::to_string(Check22Counter) << "\n" << std::to_string(Check23Counter) << "\n" << std::to_string(Check24Counter) << "\n" << std::to_string(Check25Counter) << "\n" << std::to_string(Check26Counter) << "\n";
+    std::cout << "THESE ARE THE COUNTERS:\n" << std::to_string(CheckCounterBase) << "\n0 " << std::to_string(Check0Counter) << "\n1 " <<  std::to_string(Check1Counter) << "\n2 " <<  std::to_string(Check2Counter) << "\n3 " <<  std::to_string(Check3Counter) << "\n4 " <<  std::to_string(Check4Counter) << "\n5 " <<  std::to_string(Check5Counter) << "\n6 " <<  std::to_string(Check6Counter) << "\n7 " <<  std::to_string(Check7Counter) << "\n8 " <<  std::to_string(Check8Counter) << "\n9 " <<  std::to_string(Check9Counter) << "\n10 " << std::to_string(Check10Counter) << "\n11 " << std::to_string(Check11Counter) << "\n12 " << std::to_string(Check12Counter) << "\n13 " << std::to_string(Check13Counter) << "\n14 " << std::to_string(Check14Counter) << "\n15 " << std::to_string(Check15Counter) << "\n16 " << std::to_string(Check16Counter) << "\n17 " << std::to_string(Check17Counter) << "\n18 " << std::to_string(Check18Counter) << "\n19" << std::to_string(Check19Counter) << "\n20 " << std::to_string(Check20Counter) << "\n21 " << std::to_string(Check21Counter) << "\n22 " << std::to_string(Check22Counter) << "\n23 " << std::to_string(Check23Counter) << "\n24 " << std::to_string(Check24Counter) << "\n25 " << std::to_string(Check25Counter) << "\n26 " << std::to_string(Check26Counter) << "\n";
     std::cout << "\n===========PAIRED K-MER STATS===========\n";
     std::cout << "Total number of pairs extracted from -s " << longReadsFile << " " << totalPairs << "\n";
     std::cout << "At least one sequence/pair missing from contigs: " << ct_single << "\n";
@@ -1428,15 +1429,15 @@ void pairContigs(
 
 }
 
-uint64_t getDistance(uint64_t insert_size, uint64_t length_i, uint64_t start_i, uint64_t start_j) {
+int getDistance(uint64_t insert_size, uint64_t length_i, uint64_t start_i, uint64_t start_j) {
 
     // L  ------  --------- R
     // i    ->        <-    j
     //      ....  ......    insert_span
     //      ============    insert_size
 
-   uint64_t insert_span = (length_i - start_i) + start_j;
-   uint64_t gap_or_overlap = insert_size - insert_span;
+   int insert_span = (length_i - start_i) + start_j;
+   int gap_or_overlap = insert_size - insert_span;
 
    return gap_or_overlap;
 }
