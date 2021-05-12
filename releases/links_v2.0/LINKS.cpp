@@ -8,7 +8,7 @@
 #include <regex>
 #include <unordered_map>
 #include <ctime>
-#include <sstream> 
+#include <sstream>
 // #include <pair>
 
 
@@ -202,6 +202,8 @@ class InputParser {
             distances.push_back(static_cast<unsigned int>(std::stoul(tok)));
             std::cout << distances.back() << "\n";
         }
+
+        std::sort(distances.begin(),distances.end());
  
         return distances;
     }
