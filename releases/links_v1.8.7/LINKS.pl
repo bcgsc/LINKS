@@ -850,6 +850,7 @@ sub kmerize{
       # }
       # print "Counter3: $tmpCounter1\n";
       if($bloom->contains($rd1) && $bloom->contains($rd2)){ ###Don't bother hashing k-mer pairs if assembly doesn't have these kmers
+         print "here babeeee";
          $readFastAFastq_debug_counter_2++;
          # if(not(defined $matepair->{$rd1})) {
          #    $uniquePairct++;

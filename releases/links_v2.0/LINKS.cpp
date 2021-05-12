@@ -807,7 +807,8 @@ void inline kmerizeContig( std::string *seq,
                 
                 // edit by Murathan 11.5.21
                 //trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k);
-                trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, seq_length - i, seq_length - (i + k));
+                trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i - k);
+                //trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, seq_length - i, seq_length - (i + k));
             } else {
                 // std::cout << "kmer found in trackall! Increment multiple\n";
                 // WARNING***** Because we are using canonicals, most of the multiples will be 2
@@ -849,7 +850,7 @@ void readContigs(
     btllib::SeqReader contigReader(assemblyFile, 8);// CHANGE TO FLAGS LATER
     uint64_t tmpCounter = 0;
     for (btllib::SeqReader::Record record; (record = contigReader.read());) {
-        // tigLength.insert({record.name, record.seq.length()});
+        tigLength.insert({record.name, record.seq.length()});
         cttig++;
         std::cout << "\r" << cttig;
         if(record.seq.length() >= minSize) {
@@ -1023,13 +1024,15 @@ void pairContigs(
                             //if(trackRev.find(matePairItr->first) != trackRev.end()) {//trackAll[mateListItr->first].getEnd() < trackAll[mateListItr->first].getStart()) { // -> <- :::  A-> <-B  /  rB -> <- rA
                                 Check4Counter++;
                                 // std::cout << "Checkpoint 6 (B.end < B.start)\n";
+                                //std::cout << "insert_size: " << insert_size << " A_length: " << A_length << " B_start: " << B_start << std::endl; 
                                 int distance = getDistance(insert_size, A_length, A_start, B_start);
-                                std::cout << "distance: " << distance << " min allowed: " << min_allowed << std::endl;
+                                //std::cout << "4 distance: " << distance << " tig_a: " << tig_a << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " tig_b: " << tig_b << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
+                                //std::cout << "distance: " << distance << " min allowed: " << min_allowed << std::endl;
                                 if(verbose) std::cout << "A-> <-B  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,Bstart\n";
                                 if(distance > min_allowed) {
                                     Check5Counter++;
                                     // std::cout << "Checkpoint 7 distance > min allowed\n";
-                                    uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
+                                    int isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
                                         // std::cout << "Checkpoint 7.1 adding to pair new GAPSLINKS\n";
                                         pair[ftig_a][isz][rtig_b] = Gaps_Links();
@@ -1085,11 +1088,15 @@ void pairContigs(
                                 Check7Counter++;
                                 uint64_t rB_start = B_length - B_start;
                                 int distance = getDistance(insert_size, A_length, A_start, rB_start);
-                                if(verbose) std::cout << "A-> <-rB  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,rBstart\n";
+                                //std::cout << "7 distance: " << distance << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
+                                //std::cout << "7 distance: " << distance << " tig_a: " << tig_a << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " tig_b: " << tig_b << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
+
+                                //if(verbose) std::cout << "A-> <-rB  WITH " << tig_a << "-> <- " << tig_b << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Alen, Astart,rBstart\n";
+                                //std::cout << "7 A-> <-rB  WITH " << tig_a << "-> <- " << tig_b << " GAP(dist) " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " rbstart" << std::to_string(rB_start) << " Alen, Astart,rBstart\n";
                                 if(distance >= min_allowed) {
                                     Check8Counter++;
                                     // std::cout << "Checkpoint 10.1\n";
-                                    uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
+                                    int isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
                                         // std::cout << "Checkpoint 10.2\n";
                                         pair[ftig_a][isz][rtig_b] = Gaps_Links();
@@ -1149,10 +1156,13 @@ void pairContigs(
                             //if(trackFor.find(mateListItr->first) != trackFor.end()) {//trackAll[mateListItr->first].getEnd() > trackAll[mateListItr->first].getStart()) {
                                 Check11Counter++;
                                 int distance = getDistance(insert_size, B_length, B_start, A_start);
+                                //std::cout << "11 distance: " << distance << " tig_a: " << tig_a << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " tig_b: " << tig_b << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
+   
+                                //std::cout << "11 distance: " << distance << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
                                 if(verbose) std::cout << "B-> <-A  WITH " << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Blen, Bstart,Astart\n";
                                 if(distance >= min_allowed) {
                                     Check12Counter++;
-                                    uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
+                                    int isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(ftig_b) == pair.end() || pair[ftig_b].find(isz) == pair[ftig_b].end() || pair[ftig_b][isz].find(ftig_a) == pair[ftig_b][isz].end()) {
                                         // std::cout << "Checkpoint 11.1\n";
                                         pair[ftig_b][isz][ftig_a] = Gaps_Links();
@@ -1207,10 +1217,14 @@ void pairContigs(
                                 Check14Counter++;
                                 uint64_t rB_start = B_length - B_start;
                                 int distance = getDistance(insert_size, B_length, rB_start, A_start);
+                                //std::cout << "14 distance: " << distance << " tig_a: " << tig_a << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " tig_b: " << tig_b << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
+
+                                //std::cout << "14 distance: " << distance << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
                                 if(verbose) std::cout << "rB-> <-A  WITH r." << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Blen, rBstart,Astart\n";
+                                //std::cout << "14 rB-> <-A  WITH r." << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " rb start: " << std::to_string(rB_start) << " Blen, rBstart,Astart\n";
                                 if(distance >= min_allowed) {
                                     Check15Counter++;
-                                    uint64_t isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
+                                    int isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 1000; // distance categories
                                     if(pair.find(rtig_b) == pair.end() || pair[rtig_b].find(isz) == pair[rtig_b].end() || pair[rtig_b][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
                                         // std::cout << "Checkpoint 12.1\n";
                                         pair[rtig_b][isz][ftig_a] = Gaps_Links();
