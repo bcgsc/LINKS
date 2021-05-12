@@ -889,8 +889,8 @@ void readContigs(
     btllib::SeqReader contigReader(assemblyFile, 8);// CHANGE TO FLAGS LATER
     uint64_t tmpCounter = 0;
     for (btllib::SeqReader::Record record; (record = contigReader.read());) {
-        tigLength.insert({record.name, record.seq.length()});
         cttig++;
+        tigLength.insert({std::to_string(cttig), record.seq.length()});
         std::cout << "\r" << cttig;
         if(record.seq.length() >= minSize) {
             // std::cout << "Kmerizing contig\n";
@@ -1073,6 +1073,9 @@ void pairContigs(
                                     Check5Counter++;
                                     // std::cout << "Checkpoint 7 distance > min allowed\n";
                                     int isz = distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 10000; // distance categories
+                                    if(tig_a == "22" && tig_b == "11"){
+                                        std::cout << "4 insert_size: " << insert_size << "distance: " << distance << " tig_a: " << tig_a << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " tig_b: " << tig_b << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
+                                    }
                                     if(pair.find(ftig_a) == pair.end() || pair[ftig_a].find(isz) == pair[ftig_a].end() || pair[ftig_a][isz].find(rtig_b) == pair[ftig_a][isz].end()) {
                                         // std::cout << "Checkpoint 7.1 adding to pair new GAPSLINKS\n";
                                         pair[ftig_a][isz][rtig_b] = Gaps_Links(distance,1);
@@ -1201,7 +1204,9 @@ void pairContigs(
                                 Check11Counter++;
                                 int distance = getDistance(insert_size, B_length, B_start, A_start);
                                 //std::cout << "11 distance: " << distance << " tig_a: " << tig_a << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " tig_b: " << tig_b << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
-   
+                                if(tig_a == "11" && tig_b == "22"){
+                                    std::cout << "11 insert_size: " << insert_size << "distance: " << distance << " tig_a: " << tig_a << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " tig_b: " << tig_b << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
+                                }
                                 //std::cout << "11 distance: " << distance << " A_length: " << A_length << " A_start: " << A_start << " A_end: " << A_end << " B_start: " << B_start << " B_end: " << B_end << std::endl; 
                                 if(verbose) std::cout << "B-> <-A  WITH " << tig_b << "-> <- " << tig_a << " GAP " << std::to_string(distance) << " A=" << std::to_string(A_length) << " " << std::to_string(A_start - A_end) << " B= " << B_length << " " << std::to_string(B_start-B_end) << " Blen, Bstart,Astart\n";
                                 if(distance >= min_allowed) {
