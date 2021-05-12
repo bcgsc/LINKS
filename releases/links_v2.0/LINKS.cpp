@@ -50,7 +50,7 @@ unsigned pairContigs_debug_counter_14 = 0;
 class BT_IS {
     private:
     bool bt;
-    uint64_t is;
+    int64_t is;
     // change this to a map of hash to distance
     // uint64_t distance;
     
@@ -61,34 +61,34 @@ class BT_IS {
         this->bt = 0;
         this-> is = 0;
     }
-    BT_IS(bool bt, uint64_t is) {
+    BT_IS(bool bt, int64_t is) {
         this->bt = bt;
         this-> is = is;
         // secondLayerReads.insert({hash, distance});
     }
 
-    void setBT(uint64_t bt) {
+    void setBT(int64_t bt) {
         this->bt = bt;
     }
-    void setIS(uint64_t is) {
+    void setIS(int64_t is) {
         this->is = is;
     }
     bool getBT() {
         return this->bt;
     }
-    uint64_t getIS() {
+    int64_t getIS() {
         return this->is;
     }
 };
 
 class Gaps_Links {
     private:
-    uint64_t gaps;
+    int64_t gaps;
     uint64_t links;
     std::string type;
     
     public:
-    Gaps_Links(uint64_t gap, uint64_t link) {
+    Gaps_Links(int64_t gap, uint64_t link) {
         this->gaps = gap;
         this->links = link;
         // secondLayerReads.insert({hash, distance});
@@ -104,7 +104,7 @@ class Gaps_Links {
         this->type = type;
     }
 
-    void addToGap(uint64_t distance) {
+    void addToGap(int64_t distance) {
         this->gaps += distance;
     }
 
@@ -112,7 +112,7 @@ class Gaps_Links {
         this->links++;
     }
 
-    uint64_t getGaps() {
+    int64_t getGaps() {
         return this->gaps;
     }
     uint64_t getLinks() {
@@ -855,6 +855,7 @@ void readContigs(
         std::cout << "\r" << cttig;
         if(record.seq.length() >= minSize) {
             // std::cout << "Kmerizing contig\n";
+            //std::cout << "record.name: " << record.name << std::endl;
             // std::cout << "seq:\n" << record.seq << "\n";
             kmerizeContig(&record.seq, trackAll, trackFor, trackRev, &matePair, k, record.name, hashFcts, step, tmpCounter);
             // std::cout << "---------in readContigs------\ntrackAll size: " << std::to_string(trackAll.size()) << "\n" << "trackFor size: " << std::to_string(trackFor.size()) << "\n" << "trackRev size: " << std::to_string(trackRev.size()) << "\n";
@@ -881,7 +882,7 @@ void pairContigs(
     uint64_t ct_illogical = 0, ct_ok_contig = 0, ct_ok_pairs = 0, ct_problem_pairs = 0, ct_iz_issues = 0, ct_single = 0, ct_multiple = 0, ct_both = 0, trackInsert = 0;
     std::unordered_map<uint64_t, uint64_t> ct_single_hash, ct_both_hash, ct_illogical_hash, ct_ok_contig_hash, ct_ok_pairs_hash, ct_problem_pairs_hash, ct_iz_issues_hash;
     // Mapping of tiga_head -> insertSize -> tigb_head -> links & gaps
-    std::unordered_map<std::string, std::unordered_map<uint64_t, std::unordered_map<std::string, Gaps_Links> > > pair;
+    std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, Gaps_Links> > > pair;
     std::unordered_map<std::string, std::unordered_map<std::string, Gaps_Links> >simplePair;
     std::unordered_map<std::string, Gaps_Links> err;
     std::string order1;
@@ -1424,10 +1425,10 @@ void pairContigs(
     // TIGPAIR CHECKPOINT
     std::ofstream tigpairCheckpointFile;
     tigpairCheckpointFile.open (tigpair_checkpoint);
-    std::unordered_map<std::string, std::unordered_map<uint64_t, std::unordered_map<std::string, Gaps_Links> > >::iterator pairItr;
+    std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, Gaps_Links> > >::iterator pairItr;
     std::cout << "size of TIGPAIR: " << pair.size() << "\n";
     for(pairItr = pair.begin(); pairItr != pair.end(); pairItr++) {
-        std::unordered_map<uint64_t, std::unordered_map<std::string, Gaps_Links> >::iterator insertSizes;
+        std::unordered_map<int64_t, std::unordered_map<std::string, Gaps_Links> >::iterator insertSizes;
         for(insertSizes = pairItr->second.begin(); insertSizes != pairItr->second.end(); insertSizes++) {
             std::unordered_map<std::string, Gaps_Links>::iterator secPairItr;
             for(secPairItr = insertSizes->second.begin(); secPairItr != insertSizes->second.end(); secPairItr++) {
