@@ -430,6 +430,10 @@ int getDistance(
     uint64_t length_i,
     uint64_t start_i,
     uint64_t start_j);
+inline int getDistanceBin(int distance)
+{
+    return distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 10000;
+}
 
 
 int main(int argc, char** argv) {
@@ -583,7 +587,6 @@ int main(int argc, char** argv) {
     std::cout << "reverse_kmers " + std::to_string(reverse_kmers) + "\n";
     std::cout << "forward_kmers " + std::to_string(forward_kmers) + "\n";
 
-    return 0;
     //std::cout << " The resulting trackAll map size is: " << trackAll.size() << "\n\n";
     //std::cout << " pairContigs Parameter List : \n\n";
     //std::cout << " 1- LongFile " << linksArgParser.longFile <<"\n";
@@ -837,8 +840,6 @@ void pairContigs(
     std::string longReadsFile,
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair,
     std::unordered_map<uint64_t, KmerInfo>& trackAll,
-    std::unordered_map<uint64_t, KmerInfo>& trackFor,
-    std::unordered_map<uint64_t, KmerInfo>& trackRev,
     std::unordered_map<std::string, uint64_t> tigLength,
     std::string issues,
     std::string distribution,
@@ -890,98 +891,115 @@ void pairContigs(
     int Check24Counter = 0;
     int Check25Counter = 0;
     int Check26Counter = 0;
-    //******************
+    //*****************
+
     std::ofstream issuesFile;
     issuesFile.open (issues);
+    uint64_t insert_size = 0;
+    int min_allowed = 0;
+    int low_iz = 0;
+    int up_iz = 0;
+
+    int distance;
+    int isz;
+
+    std::string tig_a, tig_b, ftig_a, ftig_b, rtig_a, rtig_b;
+    uint64_t A_length, A_start, A_end, B_length, B_start, B_end;
+
+    KmerInfo kmer1, kmer2;
+
     std::unordered_map<uint64_t, BT_IS>::iterator mateListItr;
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> >::iterator matePairItr;
-    // std::cout << "trackAll size: " << std::to_string(trackAll.size()) << "\n" << "trackFor size: " << std::to_string(trackFor.size()) << "\n" << "trackRev size: " << std::to_string(trackRev.size()) << "\n";
+
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
             CheckCounterBase++;
-            pairContigs_debug_counter_1++; // all matepair iteration
-            // std::cout << "Checkpoint 1 iteration through every matePair\n";
-            // seg faults here
-            if(mateListItr->second.getBT() == false) {
-                //filter1++;
-                pairContigs_debug_counter_2++; // matepair is not seen
-                if(trackAll.find(matePairItr->first) != trackAll.end()) {
-                    pairContigs_debug_counter_3++;
-                    filter2++; // second mate is found in assembly
-                    if(trackAll[matePairItr->first].getMultiple() == 1) { 
-                        pairContigs_debug_counter_4++;
-                        filter3++; // second mate is singleton 
-                    if(trackAll.find(mateListItr->first) != trackAll.end()){ 
-                        // std::unordered_map<uint64_t, KmerInfo>::iterator tmpItr;
-                        // for(tmpItr = trackAll.begin(); tmpItr != trackAll.end(); tmpItr++) {
-                        //     std::cout << "Multiple: " << tmpItr->second.getMultiple() << "\n";
-                        // }
-                        pairContigs_debug_counter_5++; // first mate is in assembly
-                        filter4++;
-                        if(trackAll[mateListItr->first].getMultiple() == 1) { // This has little if no effect, but negative for some odd reason
-                Check1Counter++;
-                pairContigs_debug_counter_6++;// first mate is in singleton
-                // std::cout << "Checkpoint 2 (if both pairss multiple == 1)\n";
-                // below indicates this specific pair has been seen (bt = 1)
+
+            if( mateListItr->second.getBT() == false &&                 //matepair is not seen
+                trackAll.find(matePairItr->first) != trackAll.end() &&  //first mate is tracked
+                trackAll[matePairItr->first].getMultiple() == 1 &&      //first mate seen once
+                trackAll.find(mateListItr->first) != trackAll.end() &&  //second mate is tracked
+                trackAll[mateListItr->first].getMultiple() == 1) {      //second mate is seen once
                 mateListItr->second.setBT(true);
-                uint64_t insert_size = matePair[matePairItr->first][mateListItr->first].getIS();
-                int min_allowed = -1 * (insertStdev * insert_size); // check int
-                int low_iz = insert_size + min_allowed; // check int
-                int up_iz = insert_size - min_allowed; // check int
+
+                insert_size = matePair[matePairItr->first][mateListItr->first].getIS();
+                min_allowed = -1 * (insertStdev * insert_size); // check int
+                low_iz = insert_size + min_allowed; // check int
+                up_iz = insert_size - min_allowed; // check int
+
                 if(verbose) std::cout << "Pair read1Hash=" << matePairItr->first << " read2Hash=" << mateListItr->first << "\n";
-                // std::cout << "Tig1: " << trackAll[matePairItr->first].getTig() << "Tig2: " << trackAll[mateListItr->first].getTig() << "HASH: " << std::to_string(mateListItr->first) << "\n";
-                if(trackAll[matePairItr->first].getTig() != "" && trackAll[mateListItr->first].getTig() != "") {
-                    Check0Counter++;
-                    pairContigs_debug_counter_7++; //both contigs found in trackall
-                    // std::cout << "Checkpoint 3 (if both reads are found in trackAll)\n";
-                    // std::cout << "1: " << trackAll[matePairItr->first].getTig() << " 2: " << trackAll[mateListItr->first].getTig() << " \n";
+
+                if(trackAll[matePairItr->first].getTig() != "" && trackAll[mateListItr->first].getTig() != "") { //double check if tig names not null
                     ct_both++;
                     if(ct_both_hash.find(insert_size) == ct_both_hash.end()) {
                         ct_both_hash[insert_size] = 1;
                     } else {
                         ct_both_hash[insert_size] = ct_both_hash[insert_size] + 1;
                     }
-                    std::string tig_a = trackAll[matePairItr->first].getTig();
-                    std::string tig_b = trackAll[mateListItr->first].getTig();
 
-                    std::string ftig_a = "f" + tig_a;
-                    std::string ftig_b = "f" + tig_b;
+                    /*
+                    tig_a = trackAll[matePairItr->first].getTig();
+                    tig_b = trackAll[mateListItr->first].getTig();
 
-                    std::string rtig_a = "r" + tig_a;
-                    std::string rtig_b = "r" + tig_b;
+                    ftig_a = "f" + tig_a;
+                    ftig_b = "f" + tig_b;
 
-                    uint64_t A_length = tigLength[tig_a];
-                    uint64_t A_start = trackAll[matePairItr->first].getStart();
-                    uint64_t A_end = trackAll[matePairItr->first].getEnd();
+                    rtig_a = "r" + tig_a;
+                    rtig_b = "r" + tig_b;
 
-                    uint64_t B_length = tigLength[tig_b];
-                    uint64_t B_start = trackAll[mateListItr->first].getStart();
-                    uint64_t B_end = trackAll[mateListItr->first].getEnd();
+                    A_length = tigLength[tig_a];
+                    A_start = trackAll[matePairItr->first].getStart();
+                    A_end = trackAll[matePairItr->first].getEnd();
 
-                    if(tig_a != tig_b) { // paired reads located on <> contigs
+                    B_length = tigLength[tig_b];
+                    B_start = trackAll[mateListItr->first].getStart();
+                    B_end = trackAll[mateListItr->first].getEnd();
+                    */
+                    kmer1 = trackAll[matePairItr->first];
+                    kmer2 = trackAll[mateListItr->first]; 
+
+                    if(kmer1.getTig() != kmer2.getTig()) { // paired reads located on <> contigs
                         // MURATHAN DEBUG 11.5.21
                         pairContigs_debug_counter_8++;
-                        if(A_start < A_end){
+                        if(!kmer1.getOrient()){             // if kmer1 is forward
                             pairContigs_debug_counter_9++;
-                            if(B_start > B_end){
+                            if(!kmer2.getOrient()){         // if kmer2 is forward
                                 pairContigs_debug_counter_10++;
-                            }else{
-                               pairContigs_debug_counter_11++;
+                                distance = getDistance(insert_size, tigLength[kmer1.getTig()], kmer1.getStart(), kmer2.getStart());
+                                if(distance > min_allowed){
+                                    isz = getDistanceBin(distance);
+                                }
+                            }else{                          // if kmer2 is reverse
+                                pairContigs_debug_counter_11++;
+                                distance = getDistance(insert_size, tigLength[kmer1.getTig()], kmer1.getStart(), tigLength[kmer2.getTig()] - kmer2.getEnd());
+                                if(distance > min_allowed){
+                                    isz = getDistanceBin(distance);
+                                }
                             }
-                        }else{
+                        }else{                              // if kmer1 is reverse
                             pairContigs_debug_counter_12++;
-                            if(B_end > B_start){
+                            if(!kmer2.getOrient()){         // if kmer2 is forward
                                 pairContigs_debug_counter_13++;
-                            }else{
+                                distance = getDistance(insert_size, tigLength[kmer2.getTig()], kmer2.getStart(), tigLength[kmer1.getTig()] - kmer1.getEnd());
+                                if(distance > min_allowed){
+                                    isz = getDistanceBin(distance);
+                                }
+                            }else{                          // if kmer2 is reverse
                                 pairContigs_debug_counter_14++;
+                                distance = getDistance(insert_size, tigLength[kmer2.getTig()], kmer2.getEnd(), kmer1.getEnd());
+                                if(distance > min_allowed){
+                                    isz = getDistanceBin(distance);
+                                }
                             }
                         }
+                        std::cout << "tig1: " << kmer1.getTig()  << " tig2: " << kmer2.getTig() << " distance: " << distance << " isz: " << isz << std::endl;
 
                         Check2Counter++;
                         // std::cout << "Checkpoint 4 (if tigs are different)\n";
                         //Determine most likely possibility
                         // Checking if forward
                         // MURATHAN FIX 11.5.21
+                        /*
                         if(A_start < A_end){
                         //if(trackFor.find(matePairItr->first) != trackFor.end()) {//trackAll[matePairItr->first].getStart() < trackAll[matePairItr->first].getEnd()) {
                         
@@ -1256,6 +1274,7 @@ void pairContigs(
                                 }
                             }
                         }
+                        */
                     } else { // Clone, paired reads located on the same contig -- could be used to investigate misassemblies
                         Check17Counter++;
                         if (verbose) std::cout << "Pair (" << matePairItr->first << " and " << mateListItr->first << ") located on same contig " << tig_a << " (" << A_length << " nt)\n";
@@ -1325,7 +1344,7 @@ void pairContigs(
                         ct_single_hash[insert_size] = ct_single_hash[insert_size] + 1;
                     }
                 }
-            }}}}} else { // if unseen
+            } else { // if unseen
                 Check26Counter++;
                 // std::cout << "UNSEEN\n";
                 if(matePair[matePairItr->first][mateListItr->first].getBT() == false) {
@@ -1423,11 +1442,6 @@ void pairContigs(
 }
 
 int getDistance(uint64_t insert_size, uint64_t length_i, uint64_t start_i, uint64_t start_j) {
-
-    // L  ------  --------- R
-    // i    ->        <-    j
-    //      ....  ......    insert_span
-    //      ============    insert_size
 
    int insert_span = (length_i - start_i) + start_j;
    int gap_or_overlap = insert_size - insert_span;
