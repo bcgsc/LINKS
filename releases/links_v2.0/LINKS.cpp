@@ -924,7 +924,10 @@ void pairContigs(
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
             CheckCounterBase++;
-
+            
+            if(trackAll[matePairItr->first].getTig() == "61" && trackAll[mateListItr->first].getTig() == "56"){
+                        std::cout << "checkpoint 1 : 61 - 56\n";
+            }
             if( mateListItr->second.getBT() == false &&                 //matepair is not seen
                 trackAll.find(matePairItr->first) != trackAll.end() &&  //first mate is tracked
                 trackAll[matePairItr->first].getMultiple() == 1 &&      //first mate seen once
@@ -966,7 +969,11 @@ void pairContigs(
                     B_end = trackAll[mateListItr->first].getEnd();
                     */
                     kmer1 = trackAll[matePairItr->first];
-                    kmer2 = trackAll[mateListItr->first]; 
+                    kmer2 = trackAll[mateListItr->first];
+
+                    if(kmer1.getTig() == "61" && kmer2.getTig() == "56"){
+                        std::cout << "checkpoint 2 : 61 - 56\n";
+                    }
 
                     if(kmer1.getTig() != kmer2.getTig()) { // paired reads located on <> contigs
                         // MURATHAN DEBUG 11.5.21
@@ -992,7 +999,7 @@ void pairContigs(
                             pairContigs_debug_counter_12++;
                             if(!kmer2.getOrient()){         // if kmer2 is forward
                                 pairContigs_debug_counter_13++;
-                                distance = getDistance(insert_size, tigLength[kmer2.getTig()], tigLength[kmer1.getTig()] - kmer1.getEnd(), kmer2.getStart());
+                                distance = getDistance(insert_size, tigLength[kmer1.getTig()], tigLength[kmer1.getTig()] - kmer1.getEnd(), kmer2.getStart());
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 2);
@@ -1006,9 +1013,14 @@ void pairContigs(
                                 }
                             }
                         }
-                        std::cout << "tig1: " << kmer1.getTig()  << " tig2: " << kmer2.getTig() << " distance: " << distance << " isz: " << isz << std::endl;
-                        std::cout << "insert_size: " << insert_size << "distance: " << distance << " tig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() << " tig_b: " << kmer2.getTig()  << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() << std::endl; 
-
+                        //std::cout << "tig1: " << kmer1.getTig()  << " tig2: " << kmer2.getTig() << " distance: " << distance << " isz: " << isz << std::endl;
+                        //std::cout << "insert_size: " << insert_size << "distance: " << distance << " tig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() << " tig_b: " << kmer2.getTig()  << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() << std::endl; 
+                        if(kmer1.getTig() == "61" && kmer2.getTig() == "56"){
+                            std::cout << "checkpoint 3 : 61 - 56\n";
+                            std::cout << "insert_size: " << insert_size << "distance: " << distance << " tig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() 
+                            << " \ntig_b: " << kmer2.getTig() << " B_length: " << tigLength[kmer2.getTig()] << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() <<
+                            "\norient_1:" << kmer1.getOrient() << " orient_2: " << kmer2.getOrient() << std::endl;
+                        }
                         //Check2Counter++;
                         // std::cout << "Checkpoint 4 (if tigs are different)\n";
                         //Determine most likely possibility
@@ -1363,7 +1375,7 @@ void pairContigs(
                 Check26Counter++;
                 // std::cout << "UNSEEN\n";
                 if(matePair[matePairItr->first][mateListItr->first].getBT() == false) {
-                    std::cout << "UNSEEN getBT() increment ct\n";
+                    //std::cout << "UNSEEN getBT() increment ct\n";
                     ct_multiple++;
                 }
 
