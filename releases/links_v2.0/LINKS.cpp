@@ -430,6 +430,14 @@ int getDistance(
     uint64_t length_i,
     uint64_t start_i,
     uint64_t start_j);
+void addToPairMap(
+    int& isz,
+    std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, Gaps_Links>>>& pair,
+    int& distance,
+    std::string kmer1_name,
+    std::string kmer2_name,
+    unsigned orient_enum
+);
 inline int getDistanceBin(int distance)
 {
     return distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 10000;
@@ -559,6 +567,7 @@ int main(int argc, char** argv) {
     //std::cout << "After reading long reads hit size: " << totalpairs << std::endl; 
     //std::cout << "\n\n=>Before readContigs c++ " + std::to_string(time(0)) + "\n";
     readContigs(linksArgParser.assemblyFile, trackAll, matePair, mates, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
+    // mates.clear();
     //std::cout << "\n\n=>After readContigs c++ " + std::to_string(time(0)) + "\n";
   
 
@@ -967,14 +976,16 @@ void pairContigs(
                             if(!kmer2.getOrient()){         // if kmer2 is forward
                                 pairContigs_debug_counter_10++;
                                 distance = getDistance(insert_size, tigLength[kmer1.getTig()], kmer1.getStart(), kmer2.getStart());
-                                if(distance > min_allowed){
+                                if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
+                                    addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 0);
                                 }
                             }else{                          // if kmer2 is reverse
                                 pairContigs_debug_counter_11++;
                                 distance = getDistance(insert_size, tigLength[kmer1.getTig()], kmer1.getStart(), tigLength[kmer2.getTig()] - kmer2.getEnd());
-                                if(distance > min_allowed){
+                                if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
+                                    addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 1);
                                 }
                             }
                         }else{                              // if kmer1 is reverse
@@ -982,21 +993,23 @@ void pairContigs(
                             if(!kmer2.getOrient()){         // if kmer2 is forward
                                 pairContigs_debug_counter_13++;
                                 distance = getDistance(insert_size, tigLength[kmer2.getTig()], tigLength[kmer1.getTig()] - kmer1.getEnd(), kmer2.getStart());
-                                if(distance > min_allowed){
+                                if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
+                                    addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 2);
                                 }
                             }else{                          // if kmer2 is reverse
                                 pairContigs_debug_counter_14++;
                                 distance = getDistance(insert_size, tigLength[kmer2.getTig()], kmer2.getEnd(), kmer1.getEnd());
-                                if(distance > min_allowed){
+                                if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
+                                    addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 3);
                                 }
                             }
                         }
                         std::cout << "tig1: " << kmer1.getTig()  << " tig2: " << kmer2.getTig() << " distance: " << distance << " isz: " << isz << std::endl;
                         std::cout << "insert_size: " << insert_size << "distance: " << distance << " tig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() << " tig_b: " << kmer2.getTig()  << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() << std::endl; 
 
-                        Check2Counter++;
+                        //Check2Counter++;
                         // std::cout << "Checkpoint 4 (if tigs are different)\n";
                         //Determine most likely possibility
                         // Checking if forward
@@ -1441,6 +1454,65 @@ void pairContigs(
     // }
     tigpairCheckpointFile.close();
 
+}
+
+void addToPairMap(
+    int& isz,
+    std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, Gaps_Links>>>& pair,
+    int& distance,
+    std::string kmer1_name,
+    std::string kmer2_name,
+    unsigned orient_enum
+    ){
+        std::tuple<std::string, std::string> first_pair;
+        std::tuple<std::string, std::string> second_pair;
+
+        std::string ftig_a = "f" + kmer1_name;
+        std::string ftig_b = "f" + kmer2_name;
+
+        std::string rtig_a = "r" + kmer1_name;
+        std::string rtig_b = "r" + kmer2_name;
+
+        switch (orient_enum)
+        {
+        case 0:                 // A B or rB rA
+            first_pair = std::make_tuple(ftig_a,ftig_b);
+            second_pair = std::make_tuple(rtig_b,rtig_a);
+            break;
+        case 1:                 // A B or A rB
+            first_pair = std::make_tuple(ftig_a,rtig_b);
+            second_pair = std::make_tuple(ftig_b,rtig_a);
+            break;
+        case 2:                 // rA B or rB A
+            first_pair = std::make_tuple(rtig_a,ftig_b);
+            second_pair = std::make_tuple(rtig_b,ftig_a);
+            break;
+        case 3:                 // rA rB or B A
+            first_pair = std::make_tuple(rtig_a,rtig_b);
+            second_pair = std::make_tuple(ftig_b,ftig_a);
+            break;
+        default:
+            break;
+        }
+        if(pair.find(std::get<0>(first_pair)) == pair.end() 
+            || pair[std::get<0>(first_pair)].find(isz) == pair[std::get<0>(first_pair)].end() 
+            || pair[std::get<0>(first_pair)][isz].find(std::get<1>(first_pair)) == pair[std::get<0>(first_pair)][isz].end()) {
+            // std::cout << "Checkpoint 7.1 adding to pair new GAPSLINKS\n";
+            pair[std::get<0>(first_pair)][isz][std::get<1>(first_pair)] = Gaps_Links(distance,1);
+        } else {
+            // std::cout << "Checkpoint 7.2 adding to pair existing gapslings\n";
+            pair[std::get<0>(first_pair)][isz][std::get<1>(first_pair)].addToGap(distance);
+            pair[std::get<0>(first_pair)][isz][std::get<1>(first_pair)].incrementLinks();
+        }
+        if(pair.find(std::get<0>(second_pair)) == pair.end() 
+            || pair[std::get<0>(second_pair)].find(isz) == pair[std::get<0>(second_pair)].end() 
+            || pair[std::get<0>(second_pair)][isz].find(std::get<1>(second_pair)) == pair[std::get<0>(second_pair)][isz].end()) {
+            // std::cout << "Checkpoint 7.3 adding to pair new GAPSLINKSs\n";
+            pair[std::get<0>(second_pair)][isz][std::get<1>(second_pair)] = Gaps_Links(distance,1);
+        } else {
+            pair[std::get<0>(second_pair)][isz][std::get<1>(second_pair)].addToGap(distance);
+            pair[std::get<0>(second_pair)][isz][std::get<1>(second_pair)].incrementLinks();
+        }
 }
 
 int getDistance(uint64_t insert_size, uint64_t length_i, uint64_t start_i, uint64_t start_j) {
