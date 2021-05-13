@@ -707,7 +707,8 @@ void readFastaFastq(
                 const uint64_t step) {
         btllib::SeqReader longReader(file, 8); // CHECK FOR FLAG MODES
 
-        uint64_t delta = distance - (2 * k);
+        //uint64_t delta = distance - (2 * k);
+        uint64_t delta = distance;
 
         int breakFlag = 0;
 
@@ -980,7 +981,7 @@ void pairContigs(
                             pairContigs_debug_counter_12++;
                             if(!kmer2.getOrient()){         // if kmer2 is forward
                                 pairContigs_debug_counter_13++;
-                                distance = getDistance(insert_size, tigLength[kmer2.getTig()], kmer2.getStart(), tigLength[kmer1.getTig()] - kmer1.getEnd());
+                                distance = getDistance(insert_size, tigLength[kmer2.getTig()], tigLength[kmer1.getTig()] - kmer1.getEnd(), kmer2.getStart());
                                 if(distance > min_allowed){
                                     isz = getDistanceBin(distance);
                                 }
@@ -993,6 +994,7 @@ void pairContigs(
                             }
                         }
                         std::cout << "tig1: " << kmer1.getTig()  << " tig2: " << kmer2.getTig() << " distance: " << distance << " isz: " << isz << std::endl;
+                        std::cout << "insert_size: " << insert_size << "distance: " << distance << " tig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() << " tig_b: " << kmer2.getTig()  << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() << std::endl; 
 
                         Check2Counter++;
                         // std::cout << "Checkpoint 4 (if tigs are different)\n";
