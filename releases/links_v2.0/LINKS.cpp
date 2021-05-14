@@ -217,11 +217,12 @@ class InputParser {
         while (ss >> tok) 
         {
             distances.push_back(static_cast<unsigned int>(std::stoul(tok)));
-            std::cout << distances.back() << "\n";
+            //std::cout << distances.back() << "\n";
         }
 
         std::sort(distances.begin(),distances.end());
- 
+        //std::cout << distances.back() << "\n";
+
         return distances;
     }
 
@@ -541,6 +542,7 @@ int main(int argc, char** argv) {
     
     uint64_t totalpairs = 0;
     for(uint64_t dist : linksArgParser.distances){
+        std::cout << dist << std::endl;
         readFastaFastq(linksArgParser.longFile,filtering,matePair,mates,dist,linksArgParser.k,linksArgParser.step);
     }
 
@@ -752,6 +754,56 @@ void readFastaFastq(
                 }else{
                     readFastAFastq_debug_counter_3++;
                 }
+
+                    /// TODO: should work with populating matepair in reverse direction as well but its not! should be fixed
+/*                 if(bloom.contains(nthash.hashes()) && bloom.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
+                    readFastAFastq_debug_counter_2++;
+                    
+                    if(matePair.find(nthashLead.get_reverse_hash()) == matePair.end()) {
+                        matePair[nthashLead.get_reverse_hash()][nthash.get_reverse_hash()] = BT_IS(false, distance);
+                    } else {
+                        matePair[nthashLead.get_reverse_hash()][nthash.get_reverse_hash()].setIS(distance); //override for longer distance
+                    }
+                    mates.insert(nthash.get_reverse_hash());
+                }else{
+                    readFastAFastq_debug_counter_3++;
+                } */
+
+                /// This commented block can help in optimization stage
+
+/*                 std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS>>::iterator h3_itor = matePair.find(nthashLead.get_reverse_hash());
+                
+                if(h3_itor != matePair.end())
+                {
+                    std::unordered_map<uint64_t, BT_IS> &submap=h3_itor->second;
+                    std::unordered_map<uint64_t, BT_IS>::iterator submap_itor=submap.find(nthash.get_reverse_hash());
+                    if(submap_itor == submap.end())
+                        if(bloom.contains(nthash.hashes()) && bloom.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
+                            readFastAFastq_debug_counter_2++;
+                            
+                            if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
+                                matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = BT_IS(false, distance);
+                            } else {
+                                matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()].setIS(distance); //override for longer distance
+                            }
+                            mates.insert(nthashLead.get_forward_hash());
+                        }else{
+                            readFastAFastq_debug_counter_3++;
+                        }
+                    else
+                        if(bloom.contains(nthash.hashes()) && bloom.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
+                            readFastAFastq_debug_counter_2++;
+                            
+                            if(matePair.find(nthashLead.get_reverse_hash()) == matePair.end()) {
+                                matePair[nthashLead.get_reverse_hash()][nthash.get_reverse_hash()] = BT_IS(false, distance);
+                            } else {
+                                matePair[nthashLead.get_reverse_hash()][nthash.get_reverse_hash()].setIS(distance); //override for longer distance
+                            }
+                            mates.insert(nthash.get_reverse_hash());
+                        }else{
+                            readFastAFastq_debug_counter_3++;
+                        }
+                } */
             }
         }
 }
@@ -905,7 +957,7 @@ void pairContigs(
 
     std::ofstream issuesFile;
     issuesFile.open (issues);
-    uint64_t insert_size = 0;
+    int64_t insert_size = 0;
     int min_allowed = 0;
     int low_iz = 0;
     int up_iz = 0;
@@ -925,14 +977,15 @@ void pairContigs(
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
             CheckCounterBase++;
             
-            if(trackAll[matePairItr->first].getTig() == "61" && trackAll[mateListItr->first].getTig() == "56"){
-                        std::cout << "checkpoint 1 : 61 - 56\n";
+            if(trackAll[matePairItr->first].getTig() == "20" && trackAll[mateListItr->first].getTig() == "25"){
+                        std::cout << "checkpoint 1 : 20 - 25\n";
             }
             if( mateListItr->second.getBT() == false &&                 //matepair is not seen
                 trackAll.find(matePairItr->first) != trackAll.end() &&  //first mate is tracked
                 trackAll[matePairItr->first].getMultiple() == 1 &&      //first mate seen once
                 trackAll.find(mateListItr->first) != trackAll.end() &&  //second mate is tracked
                 trackAll[mateListItr->first].getMultiple() == 1) {      //second mate is seen once
+                
                 mateListItr->second.setBT(true);
 
                 insert_size = matePair[matePairItr->first][mateListItr->first].getIS();
@@ -971,12 +1024,15 @@ void pairContigs(
                     kmer1 = trackAll[matePairItr->first];
                     kmer2 = trackAll[mateListItr->first];
 
-                    if(kmer1.getTig() == "61" && kmer2.getTig() == "56"){
-                        std::cout << "checkpoint 2 : 61 - 56\n";
+                    if(kmer1.getTig() == "20" && kmer2.getTig() == "25"){
+                        std::cout << "checkpoint 2 : 20 - 25\n";
                     }
 
                     if(kmer1.getTig() != kmer2.getTig()) { // paired reads located on <> contigs
                         // MURATHAN DEBUG 11.5.21
+                        if(kmer1.getTig() == "20" && kmer2.getTig() == "25"){
+                            std::cout << "checkpoint 2.5 : 20 - 25\n";
+                        }
                         pairContigs_debug_counter_8++;
                         if(!kmer1.getOrient()){             // if kmer1 is forward
                             pairContigs_debug_counter_9++;
@@ -1007,7 +1063,7 @@ void pairContigs(
                             }else{                          // if kmer2 is reverse
                                 pairContigs_debug_counter_14++;
                                 distance = getDistance(insert_size, tigLength[kmer2.getTig()], kmer2.getEnd(), kmer1.getEnd());
-                                if(distance > min_allowed && distance < insert_size){
+                                if(distance > min_allowed  && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 3);
                                 }
@@ -1015,11 +1071,12 @@ void pairContigs(
                         }
                         //std::cout << "tig1: " << kmer1.getTig()  << " tig2: " << kmer2.getTig() << " distance: " << distance << " isz: " << isz << std::endl;
                         //std::cout << "insert_size: " << insert_size << "distance: " << distance << " tig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() << " tig_b: " << kmer2.getTig()  << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() << std::endl; 
-                        if(kmer1.getTig() == "61" && kmer2.getTig() == "56"){
-                            std::cout << "checkpoint 3 : 61 - 56\n";
-                            std::cout << "insert_size: " << insert_size << "distance: " << distance << " tig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() 
+                        if(kmer1.getTig() == "20" && kmer2.getTig() == "25"){
+                            std::cout << "checkpoint 3 : 20 - 25\n";
+                            std::cout << "insert_size: " << insert_size << " isz: " << isz <<" distance: " << distance << " min allowed: " << min_allowed << " \ntig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() 
                             << " \ntig_b: " << kmer2.getTig() << " B_length: " << tigLength[kmer2.getTig()] << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() <<
                             "\norient_1:" << kmer1.getOrient() << " orient_2: " << kmer2.getOrient() << std::endl;
+                            std::cout << "isz func: " << getDistanceBin(distance) << std::endl;
                         }
                         //Check2Counter++;
                         // std::cout << "Checkpoint 4 (if tigs are different)\n";
@@ -1417,6 +1474,7 @@ void pairContigs(
     std::cout << "\t---\n";
     std::cout << "Total satisfied: " << satisfied << "\tunsatisfied: " << unsatisfied << "\n\nBreakdown by distances (-d):\n";
     
+    std::cout << "ct_both: " << ct_both << std::endl;
     sortInsertSize(ct_both_hash);
     std::unordered_map<uint64_t, uint64_t>::iterator itrIS;
     std::cout << "ct_both_hash map size: " << err.size() << "\n"; 
@@ -1631,7 +1689,7 @@ void sortInsertSize(std::unordered_map<uint64_t, uint64_t>& M)
     // Print the sorted value 
     for (auto& it : A) { 
         std::cout << it.first << ' '
-             << it.second; 
+             << it.second << std::endl; 
     } 
 } 
 
