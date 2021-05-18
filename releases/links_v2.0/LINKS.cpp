@@ -377,6 +377,9 @@ class InputParser {
     }
 };
 
+//typedef
+typedef std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > mate_pair;
+
 // Helper Methods
 void sortErr(std::unordered_map<std::string, Gaps_Links>& M);
 void sortInsertSize(std::unordered_map<uint64_t, uint64_t>& M);
@@ -722,6 +725,7 @@ void readFastaFastq(
         uint64_t delta = distance;
 
         int breakFlag = 0;
+        bool reverseExists = false;
 
         for (btllib::SeqReader::Record record; (record = longReader.read());) {
             btllib::NtHash nthash(record.seq, k, bloom.get_hash_num());
@@ -730,6 +734,8 @@ void readFastaFastq(
             for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=step) {
                 // roll for the number of steps
                 readFastAFastq_debug_counter_1++;
+
+                reverseExists = false;
 
                 // for step ----
                 for(int j = 1; j < step; j++) {
@@ -742,7 +748,18 @@ void readFastaFastq(
                 if(breakFlag){break;}
                 // for step ----
 
-                if(bloom.contains(nthash.hashes()) && bloom.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
+                // check if reverse pair exist
+                mate_pair::iterator it = matePair.find(nthashLead.get_reverse_hash());
+                if( it != matePair.end() ) {
+                    std::unordered_map<uint64_t, BT_IS> &innerMap = it->second;
+                    std::unordered_map<uint64_t, BT_IS>::iterator innerit = innerMap.find(nthash.get_reverse_hash());
+                    if( innerit != innerMap.end() ){
+                        innerit->second.setIS(distance);
+                        reverseExists = true;
+                    }
+                }
+                
+                if(!reverseExists && bloom.contains(nthash.hashes()) && bloom.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
                     readFastAFastq_debug_counter_2++;
                     
                     if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
@@ -755,8 +772,8 @@ void readFastaFastq(
                     readFastAFastq_debug_counter_3++;
                 }
 
-                    /// TODO: should work with populating matepair in reverse direction as well but its not! should be fixed
-/*                 if(bloom.contains(nthash.hashes()) && bloom.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
+/*                     /// TODO: should work with populating matepair in reverse direction as well but its not! should be fixed
+                if(bloom.contains(nthash.hashes()) && bloom.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
                     readFastAFastq_debug_counter_2++;
                     
                     if(matePair.find(nthashLead.get_reverse_hash()) == matePair.end()) {
@@ -855,7 +872,15 @@ void inline kmerizeContig( std::string *seq,
 
             if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
                 trackAll[ntHashContig.get_forward_hash()] = KmerInfo(head, i, i + k, 0);
+                //if(head == "51"){
+                //    std::cout << "0forward contig 51 - i: " << i << " multip: " << 
+                //    trackAll[ntHashContig.get_forward_hash()].getMultiple() << std::endl;
+                //}
             } else {
+                //if(head == "51"){
+                //    std::cout << "forward contig 51 - i: " << i << " multip: " << 
+                //    trackAll[ntHashContig.get_forward_hash()].getMultiple() << std::endl;
+                //}
                 trackAll[ntHashContig.get_forward_hash()].incrementMultiple();
             }
         }
@@ -868,6 +893,10 @@ void inline kmerizeContig( std::string *seq,
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
                 trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k, 1);
             } else {
+                //if(head == "51"){
+                //    std::cout << "reverse contig 51 - i: " << i << " multip: " << 
+                //    trackAll[ntHashContig.get_reverse_hash()].getMultiple() << std::endl;
+                //}
                 trackAll[ntHashContig.get_reverse_hash()].incrementMultiple();
             }
         }
@@ -977,8 +1006,8 @@ void pairContigs(
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
             CheckCounterBase++;
             
-            if(trackAll[matePairItr->first].getTig() == "20" && trackAll[mateListItr->first].getTig() == "25"){
-                        std::cout << "checkpoint 1 : 20 - 25\n";
+            if(trackAll[matePairItr->first].getTig() == "51" && trackAll[mateListItr->first].getTig() == "60"){
+                        std::cout << "checkpoint 1 : 51 - 60\n";
             }
             if( mateListItr->second.getBT() == false &&                 //matepair is not seen
                 trackAll.find(matePairItr->first) != trackAll.end() &&  //first mate is tracked
@@ -1024,14 +1053,14 @@ void pairContigs(
                     kmer1 = trackAll[matePairItr->first];
                     kmer2 = trackAll[mateListItr->first];
 
-                    if(kmer1.getTig() == "20" && kmer2.getTig() == "25"){
-                        std::cout << "checkpoint 2 : 20 - 25\n";
+                    if(kmer1.getTig() == "51" && kmer2.getTig() == "61"){
+                        std::cout << "checkpoint 2 : 51 - 61\n";
                     }
 
                     if(kmer1.getTig() != kmer2.getTig()) { // paired reads located on <> contigs
                         // MURATHAN DEBUG 11.5.21
-                        if(kmer1.getTig() == "20" && kmer2.getTig() == "25"){
-                            std::cout << "checkpoint 2.5 : 20 - 25\n";
+                        if(kmer1.getTig() == "51" && kmer2.getTig() == "60"){
+                            std::cout << "checkpoint 2.5 : 51 - 60\n";
                         }
                         pairContigs_debug_counter_8++;
                         if(!kmer1.getOrient()){             // if kmer1 is forward
@@ -1071,8 +1100,8 @@ void pairContigs(
                         }
                         //std::cout << "tig1: " << kmer1.getTig()  << " tig2: " << kmer2.getTig() << " distance: " << distance << " isz: " << isz << std::endl;
                         //std::cout << "insert_size: " << insert_size << "distance: " << distance << " tig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() << " tig_b: " << kmer2.getTig()  << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() << std::endl; 
-                        if(kmer1.getTig() == "20" && kmer2.getTig() == "25"){
-                            std::cout << "checkpoint 3 : 20 - 25\n";
+                        if(kmer1.getTig() == "51" && kmer2.getTig() == "60"){
+                            std::cout << "checkpoint 3 : 51 - 60\n";
                             std::cout << "insert_size: " << insert_size << " isz: " << isz <<" distance: " << distance << " min allowed: " << min_allowed << " \ntig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() 
                             << " \ntig_b: " << kmer2.getTig() << " B_length: " << tigLength[kmer2.getTig()] << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() <<
                             "\norient_1:" << kmer1.getOrient() << " orient_2: " << kmer2.getOrient() << std::endl;
