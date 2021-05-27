@@ -459,6 +459,30 @@ inline int getDistanceBin(int distance)
     return distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 10000;
 }
 
+char complement(char n)
+{   
+    switch(n)
+    {   
+    case 'A':
+        return 'T';
+    case 'T':
+        return 'A';
+    case 'G':
+        return 'C';
+    case 'C':
+        return 'G';
+    }   
+    assert(false);
+    return ' ';
+}
+std::string reverseComplement(std::string str){
+    std::transform(
+        begin(str),
+        end(str),
+        begin(str),
+        complement);
+    return str;
+}
 
 int main(int argc, char** argv) {
     // Get todays date
@@ -554,10 +578,11 @@ int main(int argc, char** argv) {
     // store second mates in a set
     std::unordered_set<uint64_t> mates;
     
-    
+    uint prev_counter_4 = 0;
     uint64_t totalpairs = 0;
     for(uint64_t dist : linksArgParser.distances){
         std::cout << dist << std::endl;
+        readFastaFastq(linksArgParser.longFile,filtering,matePair,mates,dist,linksArgParser.k,linksArgParser.step);
         std::cout << "readFastAFastq_debug_counter_1 " + std::to_string(readFastAFastq_debug_counter_1) + "\n"; 
         std::cout << "readFastAFastq_debug_counter_2 " + std::to_string(readFastAFastq_debug_counter_2) + "\n"; 
         std::cout << "readFastAFastq_debug_counter_3 " + std::to_string(readFastAFastq_debug_counter_3) + "\n";
@@ -566,8 +591,9 @@ int main(int argc, char** argv) {
         std::cout << "readFastAFastq_debug_counter_6 " + std::to_string(readFastAFastq_debug_counter_6) + "\n";
         std::cout << "readFastAFastq_debug_counter_7 " + std::to_string(readFastAFastq_debug_counter_7) + "\n";
         std::cout << "readFastAFastq_debug_counter_8 " + std::to_string(readFastAFastq_debug_counter_8) + "\n";
+        std::cout << "prev_counter_4 " + std::to_string(readFastAFastq_debug_counter_4 - prev_counter_4) + "\n";
         std::cout << "-------------------\n";
-        readFastaFastq(linksArgParser.longFile,filtering,matePair,mates,dist,linksArgParser.k,linksArgParser.step);
+        prev_counter_4 = readFastAFastq_debug_counter_4;
     }
 
     // debug by MURATHAN --->
@@ -681,6 +707,8 @@ int main(int argc, char** argv) {
     std::cout << "pairContigs_debug_counter_53 " + std::to_string(pairContigs_debug_counter_53) + "\n";
     // --  std::cout << "\n\n=>After pairContigs c++ " + std::to_string(time(0)) + "\n";
 
+    std::cout << " test revcomp: " << reverseComplement("AAAATTTT") << std::endl;
+
 
     for(uint64_t dist : linksArgParser.distances){
         std::cout << dist << std::endl;
@@ -725,7 +753,7 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
         // std::cout << "- Filter output file : " << outFileBf << "\n";
         std::cout << "- Filter output file : " << linksArgParser.k << "\n";
         assemblyBF = new btllib::KmerBloomFilter(m/8, hashFct, linksArgParser.k);
-        btllib::SeqReader assemblyReader(linksArgParser.assemblyFile, 8);
+        btllib::SeqReader assemblyReader(linksArgParser.assemblyFile, 8, 1);
         // int builder = 0;
         for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
             // if(builder % 100 == 0) {
@@ -753,10 +781,11 @@ void readFastaFastq(
                 const uint64_t distance,
                 const uint64_t k,
                 const uint64_t step) {
-        btllib::SeqReader longReader(file, 8); // CHECK FOR FLAG MODES
+        btllib::SeqReader longReader(file, 8, 1); // CHECK FOR FLAG MODES
 
         //uint64_t delta = distance - (2 * k);
-        uint64_t delta = distance;
+        uint64_t delta = distance - k;
+        //uint64_t delta = distance;
 
         int breakFlag = 0;
         bool reverseExists = false;
@@ -837,13 +866,16 @@ void readFastaFastq_debug(
                 const uint64_t distance,
                 const uint64_t k,
                 const uint64_t step) {
-        btllib::SeqReader longReader(file, 8); // CHECK FOR FLAG MODES
+        btllib::SeqReader longReader(file, 8, 1); // CHECK FOR FLAG MODES
 
         //uint64_t delta = distance - (2 * k);
-        uint64_t delta = distance;
+        uint64_t delta = distance - k;
 
         int breakFlag = 0;
         //bool reverseExists = false;
+
+        if (distance < 5000)
+            return;
 
         for (btllib::SeqReader::Record record; (record = longReader.read());) {
             btllib::NtHash nthash(record.seq, k, bloom.get_hash_num());
@@ -893,10 +925,23 @@ void readFastaFastq_debug(
                     ){
                         if(it1_f->second.getStart() > 200000 && it2_f->second.getStart() > 200000){
                             std::cout << "tig1: " << it1_f->second.getTig() << " startpos: " << it1_f->second.getStart()
-                            << " read name: " << record.name << std::endl;
+                            << " read name: " << record.name  << " orient:" << it1_f->second.getOrient() 
+                            << " seq1: "
+                            << record.seq.substr(nthash.get_pos(),nthash.get_k()) << std::endl;
+                            //(it1_f->second.getOrient() ? 
+                            //reverseComplement(record.seq.substr(nthash.get_pos(),nthash.get_k())) : record.seq.substr(nthash.get_pos(),nthash.get_k()) )
+                            //<< std::endl;
+
                             std::cout << "tig2: " << it2_f->second.getTig() << " startpos: " << it2_f->second.getStart()
-                            << " read name: " << record.name << std::endl;
+                            << " read name: " << record.name << " orient:" << it2_f->second.getOrient() 
+                            << " seq2: "
+                            << record.seq.substr(nthashLead.get_pos(),nthash.get_k()) << std::endl;
+                            //(it2_f->second.getOrient() ? 
+                            //reverseComplement(record.seq.substr(nthashLead.get_pos(),nthashLead.get_k())) : record.seq.substr(nthashLead.get_pos(),nthashLead.get_k()) )
+                            //<< std::endl;
+
                             std::cout << "insert size: " << distance << std::endl;
+                            std::cout << "orient: " << "f f" << std::endl;
                         }
                     }
                     if(
@@ -905,10 +950,11 @@ void readFastaFastq_debug(
                     ){
                         if(it1_f->second.getStart() > 200000 && it2_r->second.getStart() > 200000){
                             std::cout << "tig1: " << it1_f->second.getTig() << " startpos: " << it1_f->second.getStart()
-                            << " read name: " << record.name << std::endl;
+                            << " read name: " << record.name  << " orient:" << it1_f->second.getOrient() << " seq1: " << record.seq.substr(nthash.get_pos(),nthash.get_k()) << std::endl;
                             std::cout << "tig2: " << it2_r->second.getTig() << " startpos: " << it2_r->second.getStart()
-                            << " read name: " << record.name << std::endl;
+                            << " read name: " << record.name  << " orient:" << it2_r->second.getOrient() << " seq2: " << reverseComplement(record.seq.substr(nthashLead.get_pos(),nthash.get_k())) << std::endl;
                             std::cout << "insert size: " << distance << std::endl;
+                            std::cout << "orient: " << "f r" << std::endl;
                         }
                     }
                     if(
@@ -917,10 +963,11 @@ void readFastaFastq_debug(
                     ){
                         if(it1_r->second.getStart() > 200000 && it2_f->second.getStart() > 200000){
                             std::cout << "tig1: " << it1_r->second.getTig() << " startpos: " << it1_r->second.getStart()
-                            << " read name: " << record.name << std::endl;
+                            << " read name: " << record.name << " orient:" << it1_r->second.getOrient() << " seq1: " << reverseComplement(record.seq.substr(nthash.get_pos(),nthash.get_k())) << std::endl;
                             std::cout << "tig2: " << it2_f->second.getTig() << " startpos: " << it2_f->second.getStart()
-                            << " read name: " << record.name << std::endl;
+                            << " read name: " << record.name << " orient:" << it2_f->second.getOrient() << " seq2: " << record.seq.substr(nthashLead.get_pos(),nthash.get_k()) << std::endl;
                             std::cout << "insert size: " << distance << std::endl;
+                            std::cout << "orient: " << "r f" << std::endl;
                         }
                     }
                     if(
@@ -929,10 +976,11 @@ void readFastaFastq_debug(
                     ){
                         if(it1_r->second.getStart() > 200000 && it2_r->second.getStart() > 200000){
                             std::cout << "tig1: " << it1_r->second.getTig() << " startpos: " << it1_r->second.getStart()
-                            << " read name: " << record.name << std::endl;
+                            << " read name: " << record.name  << " orient:" << it1_r->second.getOrient() <<  "seq1: " << reverseComplement(record.seq.substr(nthash.get_pos(),nthash.get_k())) << std::endl;
                             std::cout << "tig2: " << it2_r->second.getTig() << " startpos: " << it2_r->second.getStart()
-                            << " read name: " << record.name << std::endl;
+                            << " read name: " << record.name << " orient:" << it2_r->second.getOrient() << " seq2: " << reverseComplement(record.seq.substr(nthashLead.get_pos(),nthash.get_k())) << std::endl;
                             std::cout << "insert size: " << distance << std::endl;
+                            std::cout << "orient: " << "r r" << std::endl;
                         }
                     }
                 }
@@ -979,6 +1027,8 @@ void inline kmerizeContig( std::string *seq,
         if(breakFlag) {break;}
         // for rolling step
         readContigs_debug_counter_1++;
+
+        i = ntHashContig.get_pos();
         
         // Forward part
 	    if(matePair->find(ntHashContig.get_forward_hash()) != matePair->end() || 
@@ -992,11 +1042,11 @@ void inline kmerizeContig( std::string *seq,
                     trackAll[ntHashContig.get_forward_hash()].getMultiple() << std::endl;
                 }
             } else {
+                trackAll[ntHashContig.get_forward_hash()].incrementMultiple();
                 if(head == "60"){
                     std::cout << "forward contig 60 - i: " << i << " multip: " << 
                     trackAll[ntHashContig.get_forward_hash()].getMultiple() << std::endl;
                 }
-                trackAll[ntHashContig.get_forward_hash()].incrementMultiple();
             }
         }
 
@@ -1007,16 +1057,16 @@ void inline kmerizeContig( std::string *seq,
 
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
                 trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(head, i, i + k, 1);
-                /* if(head == "60"){
+                if(head == "60"){
                     std::cout << "0reverse contig 60 - i: " << i << " multip: " << 
                     trackAll[ntHashContig.get_reverse_hash()].getMultiple() << std::endl;
-                } */
+                } 
             } else {
-/*                 if(head == "60"){
+                trackAll[ntHashContig.get_reverse_hash()].incrementMultiple();
+                if(head == "60"){
                     std::cout << "reverse contig 60 - i: " << i << " multip: " << 
                     trackAll[ntHashContig.get_reverse_hash()].getMultiple() << std::endl;
-                } */
-                trackAll[ntHashContig.get_reverse_hash()].incrementMultiple();
+                }
             }
         }
     }
@@ -1034,7 +1084,7 @@ void readContigs(
         uint64_t step) {
     // std::cout << "hashFct in readContig: " << hashFcts << "\n";
     uint64_t cttig = 0;
-    btllib::SeqReader contigReader(assemblyFile, 8);// CHANGE TO FLAGS LATER
+    btllib::SeqReader contigReader(assemblyFile, 8, 1);// CHANGE TO FLAGS LATER
     uint64_t tmpCounter = 0;
     for (btllib::SeqReader::Record record; (record = contigReader.read());) {
         cttig++;
@@ -1124,9 +1174,11 @@ void pairContigs(
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> >::iterator matePairItr;
 
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
+        pairContigs_debug_counter_1++;
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
             CheckCounterBase++;
-            
+            pairContigs_debug_counter_2++;
+
             if(trackAll[matePairItr->first].getTig() == "51" && trackAll[mateListItr->first].getTig() == "60"){
                         std::cout << "checkpoint 1 : 51 - 60\n";
             }
@@ -1135,6 +1187,8 @@ void pairContigs(
                 trackAll[matePairItr->first].getMultiple() == 1 &&      //first mate seen once
                 trackAll.find(mateListItr->first) != trackAll.end() &&  //second mate is tracked
                 trackAll[mateListItr->first].getMultiple() == 1) {      //second mate is seen once
+                
+                pairContigs_debug_counter_3++;
                 
                 mateListItr->second.setBT(true);
 
@@ -1152,7 +1206,7 @@ void pairContigs(
                     } else {
                         ct_both_hash[insert_size] = ct_both_hash[insert_size] + 1;
                     }
-
+                    pairContigs_debug_counter_4++;
                     /*
                     tig_a = trackAll[matePairItr->first].getTig();
                     tig_b = trackAll[mateListItr->first].getTig();
@@ -1183,18 +1237,18 @@ void pairContigs(
                         if(kmer1.getTig() == "51" && kmer2.getTig() == "60"){
                             std::cout << "checkpoint 2.5 : 51 - 60\n";
                         }
-                        pairContigs_debug_counter_8++;
+                        pairContigs_debug_counter_5++;
                         if(!kmer1.getOrient()){             // if kmer1 is forward
-                            pairContigs_debug_counter_9++;
+                            pairContigs_debug_counter_6++;
                             if(!kmer2.getOrient()){         // if kmer2 is forward
-                                pairContigs_debug_counter_10++;
+                                pairContigs_debug_counter_7++;
                                 distance = getDistance(insert_size, tigLength[kmer1.getTig()], kmer1.getStart(), kmer2.getStart());
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 0);
                                 }
                             }else{                          // if kmer2 is reverse
-                                pairContigs_debug_counter_11++;
+                                pairContigs_debug_counter_8++;
                                 distance = getDistance(insert_size, tigLength[kmer1.getTig()], kmer1.getStart(), tigLength[kmer2.getTig()] - kmer2.getEnd());
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
@@ -1202,16 +1256,16 @@ void pairContigs(
                                 }
                             }
                         }else{                              // if kmer1 is reverse
-                            pairContigs_debug_counter_12++;
+                            pairContigs_debug_counter_9++;
                             if(!kmer2.getOrient()){         // if kmer2 is forward
-                                pairContigs_debug_counter_13++;
+                                pairContigs_debug_counter_10++;
                                 distance = getDistance(insert_size, tigLength[kmer1.getTig()], tigLength[kmer1.getTig()] - kmer1.getEnd(), kmer2.getStart());
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 2);
                                 }
                             }else{                          // if kmer2 is reverse
-                                pairContigs_debug_counter_14++;
+                                pairContigs_debug_counter_11++;
                                 distance = getDistance(insert_size, tigLength[kmer2.getTig()], kmer2.getEnd(), kmer1.getEnd());
                                 if(distance > min_allowed  && distance < insert_size){
                                     isz = getDistanceBin(distance);
@@ -1221,13 +1275,13 @@ void pairContigs(
                         }
                         //std::cout << "tig1: " << kmer1.getTig()  << " tig2: " << kmer2.getTig() << " distance: " << distance << " isz: " << isz << std::endl;
                         //std::cout << "insert_size: " << insert_size << "distance: " << distance << " tig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() << " tig_b: " << kmer2.getTig()  << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() << std::endl; 
-                        //if(kmer1.getTig() == "51" && kmer2.getTig() == "60" && isz == -1){
+                        if(kmer1.getTig() == "51" && kmer2.getTig() == "60" && isz == -1){
                             std::cout << "checkpoint 3 : 51 - 60\n";
                             std::cout << "insert_size: " << insert_size << " isz: " << isz <<" distance: " << distance << " min allowed: " << min_allowed << " \ntig_a: " << kmer1.getTig() << " A_length: " << tigLength[kmer1.getTig()] << " A_start: " << kmer1.getStart() << " A_end: " << kmer1.getEnd() 
                             << " \ntig_b: " << kmer2.getTig() << " B_length: " << tigLength[kmer2.getTig()] << " B_start: " << kmer2.getStart() << " B_end: " << kmer2.getEnd() <<
                             "\norient_1:" << kmer1.getOrient() << " orient_2: " << kmer2.getOrient() << std::endl;
                             std::cout << "isz func: " << getDistanceBin(distance) << std::endl;
-                        //}
+                        }
                     } else { // Clone, paired reads located on the same contig -- could be used to investigate misassemblies
                         Check17Counter++;
                         if (verbose) std::cout << "Pair (" << matePairItr->first << " and " << mateListItr->first << ") located on same contig " << tig_a << " (" << A_length << " nt)\n";
