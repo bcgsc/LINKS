@@ -191,7 +191,7 @@ class InputParser {
 
     public:
     std::string assemblyFile;
-    std::string longFile;
+    std::string fofFile;
     std::vector<uint64_t> distances = {4000};
     //uint64_t distances = 4000;
     uint64_t k = 15;
@@ -210,7 +210,7 @@ class InputParser {
     uint64_t bfoff = 0;
 
     // std::string bfout = $base_name . ".bloom";
-    // $base_name = $assemblyfile . ".scaff_s-" . $longfile . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
+    // $base_name = $assemblyfile . ".scaff_s-" . $fofFile . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
 
 
 
@@ -227,7 +227,7 @@ class InputParser {
                     break;
                 case 's':
                     // full path for fof
-                    longFile.assign(optarg);
+                    fofFile.assign(optarg);
                     break;
                 case 'm':
                     readLength = strtoul(optarg, &end, BASE_TEN);
@@ -322,7 +322,7 @@ class InputParser {
         // -f inputFasta.fa -s fofLongReads.txt -m 10 -d 20 -k 30 -t 40 -o 50 -e 60.45 -l 70 -a 1.345 -z 80 -b mybase -r myBloomFilter -p 0.003 -x 34 -v
 
         std::cout   << "  -f " << assemblyFile << "\n" 
-                    << "  -s " << longFile << "\n" 
+                    << "  -s " << fofFile << "\n" 
                     << "  -m " << readLength << "\n" 
                     //<< "  -d " << distances.str() << "\n" TODO: print distances
                     << "  -k " << k << "\n"
@@ -442,7 +442,7 @@ int main(int argc, char** argv) {
     // Naming output files
     if (linksArgParser.baseName == "") {
         linksArgParser.baseName =  linksArgParser.assemblyFile + ".scaff_s-" + 
-                                    linksArgParser.longFile + "_d" + 
+                                    linksArgParser.fofFile + "_d" + 
                                     //std::to_string(linksArgParser.distances.str()) + TODO:: print distance
                                     "_k" + std::to_string(linksArgParser.k) + 
                                     "_e" + std::to_string(linksArgParser.insertStdev) +
@@ -479,7 +479,7 @@ int main(int argc, char** argv) {
     // Initialization message
     std::string initMessage = "\nRunning: " + version + 
                                 "\n-f " + linksArgParser.assemblyFile +
-                                "\n-s " + linksArgParser.longFile + 
+                                "\n-s " + linksArgParser.fofFile + 
                                 "\n-m " + std::to_string(linksArgParser.readLength) + 
                                 //"\n-d " + std::to_string(linksArgParser.distances.str()) + TODO: print distance
                                 "\n-k " + std::to_string(linksArgParser.k) + 
@@ -519,9 +519,13 @@ int main(int argc, char** argv) {
 
 
     // Stage 2 -- read long-reads and find mates
-    for(uint64_t dist : linksArgParser.distances){
-        std::cout << dist << std::endl;
-        readFastaFastq(linksArgParser.longFile,filtering,matePair,mates,dist,linksArgParser.k,linksArgParser.step);
+    std::ifstream infile(linksArgParser.fofFile);
+    std::string readFile;
+    while(infile >> readFile){
+        for(uint64_t dist : linksArgParser.distances){
+            std::cout << dist << std::endl;
+            readFastaFastq(readFile,filtering,matePair,mates,dist,linksArgParser.k,linksArgParser.step);
+        }
     }
 
     // Stage 3 -- read contigs to assign info to mates
@@ -530,7 +534,7 @@ int main(int argc, char** argv) {
     // Stage 4 -- pair contigs based on mates
     uint64_t totalpairs = 0;
     pairContigs(
-        linksArgParser.longFile,
+        linksArgParser.fofFile,
         matePair,
         trackAll,
         tigLength,
