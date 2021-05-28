@@ -174,16 +174,31 @@ class InputParser {
 
     std::vector<uint64_t> splitDistanceInput(std::string input){
         std::vector<uint64_t> distances; 
-        std::istringstream ss(input); // Turn the string into a stream. 
+
+        std::stringstream ss(input);
+        std::cout << input << std::endl;
+
+        while( ss.good() )
+        {
+            std::cout << "here1" << std::endl;
+            std::string substr;
+            getline( ss, substr, ',' );
+            distances.push_back(static_cast<unsigned int>(std::stoul(substr) ));
+            std::cout << distances.back() << std::endl;
+        }
+/*         std::istringstream ss(input); // Turn the string into a stream. 
         std::string tok; 
 
         while (ss >> tok) 
         {
             distances.push_back(static_cast<unsigned int>(std::stoul(tok)));
             //std::cout << distances.back() << "\n";
+        } */
+        for(uint64_t d : distances){
+            std::cout << "d: " << d << std::endl;
         }
 
-        std::sort(distances.begin(),distances.end());
+        //std::sort(distances.begin(),distances.end());
         //std::cout << distances.back() << "\n";
 
         return distances;
@@ -524,6 +539,7 @@ int main(int argc, char** argv) {
     while(infile >> readFile){
         for(uint64_t dist : linksArgParser.distances){
             std::cout << dist << std::endl;
+            std::cout << readFile << std::endl;
             readFastaFastq(readFile,filtering,matePair,mates,dist,linksArgParser.k,linksArgParser.step);
         }
     }
@@ -623,15 +639,13 @@ void readFastaFastq(
 
             for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=step) {
                 // roll for the number of steps
-
+                breakFlag = 0;
                 reverseExists = false;
 
                 // for step ----
                 for(uint j = 1; j < step; j++) {
-                    std::cout << "Rolling one more time\n";
                     if(!nthashLead.roll() || !nthash.roll()) {
                         breakFlag = 1;
-                        std::cout << "setting break flag\n";
                     }
                 }   
                 if(breakFlag){break;}
@@ -760,7 +774,6 @@ void readContigs(
         tigLength.insert({std::to_string(cttig), record.seq.length()});
         //std::cout << "\r" << cttig;
         // for debug purposes
-        std::cout << "rec name: " << record.name << " rank: " << std::to_string(cttig) << std::endl;
         if(record.seq.length() >= minSize) {
             kmerizeContig(&record.seq, trackAll, &matePair, mates, k, std::to_string(cttig), hashFcts, step, tmpCounter);
         }
@@ -811,9 +824,6 @@ void pairContigs(
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
 
-            if(trackAll[matePairItr->first].getTig() == "51" && trackAll[mateListItr->first].getTig() == "60"){
-                        std::cout << "checkpoint 1 : 51 - 60\n";
-            }
             if( mateListItr->second.getBT() == false &&                 //matepair is not seen
                 trackAll.find(matePairItr->first) != trackAll.end() &&  //first mate is tracked
                 trackAll[matePairItr->first].getMultiple() == 1 &&      //first mate seen once
@@ -857,15 +867,9 @@ void pairContigs(
                     kmer1 = trackAll[matePairItr->first];
                     kmer2 = trackAll[mateListItr->first];
 
-                    if(kmer1.getTig() == "51" && kmer2.getTig() == "60"){
-                        std::cout << "checkpoint 2 : 51 - 60\n";
-                    }
 
                     if(kmer1.getTig() != kmer2.getTig()) { // paired reads located on <> contigs
                         // MURATHAN DEBUG 11.5.21
-                        if(kmer1.getTig() == "51" && kmer2.getTig() == "60"){
-                            std::cout << "checkpoint 2.5 : 51 - 60\n";
-                        }
                         if(!kmer1.getOrient()){             // if kmer1 is forward
                             if(!kmer2.getOrient()){         // if kmer2 is forward
                                 distance = getDistance(insert_size, tigLength[kmer1.getTig()], kmer1.getStart(), kmer2.getStart());
