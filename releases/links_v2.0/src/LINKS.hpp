@@ -1,3 +1,7 @@
+//#ifndef LINKS_LINKS_HPP
+//#define LINKS_LINKS_HPP
+#pragma once
+
 #include "btllib/bloom_filter.hpp"
 #include "btllib/nthash.hpp"
 #include "btllib/order_queue.hpp"
@@ -5,7 +9,6 @@
 #include "btllib/status.hpp"
 #include "btllib/util.hpp"
 #include "InputParser.hpp"
-#include "Worker.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -25,7 +28,7 @@
 class LINKS
 {
 
-public:
+  public:
 
   struct MatePairInfo
   {
@@ -82,74 +85,55 @@ public:
   };
 
   //Record get_minimizers();
+  void extract_mate_pairs();
 
-    /**
-     * Construct a SeqReader to read sequences from a given path.
-     *
-     * @param seqfile Filepath to read sequences from. Pass "-" to read from
-     * stdin.
-     * @param k k-mer size for the minimizer.
-     * @param w window size when selecting minimizers.
-     * @param flags Modifier flags. Specifiying either short or long mode flag is
-     * mandatory; other flags are optional.
-     * @param threads Maximum number of processing threads to use. Must be at
-     * least 1.
-     * @param verbose Whether to output informational messages during processing.
-     * @param bf1 A Bloom filter to use for either filtering minimizers in or out,
-     * if one of the flags is enabled. If both are enabled, bf1 is used for
-     * filtering in.
-     * @param bf2 A second Bloom filter to use when both filtering minimizers in
-     * and out is enabled. bf2 is used for filtering out.
-     */
+  LINKS(InputParser* inputParser);
 
-    LINKS(InputParser::InputParser inputParser);
-        : assemblyFile(inputParser.assemblyFile)
-        , fofFile(inputParser.fofFile)
-        , distances(inputParser.distances)
-        , k(inputParser.k)
-        , verbose(inputParser.verbose)
-        , minSize(inputParser.minSize)
-        , step(inputParser.step)
-        , insertStdev(inputParser.insertStdev)
-        , baseName(inputParser.baseName)
-        , offset(inputParser.offset)
-        , fpr(inputParser.fpr)
-        , bfFile(inputParser.bfFile)
-        , bfOff(inputParser.bfOff)
+  ~LINKS();
 
-    /*
-    LINKS(  std::string seq,
-            size_t k;
-            unsigned threads = 5,
-            bool verbose = false);
-    */
-
-    ~LINKS();
-
-    InputParser::InputParser inputParser;
-    uint64_t k;
+  InputParser inputParser;
 
 
-    std::string assemblyFile;
-    std::string fofFile;
-    std::vector<uint64_t> distances = {4000};
-    //uint64_t distances = 4000;
-    uint64_t k = 15;
-    bool verbose = false;
-    uint64_t minLinks = 5;
-    uint64_t minSize = 500;
-    float maxLinkRatio = 0.3;
-    uint64_t step = 2;
-    // Added for MPET
-    uint64_t readLength;         // MPET
-    float insertStdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
-    std::string baseName;   // When set, this will override the MPET-induced changes on -e
-    uint64_t offset = 0;
-    std::string bfFile;
-    float fpr = 0.001;
-    uint64_t bfOff = 0;
+  std::string assemblyFile;
+  std::string fofFile;
+  std::vector<uint64_t> distances = {4000};
+  //uint64_t distances = 4000;
+  uint64_t k = 15;
+  bool verbose = false;
+  uint64_t minLinks = 5;
+  uint64_t minSize = 500;
+  float maxLinkRatio = 0.3;
+  uint64_t step = 2;
+  // Added for MPET
+  uint64_t readLength;         // MPET
+  float insertStdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
+  std::string baseName;   // When set, this will override the MPET-induced changes on -e
+  uint64_t offset = 0;
+  std::string bfFile;
+  float fpr = 0.001;
+  uint64_t bfOff = 0;
+
+  static const size_t MAX_SIMULTANEOUS_INDEXLRS = 128;
+
+  struct Read
+  {
+    Read() {}
+
+    Read(size_t num, std::string id, std::string comment, std::string seq)
+      : num(num)
+      , id(std::move(id))
+      , comment(std::move(comment))
+      , seq(std::move(seq))
+    {}
+
+    size_t num = 0;
+    std::string id;
+    std::string comment;
+    std::string seq;
+  };
 
 private:
+
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
 
     std::unordered_map<uint64_t, KmerInfo> trackAll;
@@ -163,6 +147,16 @@ private:
     btllib::KmerBloomFilter * myFilter;
     
     std::atomic<bool> fasta{ false };
+
+    static const size_t BUFFER_SIZE = 4;
+    static const size_t BLOCK_SIZE = 1;
+
+    std::string seqfile;
+    std::queue<std::string> longReads;
+    unsigned threads;
+    long id;
+    size_t buffer_size = 8;
+    size_t block_size = 2;
     /*
     
     static const size_t SHORT_MODE_BUFFER_SIZE = 32;
@@ -171,6 +165,90 @@ private:
     static const size_t LONG_MODE_BUFFER_SIZE = 4;
     static const size_t LONG_MODE_BLOCK_SIZE = 1;
     */
+
+    btllib::OrderQueueSPMC<Read> input_queue;
+
+    static long* ready_blocks_owners()
+    {
+      thread_local static long var[MAX_SIMULTANEOUS_INDEXLRS];
+      return var;
+    }
+
+    static std::atomic<long>& last_id()
+    {
+      static std::atomic<long> var(0);
+      return var;
+    }
+
+    class Worker
+    {
+      public:
+        void start() { t = std::thread(do_work, this); }
+        void join() { t.join(); }
+
+        virtual ~Worker() {}
+
+        Worker& operator=(const Worker& worker) = delete;
+        Worker& operator=(Worker&& worker) = delete;
+
+      protected:
+        LINKS& links;
+        std::thread t;
+
+        Worker(LINKS& links)
+          : links(links)
+        {}
+
+        Worker(const Worker& worker)
+          : Worker(worker.links)
+        {}
+        Worker(Worker&& worker) noexcept
+          : Worker(worker.links)
+        {}
+
+        virtual void work() = 0;
+        static void do_work(Worker* worker) { worker->work(); }
+    };
+
+    class InputWorker : public Worker
+    {
+      public:
+        InputWorker(LINKS& links)
+          : Worker(links)
+        {}
+
+        InputWorker(const InputWorker& worker)
+          : InputWorker(worker.links)
+        {}
+        InputWorker(InputWorker&& worker) noexcept
+          : InputWorker(worker.links)
+        {}
+
+        InputWorker& operator=(const InputWorker& worker) = delete;
+        InputWorker& operator=(InputWorker&& worker) = delete;
+
+        void work() override;
+    };
+
+    class ExtractMatePairWorker : public Worker
+    {
+      public:
+        ExtractMatePairWorker(LINKS& links)
+          : Worker(links)
+        {}
+
+        ExtractMatePairWorker(const ExtractMatePairWorker& worker)
+          : ExtractMatePairWorker(worker.links)
+        {}
+        ExtractMatePairWorker(ExtractMatePairWorker&& worker) noexcept
+          : ExtractMatePairWorker(worker.links)
+        {}
+
+        ExtractMatePairWorker& operator=(const ExtractMatePairWorker& worker) = delete;
+        ExtractMatePairWorker& operator=(ExtractMatePairWorker&& worker) = delete;
+
+        void work() override;
+    };
 
 /*
   std::atomic<bool> fasta{ false };
@@ -199,29 +277,79 @@ private:
 */
 
   btllib::SeqReader reader;
-  InputWorker::InputWorker input_worker;
-  std::vector<ExtractMatePairWorker::ExtractMatePairWorker> extract_mate_pair_workers;
+  InputWorker input_worker;
+  std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
 };
 
-inline LINKS::LINKS(InputParser::InputParser inputParser)
-        : assemblyFile(inputParser.assemblyFile)
-        , fofFile(inputParser.fofFile)
-        , distances(inputParser.distances)
-        , k(inputParser.k)
-        , verbose(inputParser.verbose)
-        , minSize(inputParser.minSize)
-        , step(inputParser.step)
-        , insertStdev(inputParser.insertStdev)
-        , baseName(inputParser.baseName)
-        , offset(inputParser.offset)
-        , fpr(inputParser.fpr)
-        , bfFile(inputParser.bfFile)
-        , bfOff(inputParser.bfOff){
-            
-            input_worker.start();
-            for (auto& worker : extract_mate_pair_workers) {
-                worker.start();
-            }
+inline void
+LINKS::InputWorker::work()
+{
+  if (links.reader.get_format() == btllib::SeqReader::Format::FASTA) {
+    links.fasta = true;
+  } else {
+    links.fasta = false;
+  }
+
+  decltype(links.input_queue)::Block block(links.block_size);
+  size_t current_block_num = 0;
+  Read read;
+
+  for (btllib::SeqReader::Record record; (record = links.reader.read());) {
+    block.data[block.count++] = Read(record.num,
+                                    std::move(record.id),
+                                    std::move(record.comment),
+                                    std::move(record.seq));
+    if (block.count == links.block_size) {
+      block.num = current_block_num++;
+      links.input_queue.write(block);
+      block.count = 0;
+    }
+  }
+
+  if (block.count > 0) {
+    block.num = current_block_num++;
+    links.input_queue.write(block);
+  }
+  for (unsigned i = 0; i < links.threads; i++) {
+    block.num = current_block_num++;
+    block.current = 0;
+    block.count = 0;
+    links.input_queue.write(block);
+  }
+}
+inline void
+LINKS::ExtractMatePairWorker::work()
+{
+  std::cout << "here!" << std::endl;
+}
+
+inline LINKS::LINKS(InputParser* inputParser)
+        : assemblyFile(inputParser->assemblyFile)
+        , longReads(inputParser->longReads)
+        //, seqfile(longReads.front())
+        //, fofFile(inputParser->fofFile)
+        , distances(inputParser->distances)
+        , k(inputParser->k)
+        , verbose(inputParser->verbose)
+        , minSize(inputParser->minSize)
+        , step(inputParser->step)
+        , insertStdev(inputParser->insertStdev)
+        , baseName(inputParser->baseName)
+        , offset(inputParser->offset)
+        , fpr(inputParser->fpr)
+        , bfFile(inputParser->bfFile)
+        , bfOff(inputParser->bfOff)
+        , input_queue(buffer_size, block_size)
+        , input_worker(*this)
+        , extract_mate_pair_workers(
+             std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this)))
+        , reader(std::move(longReads.front()), btllib::SeqReader::Flag::LONG_MODE)
+        {
+          longReads.pop();
+          input_worker.start();
+          for (auto& worker : extract_mate_pair_workers) {
+              worker.start();
+          }
         }
 /*
 inline LINKS::LINKS(std::string seqfile,
@@ -266,66 +394,19 @@ inline LINKS::LINKS(std::string seqfile,
 }
 */
 
-inline LINKS::~Indexlr()
+inline LINKS::~LINKS()
 {
-  reader.close();
+  //reader.close();
   for (auto& worker : extract_mate_pair_workers) {
     worker.join();
   }
   input_worker.join();
+  
 }
 
-// Minimerize a sequence: Find the minimizers of a vector of hash values
-// representing a sequence.
-/* Algorithm
-v is a vector of non-negative integers
-w is the window size
-Invariants
-    0 <  w <= v.size() - 1
-    0 <= l <= r <= v.size() - 1
-Initial conditions
-    M    = NIL       Final set of minimizers, empty initially
-    min  = -1        Minimum element
-    i    = -1        Index of minimum element
-    prev = -1        Index of previous minimum element
-    l    = 0         Index of left end of window
-    r    = l + w - 1 Index of right end of window
-Computation
-At each window, if the previous minimum is out of scope, find the new,
-right-most, minimum or else, check with only the right-most element to determine
-if that is the new minimum. A minimizer is added to the final vector only if
-it's index has changed. for each window of v bounded by [l, r] if (i < l) i =
-index of minimum element in [l, r], furthest from l. else if (v[r] <= v[i]) i =
-r min = v[i] if (i != prev) { prev = i M <- M + m
-    }
-    l = l + 1        Move window's left bound by one element
-    r = l + w - 1    Set window's right bound
-}*/
-
-inline std::string
-Indexlr::extract_barcode(const std::string& id, const std::string& comment)
-{
-  const static std::string BARCODE_PREFIX = "BX:Z:";
-  if (starts_with(comment, BARCODE_PREFIX)) {
-    const auto space_pos = comment.find(' ');
-    if (space_pos != std::string::npos) {
-      return comment.substr(BARCODE_PREFIX.size(),
-                            space_pos - BARCODE_PREFIX.size());
-    }
-    return comment.substr(BARCODE_PREFIX.size());
-  }
-  const auto pound_pos = id.find('#');
-  if (pound_pos != std::string::npos) {
-    const auto slash_pos = id.find('/');
-    if (slash_pos > pound_pos) {
-      return id.substr(pound_pos + 1, slash_pos - (pound_pos + 1));
-    }
-  }
-  return "NA";
-}
-
+/*
 inline static void
-filter_hashed_kmer(Indexlr::HashedKmer& hk,
+filter_hashed_kmer(LINKS::HashedKmer& hk,
                    bool filter_in,
                    bool filter_out,
                    const BloomFilter& filter_in_bf,
@@ -349,14 +430,14 @@ filter_hashed_kmer(Indexlr::HashedKmer& hk,
 }
 
 inline static void
-calc_minimizer(const std::vector<Indexlr::HashedKmer>& hashed_kmers_buffer,
-               const Indexlr::Minimizer*& min_current,
+calc_minimizer(const std::vector<LINKS::HashedKmer>& hashed_kmers_buffer,
+               const LINKS::Minimizer*& min_current,
                const size_t idx,
                ssize_t& min_idx_left,
                ssize_t& min_idx_right,
                ssize_t& min_pos_prev,
                const size_t w,
-               std::vector<Indexlr::Minimizer>& minimizers)
+               std::vector<LINKS::Minimizer>& minimizers)
 {
   min_idx_left = ssize_t(idx + 1 - w);
   min_idx_right = ssize_t(idx + 1);
@@ -384,8 +465,8 @@ calc_minimizer(const std::vector<Indexlr::HashedKmer>& hashed_kmers_buffer,
   }
 }
 
-inline std::vector<Indexlr::Minimizer>
-Indexlr::minimize(const std::string& seq) const
+inline std::vector<LINKS::Minimizer>
+LINKS::minimize(const std::string& seq) const
 {
   if ((k > seq.size()) || (w > seq.size() - k + 1)) {
     return {};
@@ -421,10 +502,11 @@ Indexlr::minimize(const std::string& seq) const
   }
   return minimizers;
 }
-
-inline Indexlr::Record
-Indexlr::get_minimizers()
+*/
+inline void
+LINKS::extract_mate_pairs()
 {
+  /*
   if (ready_blocks_owners()[id % MAX_SIMULTANEOUS_INDEXLRS] != id) {
     ready_blocks_array()[id % MAX_SIMULTANEOUS_INDEXLRS] =
       std::unique_ptr<decltype(output_queue)::Block>(
@@ -441,99 +523,8 @@ Indexlr::get_minimizers()
     }
   }
   return std::move(block.data[block.current++]);
+  */
+  return;
 }
 
-inline void
-Indexlr::InputWorker::work()
-{
-  if (indexlr.reader.get_format() == SeqReader::Format::FASTA) {
-    indexlr.fasta = true;
-  } else {
-    indexlr.fasta = false;
-  }
-
-  decltype(indexlr.input_queue)::Block block(indexlr.block_size);
-  size_t current_block_num = 0;
-  SeqReader::Record record;
-  Read read;
-  while ((record = indexlr.reader.read())) {
-    block.data[block.count++] = Read(record.num,
-                                     std::move(record.id),
-                                     std::move(record.comment),
-                                     std::move(record.seq));
-    if (block.count == indexlr.block_size) {
-      block.num = current_block_num++;
-      indexlr.input_queue.write(block);
-      block.count = 0;
-    }
-  }
-  if (block.count > 0) {
-    block.num = current_block_num++;
-    indexlr.input_queue.write(block);
-  }
-  for (unsigned i = 0; i < indexlr.threads; i++) {
-    block.num = current_block_num++;
-    block.current = 0;
-    block.count = 0;
-    indexlr.input_queue.write(block);
-  }
-}
-
-inline void
-Indexlr::MinimizeWorker::work()
-{
-  decltype(indexlr.input_queue)::Block input_block(indexlr.block_size);
-  decltype(indexlr.output_queue)::Block output_block(indexlr.block_size);
-
-  for (;;) {
-    if (input_block.current == input_block.count) {
-      if (output_block.count > 0) {
-        output_block.num = input_block.num;
-        indexlr.output_queue.write(output_block);
-        output_block.current = 0;
-        output_block.count = 0;
-      }
-      indexlr.input_queue.read(input_block);
-    }
-    if (input_block.count == 0) {
-      output_block.num = input_block.num;
-      output_block.current = 0;
-      output_block.count = 0;
-      indexlr.output_queue.write(output_block);
-      break;
-    }
-    Read& read = input_block.data[input_block.current++];
-    Record record;
-    record.num = read.num;
-    if (indexlr.output_id()) {
-      record.id = std::move(read.id);
-    }
-    if (indexlr.output_bx()) {
-      record.barcode = indexlr.extract_barcode(record.id, read.comment);
-    }
-    record.readlen = read.seq.size();
-
-    check_info(indexlr.verbose && indexlr.k > read.seq.size(),
-               "Indexlr: skipped seq " + std::to_string(read.num) +
-                 " on line " +
-                 std::to_string(read.num * (indexlr.fasta ? 2 : 4) + 2) +
-                 "; k (" + std::to_string(indexlr.k) + ") > seq length (" +
-                 std::to_string(read.seq.size()) + ")");
-
-    check_info(indexlr.verbose && indexlr.w > read.seq.size() - indexlr.k + 1,
-               "Indexlr: skipped seq " + std::to_string(read.num) +
-                 " on line " +
-                 std::to_string(read.num * (indexlr.fasta ? 2 : 4) + 2) +
-                 "; w (" + std::to_string(indexlr.w) + ") > # of hashes (" +
-                 std::to_string(read.seq.size() - indexlr.k + 1) + ")");
-
-    if (indexlr.k <= read.seq.size() &&
-        indexlr.w <= read.seq.size() - indexlr.k + 1) {
-      record.minimizers = indexlr.minimize(read.seq);
-    } else {
-      record.minimizers = {};
-    }
-
-    output_block.data[output_block.count++] = std::move(record);
-  }
-}
+//#endif

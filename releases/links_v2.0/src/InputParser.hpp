@@ -1,9 +1,14 @@
+//#ifndef LINKS_INPUTPARSER_HPP
+//#define LINKS_INPUTPARSER_HPP
+#pragma once
 
 #include <vector>
+#include <queue>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <getopt.h>
+#include <sstream>
 
 //Globals
 #define BASE_TEN 10
@@ -22,37 +27,33 @@ class InputParser {
         std::vector<uint64_t> distances; 
 
         std::stringstream ss(input);
-        std::cout << input << std::endl;
 
         while( ss.good() )
         {
-            std::cout << "here1" << std::endl;
             std::string substr;
             getline( ss, substr, ',' );
             distances.push_back(static_cast<unsigned int>(std::stoul(substr) ));
-            std::cout << distances.back() << std::endl;
         }
-/*         std::istringstream ss(input); // Turn the string into a stream. 
-        std::string tok; 
-
-        while (ss >> tok) 
-        {
-            distances.push_back(static_cast<unsigned int>(std::stoul(tok)));
-            //std::cout << distances.back() << "\n";
-        } */
-        for(uint64_t d : distances){
-            std::cout << "d: " << d << std::endl;
-        }
-
-        //std::sort(distances.begin(),distances.end());
-        //std::cout << distances.back() << "\n";
-
         return distances;
     }
 
+    std::queue<std::string> parseFofInput(std::string fofFile){
+        std::queue<std::string> longReads; 
+
+        std::ifstream infile(fofFile);
+        std::string readFile;
+        while(infile >> readFile){
+            longReads.push(readFile);
+            std::cout << longReads.back() << std::endl;
+        }
+
+        return longReads;
+    }
+
     public:
-    std::string assemblyFile;
-    std::string fofFile;
+    std::string assemblyFile = "";
+    std::string fofFile = "";
+    std::queue<std::string> longReads;
     std::vector<uint64_t> distances = {4000};
     //uint64_t distances = 4000;
     uint64_t k = 15;
@@ -64,9 +65,9 @@ class InputParser {
     // Added for MPET
     uint64_t readLength;         // MPET
     float insertStdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
-    std::string baseName;   // When set, this will override the MPET-induced changes on -e
+    std::string baseName = "";   // When set, this will override the MPET-induced changes on -e
     uint64_t offset = 0;
-    std::string bfFile;
+    std::string bfFile = "";
     float fpr = 0.001;
     uint64_t bfOff = 0;
 
@@ -89,6 +90,7 @@ class InputParser {
                 case 's':
                     // full path for fof
                     fofFile.assign(optarg);
+                    longReads = parseFofInput(fofFile);
                     break;
                 case 'm':
                     readLength = strtoul(optarg, &end, BASE_TEN);
@@ -200,3 +202,4 @@ class InputParser {
                     << "  -v " << verbose << "\n";
     }
 };
+//#endif
