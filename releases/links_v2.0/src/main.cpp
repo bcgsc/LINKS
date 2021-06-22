@@ -6,6 +6,7 @@ int main(int argc, char** argv){
     std::cout << "fasta file: " << linksArgParser->assemblyFile << std::endl;
     LINKS* links = new LINKS(linksArgParser);
     std::cout << "test 2:" << std::endl;
+    std::cin.ignore();
     delete(linksArgParser);
     std::cout << "test 4: " << std::endl;
     delete(links);

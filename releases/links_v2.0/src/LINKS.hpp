@@ -155,8 +155,8 @@ private:
     std::queue<std::string> longReads;
     unsigned threads;
     long id;
-    size_t buffer_size = 8;
-    size_t block_size = 2;
+    size_t buffer_size = 32;
+    size_t block_size = 8;
     /*
     
     static const size_t SHORT_MODE_BUFFER_SIZE = 32;
@@ -167,6 +167,8 @@ private:
     */
 
     btllib::OrderQueueSPMC<Read> input_queue;
+
+    void extract_mate_pair(const std::string& seq);
 
     static long* ready_blocks_owners()
     {
@@ -250,19 +252,20 @@ private:
         void work() override;
     };
 
-/*
-  std::atomic<bool> fasta{ false };
-  OrderQueueSPMC<Read> input_queue;
-  OrderQueueMPSC<Record> output_queue;
 
-  using OutputQueueType = decltype(output_queue);
+  //std::atomic<bool> fasta{ false };
+  //OrderQueueSPMC<Read> input_queue;
+  //OrderQueueMPSC<Record> output_queue;
+
+  /*using OutputQueueType = decltype(output_queue);
   static std::unique_ptr<OutputQueueType::Block>* ready_blocks_array()
   {
     thread_local static std::unique_ptr<decltype(output_queue)::Block>
       var[MAX_SIMULTANEOUS_INDEXLRS];
     return var;
-  }
+  }*/
 
+  /*
   static long* ready_blocks_owners()
   {
     thread_local static long var[MAX_SIMULTANEOUS_INDEXLRS];
@@ -274,7 +277,7 @@ private:
     static std::atomic<long> var(0);
     return var;
   }
-*/
+  */
 
   btllib::SeqReader reader;
   InputWorker input_worker;
@@ -284,6 +287,7 @@ private:
 inline void
 LINKS::InputWorker::work()
 {
+  std::cout << "here for fun" << std::endl;
   if (links.reader.get_format() == btllib::SeqReader::Format::FASTA) {
     links.fasta = true;
   } else {
@@ -294,7 +298,13 @@ LINKS::InputWorker::work()
   size_t current_block_num = 0;
   Read read;
 
+  uint counterx = 0;
   for (btllib::SeqReader::Record record; (record = links.reader.read());) {
+   //for(auto record : links.reader){
+    std::cout << "counterx: " << counterx << std::endl;
+    ++counterx;
+    std::cout << "counter num: " << record.num << std::endl;
+    std::cout << "counter id: " << record.id << std::endl;
     block.data[block.count++] = Read(record.num,
                                     std::move(record.id),
                                     std::move(record.comment),
@@ -317,9 +327,79 @@ LINKS::InputWorker::work()
     links.input_queue.write(block);
   }
 }
+
+inline void
+LINKS::extract_mate_pair(const std::string& seq)
+{
+
+  std::cout << "seq size: " << seq.size() << std::endl;
+  std::cout << "id: " << std::this_thread::get_id() << std::endl;
+} 
+
 inline void
 LINKS::ExtractMatePairWorker::work()
 {
+  std::cout << "here for a intellectual talk" << std::endl;
+  decltype(links.input_queue)::Block input_block(links.block_size);
+  //decltype(indexlr.output_queue)::Block output_block(indexlr.block_size);
+  
+  for (;;) {
+    if (input_block.current == input_block.count) {
+      /*if (output_block.count > 0) {
+        output_block.num = input_block.num;
+        indexlr.output_queue.write(output_block);
+        output_block.current = 0;
+        output_block.count = 0;
+      }*/
+      links.input_queue.read(input_block);
+    }
+    
+    if (input_block.count == 0) {
+      /*
+      output_block.num = input_block.num;
+      output_block.current = 0;
+      output_block.count = 0;
+      indexlr.output_queue.write(output_block);
+      */
+      break;
+    }
+    
+    Read& read = input_block.data[input_block.current++];
+    //Record record;
+    //record.num = read.num;
+    //if (links.output_id()) {
+    //  record.id = std::move(read.id);
+    //}
+    /*
+    if (links.output_bx()) {
+      record.barcode = links.extract_barcode(record.id, read.comment);
+    }
+    */
+    //record.readlen = read.seq.size();
+
+    /*
+    check_info(indexlr.verbose && indexlr.k > read.seq.size(),
+               "Indexlr: skipped seq " + std::to_string(read.num) +
+                 " on line " +
+                 std::to_string(read.num * (indexlr.fasta ? 2 : 4) + 2) +
+                 "; k (" + std::to_string(indexlr.k) + ") > seq length (" +
+                 std::to_string(read.seq.size()) + ")");
+
+    check_info(indexlr.verbose && indexlr.w > read.seq.size() - indexlr.k + 1,
+               "Indexlr: skipped seq " + std::to_string(read.num) +
+                 " on line " +
+                 std::to_string(read.num * (indexlr.fasta ? 2 : 4) + 2) +
+                 "; w (" + std::to_string(indexlr.w) + ") > # of hashes (" +
+                 std::to_string(read.seq.size() - indexlr.k + 1) + ")");
+    */
+    if (links.k <= read.seq.size()) {
+        links.extract_mate_pair(read.seq);
+    } else {
+      continue; // nothing
+    }
+
+    //output_block.data[output_block.count++] = std::move(record);
+  }
   std::cout << "here!" << std::endl;
 }
 
@@ -339,6 +419,7 @@ inline LINKS::LINKS(InputParser* inputParser)
         , fpr(inputParser->fpr)
         , bfFile(inputParser->bfFile)
         , bfOff(inputParser->bfOff)
+        , threads(1)
         , input_queue(buffer_size, block_size)
         , input_worker(*this)
         , extract_mate_pair_workers(
@@ -351,48 +432,6 @@ inline LINKS::LINKS(InputParser* inputParser)
               worker.start();
           }
         }
-/*
-inline LINKS::LINKS(std::string seqfile,
-                        const size_t k,
-                        const size_t w,
-                        const unsigned flags,
-                        const unsigned threads,
-                        const bool verbose,
-                        const BloomFilter& bf1,
-                        const BloomFilter& bf2)
-  : seqfile(std::move(seqfile))
-  , k(k)
-  , w(w)
-  , flags(flags)
-  , threads(threads)
-  , verbose(verbose)
-  , id(++last_id())
-  , buffer_size(short_mode() ? SHORT_MODE_BUFFER_SIZE : LONG_MODE_BUFFER_SIZE)
-  , block_size(short_mode() ? SHORT_MODE_BLOCK_SIZE : LONG_MODE_BLOCK_SIZE)
-  , filter_in_bf(filter_in() ? bf1 : Indexlr::dummy_bf())
-  , filter_out_bf(filter_out() ? filter_in() ? bf2 : bf1 : Indexlr::dummy_bf())
-  , filter_in_enabled(filter_in())
-  , filter_out_enabled(filter_out())
-  , input_queue(buffer_size, block_size)
-  , output_queue(buffer_size, block_size)
-  , reader(this->seqfile,
-           short_mode() ? SeqReader::Flag::SHORT_MODE
-                        : SeqReader::Flag::LONG_MODE)
-  , input_worker(*this)
-  , minimize_workers(
-      std::vector<MinimizeWorker>(threads, MinimizeWorker(*this)))
-{
-  check_error(!short_mode() && !long_mode(),
-              "Indexlr: no mode selected, either short or long mode flag must "
-              "be provided.");
-  check_error(threads == 0,
-              "Indexlr: Number of processing threads cannot be 0.");
-  input_worker.start();
-  for (auto& worker : minimize_workers) {
-    worker.start();
-  }
-}
-*/
 
 inline LINKS::~LINKS()
 {
@@ -404,127 +443,5 @@ inline LINKS::~LINKS()
   
 }
 
-/*
-inline static void
-filter_hashed_kmer(LINKS::HashedKmer& hk,
-                   bool filter_in,
-                   bool filter_out,
-                   const BloomFilter& filter_in_bf,
-                   const BloomFilter& filter_out_bf)
-{
-  if (filter_in && filter_out) {
-    std::vector<uint64_t> tmp;
-    tmp = { hk.min_hash };
-    if (!filter_in_bf.contains(tmp) || filter_out_bf.contains(tmp)) {
-      hk.min_hash = std::numeric_limits<uint64_t>::max();
-    }
-  } else if (filter_in) {
-    if (!filter_in_bf.contains({ hk.min_hash })) {
-      hk.min_hash = std::numeric_limits<uint64_t>::max();
-    }
-  } else if (filter_out) {
-    if (filter_out_bf.contains({ hk.min_hash })) {
-      hk.min_hash = std::numeric_limits<uint64_t>::max();
-    }
-  }
-}
-
-inline static void
-calc_minimizer(const std::vector<LINKS::HashedKmer>& hashed_kmers_buffer,
-               const LINKS::Minimizer*& min_current,
-               const size_t idx,
-               ssize_t& min_idx_left,
-               ssize_t& min_idx_right,
-               ssize_t& min_pos_prev,
-               const size_t w,
-               std::vector<LINKS::Minimizer>& minimizers)
-{
-  min_idx_left = ssize_t(idx + 1 - w);
-  min_idx_right = ssize_t(idx + 1);
-  const auto& min_left =
-    hashed_kmers_buffer[min_idx_left % hashed_kmers_buffer.size()];
-  const auto& min_right =
-    hashed_kmers_buffer[(min_idx_right - 1) % hashed_kmers_buffer.size()];
-
-  if (min_current == nullptr || min_current->pos < min_left.pos) {
-    min_current = &min_left;
-    // Use of operator '<=' returns the minimum that is furthest from left.
-    for (ssize_t i = min_idx_left; i < min_idx_right; i++) {
-      const auto& min_i = hashed_kmers_buffer[i % hashed_kmers_buffer.size()];
-      if (min_i.min_hash <= min_current->min_hash) {
-        min_current = &min_i;
-      }
-    }
-  } else if (min_right.min_hash <= min_current->min_hash) {
-    min_current = &min_right;
-  }
-  if (ssize_t(min_current->pos) > min_pos_prev &&
-      min_current->min_hash != std::numeric_limits<uint64_t>::max()) {
-    min_pos_prev = ssize_t(min_current->pos);
-    minimizers.push_back(*min_current);
-  }
-}
-
-inline std::vector<LINKS::Minimizer>
-LINKS::minimize(const std::string& seq) const
-{
-  if ((k > seq.size()) || (w > seq.size() - k + 1)) {
-    return {};
-  }
-  std::vector<Minimizer> minimizers;
-  minimizers.reserve(2 * (seq.size() - k + 1) / w);
-  std::vector<HashedKmer> hashed_kmers_buffer(w + 1);
-  ssize_t min_idx_left, min_idx_right, min_pos_prev = -1;
-  const Minimizer* min_current = nullptr;
-  size_t idx = 0;
-  for (NtHash nh(seq, 2, k); nh.roll(); ++idx) {
-    auto& hk = hashed_kmers_buffer[idx % hashed_kmers_buffer.size()];
-
-    hk = HashedKmer(nh.hashes()[0],
-                    nh.hashes()[1],
-                    nh.get_pos(),
-                    nh.forward(),
-                    output_seq() ? seq.substr(nh.get_pos(), k) : "");
-
-    filter_hashed_kmer(
-      hk, filter_in(), filter_out(), filter_in_bf.get(), filter_out_bf.get());
-
-    if (idx + 1 >= w) {
-      calc_minimizer(hashed_kmers_buffer,
-                     min_current,
-                     idx,
-                     min_idx_left,
-                     min_idx_right,
-                     min_pos_prev,
-                     w,
-                     minimizers);
-    }
-  }
-  return minimizers;
-}
-*/
-inline void
-LINKS::extract_mate_pairs()
-{
-  /*
-  if (ready_blocks_owners()[id % MAX_SIMULTANEOUS_INDEXLRS] != id) {
-    ready_blocks_array()[id % MAX_SIMULTANEOUS_INDEXLRS] =
-      std::unique_ptr<decltype(output_queue)::Block>(
-        new decltype(output_queue)::Block(block_size));
-    ready_blocks_owners()[id % MAX_SIMULTANEOUS_INDEXLRS] = id;
-  }
-  auto& block = *(ready_blocks_array()[id % MAX_SIMULTANEOUS_INDEXLRS]);
-  if (block.count <= block.current) {
-    output_queue.read(block);
-    if (block.count <= block.current) {
-      output_queue.close();
-      block = decltype(output_queue)::Block(block_size);
-      return Record();
-    }
-  }
-  return std::move(block.data[block.current++]);
-  */
-  return;
-}
 
 //#endif
