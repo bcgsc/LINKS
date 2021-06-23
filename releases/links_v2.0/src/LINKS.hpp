@@ -37,6 +37,7 @@ class LINKS
     LINKS(InputParser* inputParser);
     void init_bloom_filter();
     void start_read_fasta();
+    void start_read_contig();
     ~LINKS();
 
     InputParser* inputParser;
@@ -135,38 +136,7 @@ class LINKS
     
     typedef std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > mate_pair;
 private:
-    static const size_t BUFFER_SIZE = 4;
-    static const size_t BLOCK_SIZE = 1;
-
-    std::string seqfile;
-    std::queue<std::string> longReads;
-    unsigned threads;
-    long id;
-    size_t buffer_size = 32;
-    size_t block_size = 8;
-
-    btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
-    void extract_mate_pair(const std::string& seq);
-    uint64_t get_file_size(std::string filename);
-    bool does_file_exist(std::string fileName);
-    std::atomic<bool> fasta{ false };
-
-    btllib::KmerBloomFilter * bloom;
-    btllib::SeqReader reader;
-    InputWorker input_worker;
-    std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
-    btllib::OrderQueueSPMC<Read> input_queue;
-    std::shared_mutex mate_pair_mutex;
-    std::mutex mates_mutex;
-    
-
-    std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
-    std::unordered_map<uint64_t, KmerInfo> trackAll;
-    std::unordered_map<std::string, uint64_t> tigLength;
-    // store second mates in a set
-    std::unordered_set<uint64_t> mates;
-
-    class Worker
+  class Worker
     {
       public:
         void start() { t = std::thread(do_work, this); }
@@ -235,6 +205,58 @@ private:
 
         void work() override;
     };
+
+    class PopulateMateInfoWorker : public Worker
+    {
+      public:
+        PopulateMateInfoWorker(LINKS& links)
+          : Worker(links)
+        {}
+
+        PopulateMateInfoWorker(const PopulateMateInfoWorker& worker)
+          : PopulateMateInfoWorker(worker.links)
+        {}
+        PopulateMateInfoWorker(PopulateMateInfoWorker&& worker) noexcept
+          : PopulateMateInfoWorker(worker.links)
+        {}
+
+        PopulateMateInfoWorker& operator=(const PopulateMateInfoWorker& worker) = delete;
+        PopulateMateInfoWorker& operator=(PopulateMateInfoWorker&& worker) = delete;
+
+        void work() override;
+    };
+
+    static const size_t BUFFER_SIZE = 4;
+    static const size_t BLOCK_SIZE = 1;
+
+    std::string seqfile;
+    std::queue<std::string> longReads;
+    unsigned threads;
+    long id;
+    size_t buffer_size = 32;
+    size_t block_size = 8;
+
+    btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
+    void extract_mate_pair(const std::string& seq);
+    uint64_t get_file_size(std::string filename);
+    bool does_file_exist(std::string fileName);
+    std::atomic<bool> fasta{ false };
+
+    btllib::KmerBloomFilter * bloom;
+    btllib::SeqReader* reader;
+    btllib::OrderQueueSPMC<Read> input_queue;
+    InputWorker input_worker;
+    std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
+    std::vector<PopulateMateInfoWorker> populate_mate_info_workers;
+    std::shared_mutex mate_pair_mutex;
+    std::mutex mates_mutex;
+    
+
+    std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
+    std::unordered_map<uint64_t, KmerInfo> trackAll;
+    std::unordered_map<std::string, uint64_t> tigLength;
+    // store second mates in a set
+    std::unordered_set<uint64_t> mates;
 };
 
 inline btllib::KmerBloomFilter*
@@ -311,9 +333,6 @@ inline LINKS::LINKS(InputParser* inputParser)
         , threads(8)
         , input_queue(buffer_size, block_size)
         , input_worker(*this)
-        , extract_mate_pair_workers(
-             std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this)))
-        , reader(std::move(longReads.front()), btllib::SeqReader::Flag::LONG_MODE)
         {}
 
 inline void
@@ -327,7 +346,7 @@ LINKS::init_bloom_filter(){
 inline void
 LINKS::InputWorker::work()
 {
-  if (links.reader.get_format() == btllib::SeqReader::Format::FASTA) {
+  if (links.reader->get_format() == btllib::SeqReader::Format::FASTA) {
     links.fasta = true;
   } else {
     links.fasta = false;
@@ -338,7 +357,7 @@ LINKS::InputWorker::work()
   Read read;
 
   uint counterx = 0;
-  for(auto record : links.reader){
+  for(auto record : (*(links.reader))){
     block.data[block.count++] = Read(record.num,
                                     std::move(record.id),
                                     std::move(record.comment),
@@ -367,7 +386,9 @@ LINKS::start_read_fasta(){
   matePair.reserve(10000);
   mates.reserve(10000);
   
+  reader = new btllib::SeqReader(std::move(longReads.front()), btllib::SeqReader::Flag::LONG_MODE);
   longReads.pop();
+  extract_mate_pair_workers = std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
   input_worker.start();
   // start
   for (auto& worker : extract_mate_pair_workers) {
@@ -377,10 +398,29 @@ LINKS::start_read_fasta(){
   for (auto& worker : extract_mate_pair_workers) {
     worker.join();
   }
+  input_worker.join();
 
   std::cout << "matepair size: " << matePair.size() << std::endl;
   std::cout << "mates size: " << mates.size() << std::endl;
 }
+inline void 
+LINKS::start_read_contig(){
+  trackAll.reserve(mates.size());
+
+  delete(reader);
+  reader = new btllib::SeqReader(assemblyFile, btllib::SeqReader::Flag::LONG_MODE);
+
+  populate_mate_info_workers = std::vector<PopulateMateInfoWorker>(threads, PopulateMateInfoWorker(*this));
+
+  for (auto& worker : populate_mate_info_workers) {
+    worker.start();
+  }
+  // wait
+  for (auto& worker : populate_mate_info_workers) {
+    worker.join();
+  }
+}
+
 inline void
 LINKS::extract_mate_pair(const std::string& seq)
 {
@@ -483,13 +523,38 @@ LINKS::ExtractMatePairWorker::work()
   std::cout << microseconds.count() << "µs\n";
 }
 
+inline void
+LINKS::PopulateMateInfoWorker::work()
+{
+  decltype(links.input_queue)::Block input_block(links.block_size);
+
+  auto start = std::chrono::high_resolution_clock::now();
+  for (;;) {
+    if (input_block.current == input_block.count) {
+      links.input_queue.read(input_block);
+    }
+    
+    if (input_block.count == 0) {
+      break;
+    }
+    Read& read = input_block.data[input_block.current++];
+
+    if (links.k <= read.seq.size()) {
+        //links.extract_mate_pair(read.seq);
+        continue;
+    } else {
+      continue; // nothing
+    }
+
+  }
+  auto finish = std::chrono::high_resolution_clock::now();
+  auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(finish-start);
+  std::cout << microseconds.count() << "µs\n";
+}
+
 inline LINKS::~LINKS()
 {
-  //reader.close();
-  //for (auto& worker : extract_mate_pair_workers) {
-  //  worker.join();
-  //}
-  input_worker.join();
+  
 }
 
 inline uint64_t 

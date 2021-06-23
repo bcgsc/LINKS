@@ -7,6 +7,7 @@ int main(int argc, char** argv){
     LINKS* links = new LINKS(linksArgParser);
     std::cout << "test 2:" << std::endl;
     std::cin.ignore();
+    links->init_bloom_filter();
     links->start_read_fasta();
     std::cout << "test 3:" << std::endl;
     std::cin.ignore();
