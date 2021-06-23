@@ -24,6 +24,11 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <mutex>
+#include <shared_mutex>
+#include <chrono>
+
+
 
 class LINKS
 {
@@ -91,12 +96,11 @@ class LINKS
 
   ~LINKS();
 
-  InputParser inputParser;
-
+  InputParser* inputParser;
 
   std::string assemblyFile;
   std::string fofFile;
-  std::vector<uint64_t> distances = {4000};
+  std::vector<uint64_t> distances = {2000,4000};
   //uint64_t distances = 4000;
   uint64_t k = 15;
   bool verbose = false;
@@ -112,6 +116,9 @@ class LINKS
   std::string bfFile;
   float fpr = 0.001;
   uint64_t bfOff = 0;
+
+  //std::vector<uint16_t> distances = {1000,2000};
+  //btllib::BloomFilter bloom;
 
   static const size_t MAX_SIMULTANEOUS_INDEXLRS = 128;
 
@@ -132,6 +139,7 @@ class LINKS
     std::string seq;
   };
 
+  typedef std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > mate_pair;
 private:
 
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
@@ -141,10 +149,9 @@ private:
 
     // store second mates in a set
     std::unordered_set<uint64_t> mates;
-   
 
     // Stage 1 -- populate bloom filter with contigs
-    btllib::KmerBloomFilter * myFilter;
+    btllib::KmerBloomFilter * bloom;
     
     std::atomic<bool> fasta{ false };
 
@@ -157,6 +164,9 @@ private:
     long id;
     size_t buffer_size = 32;
     size_t block_size = 8;
+
+    std::shared_mutex mate_pair_mutex;
+    std::mutex mates_mutex;
     /*
     
     static const size_t SHORT_MODE_BUFFER_SIZE = 32;
@@ -169,6 +179,12 @@ private:
     btllib::OrderQueueSPMC<Read> input_queue;
 
     void extract_mate_pair(const std::string& seq);
+
+    void init_bloom_filter();
+    btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
+    uint64_t get_file_size(std::string filename);
+
+    bool does_file_exist(std::string fileName);
 
     static long* ready_blocks_owners()
     {
@@ -252,42 +268,108 @@ private:
         void work() override;
     };
 
-
-  //std::atomic<bool> fasta{ false };
-  //OrderQueueSPMC<Read> input_queue;
-  //OrderQueueMPSC<Record> output_queue;
-
-  /*using OutputQueueType = decltype(output_queue);
-  static std::unique_ptr<OutputQueueType::Block>* ready_blocks_array()
-  {
-    thread_local static std::unique_ptr<decltype(output_queue)::Block>
-      var[MAX_SIMULTANEOUS_INDEXLRS];
-    return var;
-  }*/
-
-  /*
-  static long* ready_blocks_owners()
-  {
-    thread_local static long var[MAX_SIMULTANEOUS_INDEXLRS];
-    return var;
-  }
-
-  static std::atomic<long>& last_id()
-  {
-    static std::atomic<long> var(0);
-    return var;
-  }
-  */
-
   btllib::SeqReader reader;
   InputWorker input_worker;
   std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
 };
 
+inline btllib::KmerBloomFilter*
+LINKS::make_bf(uint64_t bfElements, InputParser* linksArgParser){
+  btllib::KmerBloomFilter * assemblyBF;
+    if(linksArgParser->bfFile != "") {
+        std::cout << "A Bloom filter was supplied (" << linksArgParser->bfFile << ") and will be used instead of building a new one from -f " << linksArgParser->assemblyFile << "\n";
+        if(!does_file_exist(linksArgParser->bfFile)) {
+            std::cout << "\nInvalid file: " << linksArgParser->bfFile <<  " -- fatal\n";
+            exit(1);
+        } else {
+            std::cout << "Checking Bloom filter file " << linksArgParser->bfFile <<"...ok\n";
+        }
+        // std::cout << "Loading bloom filter of size " << getFileSize(linksArgParser->bfFile) << " from " << linksArgParser->bfFile << "\n";
+        assemblyBF = new btllib::KmerBloomFilter(linksArgParser->bfFile);
+    } else {
+        uint64_t m = ceil((-1 * (double)bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
+        //uint64_t rem = 64 - (m % 64);
+        m = ((uint64_t)(m / 8) + 1) * 8;
+        std::cout << "HASHES CALC: " << std::to_string(((double)m / bfElements)) << " second: " << std::to_string(((double)m / bfElements) * log(2)) << "\n";
+        unsigned hashFct = floor(((double)m / bfElements) * log(2));
+        std::cout << "- Number of bfElements: " << bfElements << "\n"
+                    << "- Input file path: " << linksArgParser->bfFile << "\n"
+                    << "- Input file: " << linksArgParser->assemblyFile << "\n"
+                    << "- kmersize: " << linksArgParser->k << "\n"
+                    << "- m: " << m << "\n"
+                    << "- fpr: " << linksArgParser->fpr << "\n"
+                    << "- hashFct: " << hashFct << "\n";
+
+        std::string reading_tigbloom_message = "\n\n=>Reading contig/sequence assembly file : " + std::to_string(time(0)) + "\n";
+        // assemblyruninfo += reading_tigbloom_message;
+        // std::cout << "- Filter output file : " << outFileBf << "\n";
+        std::cout << "- Filter output file : " << linksArgParser->k << "\n";
+        assemblyBF = new btllib::KmerBloomFilter(m/8, hashFct, linksArgParser->k);
+        btllib::SeqReader assemblyReader(linksArgParser->assemblyFile, 8, 1);
+        // int builder = 0;
+        for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
+            // if(builder % 100 == 0) {
+            //     std::cout << "reading... builder: " << builder << "\n";
+            // }
+            // builder++;
+
+            assemblyBF->insert(record.seq);
+        }
+        std::string bfmsg = "\n\nWriting Bloom filter to disk (" + linksArgParser->bfFile + ") : " + std::to_string(time(0)) + "\n";
+        // assemblyruninfo += bfmsg;
+        std::cout << bfmsg;
+        assemblyBF->save("bftest.out");
+        // std::cout << "Done mybf, printing stats...\n";
+        
+        //printBloomStats(*assemblyBF, std::cout);
+        
+    }
+    return assemblyBF;
+}
+
+inline void
+LINKS::init_bloom_filter(){
+  int64_t bf_elements = get_file_size(inputParser->assemblyFile);
+  bloom = make_bf(bf_elements,inputParser);
+}
+
+inline LINKS::LINKS(InputParser* inputParser)
+        : inputParser(inputParser)
+        , assemblyFile(inputParser->assemblyFile)
+        , longReads(inputParser->longReads)
+        //, seqfile(longReads.front())
+        //, fofFile(inputParser->fofFile)
+        , distances(inputParser->distances)
+        , k(inputParser->k)
+        , verbose(inputParser->verbose)
+        , minSize(inputParser->minSize)
+        , step(inputParser->step)
+        , insertStdev(inputParser->insertStdev)
+        , baseName(inputParser->baseName)
+        , offset(inputParser->offset)
+        , fpr(inputParser->fpr)
+        , bfFile(inputParser->bfFile)
+        , bfOff(inputParser->bfOff)
+        , threads(4)
+        , input_queue(buffer_size, block_size)
+        , input_worker(*this)
+        , extract_mate_pair_workers(
+             std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this)))
+        , reader(std::move(longReads.front()), btllib::SeqReader::Flag::LONG_MODE)
+        {
+          matePair.reserve(10000);
+          mates.reserve(5000);
+          init_bloom_filter();
+          longReads.pop();
+          input_worker.start();
+          for (auto& worker : extract_mate_pair_workers) {
+              worker.start();
+          }
+        }
+
 inline void
 LINKS::InputWorker::work()
 {
-  std::cout << "here for fun" << std::endl;
   if (links.reader.get_format() == btllib::SeqReader::Format::FASTA) {
     links.fasta = true;
   } else {
@@ -299,12 +381,7 @@ LINKS::InputWorker::work()
   Read read;
 
   uint counterx = 0;
-  for (btllib::SeqReader::Record record; (record = links.reader.read());) {
-   //for(auto record : links.reader){
-    std::cout << "counterx: " << counterx << std::endl;
-    ++counterx;
-    std::cout << "counter num: " << record.num << std::endl;
-    std::cout << "counter id: " << record.id << std::endl;
+  for(auto record : links.reader){
     block.data[block.count++] = Read(record.num,
                                     std::move(record.id),
                                     std::move(record.comment),
@@ -332,17 +409,87 @@ inline void
 LINKS::extract_mate_pair(const std::string& seq)
 {
 
-  std::cout << "seq size: " << seq.size() << std::endl;
-  std::cout << "id: " << std::this_thread::get_id() << std::endl;
+  for(auto distance : distances){
+    uint64_t delta = distance - k;
+    //uint64_t delta = distance;
+    int breakFlag = 0;
+    bool reverseExists = false;
+    btllib::NtHash nthash(seq, bloom->get_hash_num(), k);
+    btllib::NtHash nthashLead(seq, bloom->get_hash_num(), k, delta);
+
+    for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=step) {
+        // roll for the number of steps
+        breakFlag = 0;
+        reverseExists = false;
+        // for step ----
+        for(uint j = 1; j < step; j++) {
+            if(!nthashLead.roll() || !nthash.roll()) {
+                breakFlag = 1;
+            }
+        }  
+        if(breakFlag){break;}
+        // for step ----
+        // check if reverse pair exist
+        mate_pair_mutex.lock_shared();
+        mate_pair::iterator it = matePair.find(nthashLead.get_reverse_hash());
+        mate_pair_mutex.unlock_shared();
+        if( it != matePair.end() ) {
+            std::unordered_map<uint64_t, MatePairInfo > &innerMap = it->second;
+            mate_pair_mutex.lock_shared();
+            std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(nthash.get_reverse_hash());
+            mate_pair_mutex.unlock_shared();
+            if( innerit != innerMap.end() ){
+                mate_pair_mutex.lock();
+                innerit->second.insert_size = distance;
+                mate_pair_mutex.unlock();
+                reverseExists = true;
+            }
+        }
+        
+        if(!reverseExists && bloom->contains(nthash.hashes()) && bloom->contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
+            mate_pair_mutex.lock_shared();
+            mate_pair::iterator it = matePair.find(nthash.get_forward_hash());
+            mate_pair_mutex.unlock_shared();
+            if( it != matePair.end() ) {
+                std::unordered_map<uint64_t, MatePairInfo> &innerMap = it->second;
+                mate_pair_mutex.lock_shared();
+                std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(nthashLead.get_forward_hash());
+                mate_pair_mutex.unlock_shared();
+                if( innerit != innerMap.end() ){
+                    mate_pair_mutex.lock();
+                    matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()].insert_size = distance;
+                    mate_pair_mutex.unlock();
+                }else{
+                    mate_pair_mutex.lock();
+                    matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
+                    mate_pair_mutex.unlock();
+                }
+            }else{
+                mate_pair_mutex.lock();
+                matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
+                mate_pair_mutex.unlock();
+            }
+            
+/*              if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
+                matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = BT_IS(false, distance);
+                readFastAFastq_debug_counter_5++;
+            } else {
+                matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()].setIS(distance);
+                readFastAFastq_debug_counter_6++;
+            } */
+            std::lock_guard<std::mutex> guard(mates_mutex);
+            mates.insert(nthashLead.get_forward_hash());
+        }
+    }
+  }
 } 
 
 inline void
 LINKS::ExtractMatePairWorker::work()
 {
-  std::cout << "here for a intellectual talk" << std::endl;
   decltype(links.input_queue)::Block input_block(links.block_size);
   //decltype(indexlr.output_queue)::Block output_block(indexlr.block_size);
-  
+  auto start = std::chrono::high_resolution_clock::now();
   for (;;) {
     if (input_block.current == input_block.count) {
       /*if (output_block.count > 0) {
@@ -400,38 +547,10 @@ LINKS::ExtractMatePairWorker::work()
 
     //output_block.data[output_block.count++] = std::move(record);
   }
-  std::cout << "here!" << std::endl;
+  auto finish = std::chrono::high_resolution_clock::now();
+  auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(finish-start);
+  std::cout << microseconds.count() << "µs\n";
 }
-
-inline LINKS::LINKS(InputParser* inputParser)
-        : assemblyFile(inputParser->assemblyFile)
-        , longReads(inputParser->longReads)
-        //, seqfile(longReads.front())
-        //, fofFile(inputParser->fofFile)
-        , distances(inputParser->distances)
-        , k(inputParser->k)
-        , verbose(inputParser->verbose)
-        , minSize(inputParser->minSize)
-        , step(inputParser->step)
-        , insertStdev(inputParser->insertStdev)
-        , baseName(inputParser->baseName)
-        , offset(inputParser->offset)
-        , fpr(inputParser->fpr)
-        , bfFile(inputParser->bfFile)
-        , bfOff(inputParser->bfOff)
-        , threads(1)
-        , input_queue(buffer_size, block_size)
-        , input_worker(*this)
-        , extract_mate_pair_workers(
-             std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this)))
-        , reader(std::move(longReads.front()), btllib::SeqReader::Flag::LONG_MODE)
-        {
-          longReads.pop();
-          input_worker.start();
-          for (auto& worker : extract_mate_pair_workers) {
-              worker.start();
-          }
-        }
 
 inline LINKS::~LINKS()
 {
@@ -440,8 +559,23 @@ inline LINKS::~LINKS()
     worker.join();
   }
   input_worker.join();
-  
 }
 
+inline uint64_t 
+LINKS::get_file_size(std::string filename)
+{
+    // This buffer is a stat struct that the information is placed concerning the file.
+    struct stat stat_buf;
+    // Stat method returns true if successfully completed
+    int rc = stat(filename.c_str(), &stat_buf);
+    // st_size holds the total size of the file in bytes
+    return rc == 0 ? stat_buf.st_size : -1;
+}
 
+inline bool 
+LINKS::does_file_exist(std::string fileName)
+{
+    std::ifstream infile(fileName);
+    return infile.good();
+}
 //#endif
