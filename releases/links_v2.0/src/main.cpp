@@ -7,6 +7,9 @@ int main(int argc, char** argv){
     LINKS* links = new LINKS(linksArgParser);
     std::cout << "test 2:" << std::endl;
     std::cin.ignore();
+    links->start_read_fasta();
+    std::cout << "test 3:" << std::endl;
+    std::cin.ignore();
     delete(linksArgParser);
     std::cout << "test 4: " << std::endl;
     delete(links);

@@ -32,129 +32,109 @@
 
 class LINKS
 {
-
   public:
 
-  struct MatePairInfo
-  {
-    MatePairInfo() = default;
+    LINKS(InputParser* inputParser);
+    void init_bloom_filter();
+    void start_read_fasta();
+    ~LINKS();
 
-    MatePairInfo(   bool seen,
-                    int64_t insert_size)
-      : seen(seen)
-      , insert_size(insert_size)
-    {}
+    InputParser* inputParser;
 
-    bool seen = false;
-    int64_t insert_size = 0;
-  };
+    std::string assemblyFile;
+    std::string fofFile;
+    std::vector<uint64_t> distances = {2000,4000};
+    //uint64_t distances = 4000;
+    uint64_t k = 15;
+    bool verbose = false;
+    uint64_t minLinks = 5;
+    uint64_t minSize = 500;
+    float maxLinkRatio = 0.3;
+    uint64_t step = 2;
+    // Added for MPET
+    uint64_t readLength;         // MPET
+    float insertStdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
+    std::string baseName;   // When set, this will override the MPET-induced changes on -e
+    uint64_t offset = 0;
+    std::string bfFile;
+    float fpr = 0.001;
+    uint64_t bfOff = 0;
 
-  struct PairLinkInfo
-  {
-    PairLinkInfo() {}
+    static const size_t MAX_SIMULTANEOUS_INDEXLRS = 128;
 
-    PairLinkInfo(   int64_t gaps,
-                    uint64_t links,
-                    std::string type)
-      : gaps(gaps)
-      , links(links)
-      , type(type)
-    {}
+    struct Read
+    {
+      Read() {}
 
-    int64_t gaps = 0;
-    uint64_t links = 0;
-    std::string type;
-  };
+      Read(size_t num, std::string id, std::string comment, std::string seq)
+        : num(num)
+        , id(std::move(id))
+        , comment(std::move(comment))
+        , seq(std::move(seq))
+      {}
 
-  struct KmerInfo
-  {
-    KmerInfo() {}
+      size_t num = 0;
+      std::string id;
+      std::string comment;
+      std::string seq;
+    };
 
-    KmerInfo(   std::string tig,
-                uint64_t start,
-                uint64_t end,
-                uint64_t multiple,
-                bool orient)
-                : tig(tig)
-                , start(start)
-                , end(end)
-                , multiple(multiple)
-                , orient(orient)
-    {}
+    struct MatePairInfo
+    {
+      MatePairInfo() = default;
 
-    std::string tig = "";
-    uint64_t start = 0;
-    uint64_t end = 0;
-    uint64_t multiple = 1;
-    bool orient = 0;
-  };
+      MatePairInfo(   bool seen,
+                      int64_t insert_size)
+        : seen(seen)
+        , insert_size(insert_size)
+      {}
 
-  //Record get_minimizers();
-  void extract_mate_pairs();
+      bool seen = false;
+      int64_t insert_size = 0;
+    };
 
-  LINKS(InputParser* inputParser);
+    struct PairLinkInfo
+    {
+      PairLinkInfo() {}
 
-  ~LINKS();
+      PairLinkInfo(   int64_t gaps,
+                      uint64_t links,
+                      std::string type)
+        : gaps(gaps)
+        , links(links)
+        , type(type)
+      {}
 
-  InputParser* inputParser;
+      int64_t gaps = 0;
+      uint64_t links = 0;
+      std::string type;
+    };
 
-  std::string assemblyFile;
-  std::string fofFile;
-  std::vector<uint64_t> distances = {2000,4000};
-  //uint64_t distances = 4000;
-  uint64_t k = 15;
-  bool verbose = false;
-  uint64_t minLinks = 5;
-  uint64_t minSize = 500;
-  float maxLinkRatio = 0.3;
-  uint64_t step = 2;
-  // Added for MPET
-  uint64_t readLength;         // MPET
-  float insertStdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
-  std::string baseName;   // When set, this will override the MPET-induced changes on -e
-  uint64_t offset = 0;
-  std::string bfFile;
-  float fpr = 0.001;
-  uint64_t bfOff = 0;
+    struct KmerInfo
+    {
+      KmerInfo() {}
 
-  //std::vector<uint16_t> distances = {1000,2000};
-  //btllib::BloomFilter bloom;
+      KmerInfo(   std::string tig,
+                  uint64_t start,
+                  uint64_t end,
+                  uint64_t multiple,
+                  bool orient)
+                  : tig(tig)
+                  , start(start)
+                  , end(end)
+                  , multiple(multiple)
+                  , orient(orient)
+      {}
 
-  static const size_t MAX_SIMULTANEOUS_INDEXLRS = 128;
-
-  struct Read
-  {
-    Read() {}
-
-    Read(size_t num, std::string id, std::string comment, std::string seq)
-      : num(num)
-      , id(std::move(id))
-      , comment(std::move(comment))
-      , seq(std::move(seq))
-    {}
-
-    size_t num = 0;
-    std::string id;
-    std::string comment;
-    std::string seq;
-  };
-
-  typedef std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > mate_pair;
-private:
-
-    std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
-
-    std::unordered_map<uint64_t, KmerInfo> trackAll;
-    std::unordered_map<std::string, uint64_t> tigLength;
-
-    // store second mates in a set
-    std::unordered_set<uint64_t> mates;
-
-    // Stage 1 -- populate bloom filter with contigs
-    btllib::KmerBloomFilter * bloom;
+      std::string tig = "";
+      uint64_t start = 0;
+      uint64_t end = 0;
+      uint64_t multiple = 1;
+      bool orient = 0;
+    };
     
-    std::atomic<bool> fasta{ false };
-
+    typedef std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > mate_pair;
+private:
     static const size_t BUFFER_SIZE = 4;
     static const size_t BLOCK_SIZE = 1;
 
@@ -165,38 +145,26 @@ private:
     size_t buffer_size = 32;
     size_t block_size = 8;
 
+    btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
+    void extract_mate_pair(const std::string& seq);
+    uint64_t get_file_size(std::string filename);
+    bool does_file_exist(std::string fileName);
+    std::atomic<bool> fasta{ false };
+
+    btllib::KmerBloomFilter * bloom;
+    btllib::SeqReader reader;
+    InputWorker input_worker;
+    std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
+    btllib::OrderQueueSPMC<Read> input_queue;
     std::shared_mutex mate_pair_mutex;
     std::mutex mates_mutex;
-    /*
     
-    static const size_t SHORT_MODE_BUFFER_SIZE = 32;
-    static const size_t SHORT_MODE_BLOCK_SIZE = 32;
 
-    static const size_t LONG_MODE_BUFFER_SIZE = 4;
-    static const size_t LONG_MODE_BLOCK_SIZE = 1;
-    */
-
-    btllib::OrderQueueSPMC<Read> input_queue;
-
-    void extract_mate_pair(const std::string& seq);
-
-    void init_bloom_filter();
-    btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
-    uint64_t get_file_size(std::string filename);
-
-    bool does_file_exist(std::string fileName);
-
-    static long* ready_blocks_owners()
-    {
-      thread_local static long var[MAX_SIMULTANEOUS_INDEXLRS];
-      return var;
-    }
-
-    static std::atomic<long>& last_id()
-    {
-      static std::atomic<long> var(0);
-      return var;
-    }
+    std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
+    std::unordered_map<uint64_t, KmerInfo> trackAll;
+    std::unordered_map<std::string, uint64_t> tigLength;
+    // store second mates in a set
+    std::unordered_set<uint64_t> mates;
 
     class Worker
     {
@@ -267,10 +235,6 @@ private:
 
         void work() override;
     };
-
-  btllib::SeqReader reader;
-  InputWorker input_worker;
-  std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
 };
 
 inline btllib::KmerBloomFilter*
@@ -327,12 +291,6 @@ LINKS::make_bf(uint64_t bfElements, InputParser* linksArgParser){
     return assemblyBF;
 }
 
-inline void
-LINKS::init_bloom_filter(){
-  int64_t bf_elements = get_file_size(inputParser->assemblyFile);
-  bloom = make_bf(bf_elements,inputParser);
-}
-
 inline LINKS::LINKS(InputParser* inputParser)
         : inputParser(inputParser)
         , assemblyFile(inputParser->assemblyFile)
@@ -350,22 +308,21 @@ inline LINKS::LINKS(InputParser* inputParser)
         , fpr(inputParser->fpr)
         , bfFile(inputParser->bfFile)
         , bfOff(inputParser->bfOff)
-        , threads(4)
+        , threads(8)
         , input_queue(buffer_size, block_size)
         , input_worker(*this)
         , extract_mate_pair_workers(
              std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this)))
         , reader(std::move(longReads.front()), btllib::SeqReader::Flag::LONG_MODE)
-        {
-          matePair.reserve(10000);
-          mates.reserve(5000);
-          init_bloom_filter();
-          longReads.pop();
-          input_worker.start();
-          for (auto& worker : extract_mate_pair_workers) {
-              worker.start();
-          }
-        }
+        {}
+
+inline void
+LINKS::init_bloom_filter(){
+  int64_t bf_elements = get_file_size(inputParser->assemblyFile);
+  bloom = make_bf(bf_elements,inputParser);
+}
+
+
 
 inline void
 LINKS::InputWorker::work()
@@ -405,11 +362,31 @@ LINKS::InputWorker::work()
   }
 }
 
+inline void 
+LINKS::start_read_fasta(){
+  matePair.reserve(10000);
+  mates.reserve(10000);
+  
+  longReads.pop();
+  input_worker.start();
+  // start
+  for (auto& worker : extract_mate_pair_workers) {
+    worker.start();
+  }
+  // wait
+  for (auto& worker : extract_mate_pair_workers) {
+    worker.join();
+  }
+
+  std::cout << "matepair size: " << matePair.size() << std::endl;
+  std::cout << "mates size: " << mates.size() << std::endl;
+}
 inline void
 LINKS::extract_mate_pair(const std::string& seq)
 {
 
   for(auto distance : distances){
+    //std::cout << "dist: " << distance << std::endl;
     uint64_t delta = distance - k;
     //uint64_t delta = distance;
     int breakFlag = 0;
@@ -469,14 +446,7 @@ LINKS::extract_mate_pair(const std::string& seq)
                 matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
                 mate_pair_mutex.unlock();
             }
-            
-/*              if(matePair.find(nthash.get_forward_hash()) == matePair.end()) {
-                matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = BT_IS(false, distance);
-                readFastAFastq_debug_counter_5++;
-            } else {
-                matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()].setIS(distance);
-                readFastAFastq_debug_counter_6++;
-            } */
+
             std::lock_guard<std::mutex> guard(mates_mutex);
             mates.insert(nthashLead.get_forward_hash());
         }
@@ -488,64 +458,25 @@ inline void
 LINKS::ExtractMatePairWorker::work()
 {
   decltype(links.input_queue)::Block input_block(links.block_size);
-  //decltype(indexlr.output_queue)::Block output_block(indexlr.block_size);
+
   auto start = std::chrono::high_resolution_clock::now();
   for (;;) {
     if (input_block.current == input_block.count) {
-      /*if (output_block.count > 0) {
-        output_block.num = input_block.num;
-        indexlr.output_queue.write(output_block);
-        output_block.current = 0;
-        output_block.count = 0;
-      }*/
       links.input_queue.read(input_block);
     }
     
     if (input_block.count == 0) {
-      /*
-      output_block.num = input_block.num;
-      output_block.current = 0;
-      output_block.count = 0;
-      indexlr.output_queue.write(output_block);
-      */
       break;
     }
     
     Read& read = input_block.data[input_block.current++];
-    //Record record;
-    //record.num = read.num;
-    //if (links.output_id()) {
-    //  record.id = std::move(read.id);
-    //}
-    /*
-    if (links.output_bx()) {
-      record.barcode = links.extract_barcode(record.id, read.comment);
-    }
-    */
-    //record.readlen = read.seq.size();
 
-    /*
-    check_info(indexlr.verbose && indexlr.k > read.seq.size(),
-               "Indexlr: skipped seq " + std::to_string(read.num) +
-                 " on line " +
-                 std::to_string(read.num * (indexlr.fasta ? 2 : 4) + 2) +
-                 "; k (" + std::to_string(indexlr.k) + ") > seq length (" +
-                 std::to_string(read.seq.size()) + ")");
-
-    check_info(indexlr.verbose && indexlr.w > read.seq.size() - indexlr.k + 1,
-               "Indexlr: skipped seq " + std::to_string(read.num) +
-                 " on line " +
-                 std::to_string(read.num * (indexlr.fasta ? 2 : 4) + 2) +
-                 "; w (" + std::to_string(indexlr.w) + ") > # of hashes (" +
-                 std::to_string(read.seq.size() - indexlr.k + 1) + ")");
-    */
     if (links.k <= read.seq.size()) {
         links.extract_mate_pair(read.seq);
     } else {
       continue; // nothing
     }
 
-    //output_block.data[output_block.count++] = std::move(record);
   }
   auto finish = std::chrono::high_resolution_clock::now();
   auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(finish-start);
@@ -555,9 +486,9 @@ LINKS::ExtractMatePairWorker::work()
 inline LINKS::~LINKS()
 {
   //reader.close();
-  for (auto& worker : extract_mate_pair_workers) {
-    worker.join();
-  }
+  //for (auto& worker : extract_mate_pair_workers) {
+  //  worker.join();
+  //}
   input_worker.join();
 }
 
