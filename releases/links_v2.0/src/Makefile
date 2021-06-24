@@ -1,4 +1,4 @@
-GCC := g++
+GCC := /gsc/software/linux-x86_64-centos7/gcc-7.2.0/bin/g++
 
 OUTPUT := LINKS 
 SOURCES := $(wildcard *.hpp) $(wildcard *.cpp)  
