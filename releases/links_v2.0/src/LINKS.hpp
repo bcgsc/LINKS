@@ -1,6 +1,5 @@
-//#ifndef LINKS_LINKS_HPP
-//#define LINKS_LINKS_HPP
-#pragma once
+#ifndef LINKS_LINKS_HPP
+#define LINKS_LINKS_HPP
 
 #include "btllib/bloom_filter.hpp"
 #include "btllib/nthash.hpp"
@@ -330,7 +329,7 @@ inline LINKS::LINKS(InputParser* inputParser)
         , fpr(inputParser->fpr)
         , bfFile(inputParser->bfFile)
         , bfOff(inputParser->bfOff)
-        , threads(8)
+        , threads(inputParser->thread)
         , input_queue(buffer_size, block_size)
         , input_worker(*this)
         {}
@@ -574,4 +573,4 @@ LINKS::does_file_exist(std::string fileName)
     std::ifstream infile(fileName);
     return infile.good();
 }
-//#endif
+#endif

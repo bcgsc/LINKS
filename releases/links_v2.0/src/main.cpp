@@ -1,16 +1,25 @@
 #include "LINKS.hpp"
 #include "InputParser.hpp"
+#include <chrono>
 
 int main(int argc, char** argv){
     InputParser* linksArgParser = new InputParser(argc, argv);
     std::cout << "fasta file: " << linksArgParser->assemblyFile << std::endl;
     LINKS* links = new LINKS(linksArgParser);
-    std::cout << "test 2:" << std::endl;
     std::cin.ignore();
+
+    auto start = std::chrono::high_resolution_clock::now();
     links->init_bloom_filter();
+    auto finish = std::chrono::high_resolution_clock::now();
+    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
+    std::cout << milliseconds.count() << "ms\n"
+
+    start = std::chrono::high_resolution_clock::now();
     links->start_read_fasta();
-    std::cout << "test 3:" << std::endl;
-    std::cin.ignore();
+    finish = std::chrono::high_resolution_clock::now();
+    milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
+    std::cout << microseconds.count() << "ms\n"
+
     delete(linksArgParser);
     std::cout << "test 4: " << std::endl;
     delete(links);

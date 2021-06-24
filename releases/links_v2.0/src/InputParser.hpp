@@ -1,6 +1,5 @@
-//#ifndef LINKS_INPUTPARSER_HPP
-//#define LINKS_INPUTPARSER_HPP
-#pragma once
+#ifndef LINKS_INPUTPARSER_HPP
+#define LINKS_INPUTPARSER_HPP
 
 #include <vector>
 #include <queue>
@@ -70,6 +69,7 @@ class InputParser {
     std::string bfFile = "";
     float fpr = 0.001;
     uint64_t bfOff = 0;
+    uint thread = 4;
 
     // std::string bfout = $base_name . ".bloom";
     // $base_name = $assemblyfile . ".scaff_s-" . $fofFile . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
@@ -80,7 +80,7 @@ class InputParser {
             this->argc = argc;
             static const struct option longopts[] = { { "help", no_argument, &help, 1 },
 		                                      { nullptr, 0, nullptr, 0 } };
-            while ((c = getopt_long(argc, argv, "f:s:m:d:k:t:o:e:l:a:z:b:r:p:x:v", longopts, &optindex)) != -1) {
+            while ((c = getopt_long(argc, argv, "f:s:m:d:k:t:j:o:e:l:a:z:b:r:p:x:v", longopts, &optindex)) != -1) {
                 switch (c) {
                 case 0:
                     break;
@@ -107,6 +107,9 @@ class InputParser {
                     break;
                 case 't':
                     step = strtoul(optarg, &end, BASE_TEN);
+                    break;
+                case 'j':
+                    thread = strtoul(optarg, &end, BASE_TEN);
                     break;
                 case 'o':
                     offset = strtoul(optarg, &end, BASE_TEN);
@@ -202,4 +205,4 @@ class InputParser {
                     << "  -v " << verbose << "\n";
     }
 };
-//#endif
+#endif
