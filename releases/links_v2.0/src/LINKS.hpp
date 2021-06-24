@@ -25,7 +25,6 @@
 #include <vector>
 #include <mutex>
 #include <shared_mutex>
-#include <chrono>
 
 
 
@@ -498,7 +497,6 @@ LINKS::ExtractMatePairWorker::work()
 {
   decltype(links.input_queue)::Block input_block(links.block_size);
 
-  auto start = std::chrono::high_resolution_clock::now();
   for (;;) {
     if (input_block.current == input_block.count) {
       links.input_queue.read(input_block);
@@ -517,9 +515,6 @@ LINKS::ExtractMatePairWorker::work()
     }
 
   }
-  auto finish = std::chrono::high_resolution_clock::now();
-  auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(finish-start);
-  std::cout << microseconds.count() << "µs\n";
 }
 
 inline void
@@ -527,7 +522,6 @@ LINKS::PopulateMateInfoWorker::work()
 {
   decltype(links.input_queue)::Block input_block(links.block_size);
 
-  auto start = std::chrono::high_resolution_clock::now();
   for (;;) {
     if (input_block.current == input_block.count) {
       links.input_queue.read(input_block);
@@ -546,9 +540,6 @@ LINKS::PopulateMateInfoWorker::work()
     }
 
   }
-  auto finish = std::chrono::high_resolution_clock::now();
-  auto microseconds = std::chrono::duration_cast<std::chrono::microseconds>(finish-start);
-  std::cout << microseconds.count() << "µs\n";
 }
 
 inline LINKS::~LINKS()
