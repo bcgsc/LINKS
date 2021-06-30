@@ -236,6 +236,7 @@ private:
 
     btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
     void extract_mate_pair(const std::string& seq);
+    void populate_mate_info(const std::string& seq,const std::string& contig_rank);
     uint64_t get_file_size(std::string filename);
     bool does_file_exist(std::string fileName);
     std::atomic<bool> fasta{ false };
@@ -251,6 +252,8 @@ private:
     std::vector<PopulateMateInfoWorker> populate_mate_info_workers;
     std::shared_mutex mate_pair_mutex;
     std::mutex mates_mutex;
+    std::mutex contig_rank_mutex;
+    std::shared_mutex track_all_mutex;
     
 
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
@@ -258,6 +261,7 @@ private:
     std::unordered_map<std::string, uint64_t> tigLength;
     // store second mates in a set
     std::unordered_set<uint64_t> mates;
+    unsigned last_contig_rank = 0;
 };
 
 inline btllib::KmerBloomFilter*
@@ -522,6 +526,61 @@ LINKS::extract_mate_pair(const std::string& seq)
   }
 } 
 
+inline void
+LINKS::populate_mate_info(const std::string& seq,
+                          const std::string& contig_rank){
+  
+  btllib::NtHash ntHashContig(seq, bloom->get_hash_num(), k); // hashFunc can be 1 after first step
+
+  int breakFlag = 0;
+  //unsigned seq_length = seq->length();
+  for (size_t i = 0; ntHashContig.roll(); i+=step) {
+      // for rolling step
+      for(uint j = 1; j < step; j++) {
+          if(!ntHashContig.roll()) {
+              breakFlag = 1;
+          }
+      }
+      if(breakFlag) {break;}
+        // for rolling step
+
+      i = ntHashContig.get_pos();
+        
+        // Forward part
+	    if(matePair.find(ntHashContig.get_forward_hash()) != matePair.end() || 
+            mates.find(ntHashContig.get_forward_hash()) != mates.end()) {
+            track_all_mutex.lock_shared();
+            if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
+              track_all_mutex.unlock_shared();
+              track_all_mutex.lock();
+              trackAll[ntHashContig.get_forward_hash()] = KmerInfo(contig_rank, i, i + k, 0, 0);
+              track_all_mutex.unlock();
+            } else {
+              track_all_mutex.unlock_shared();
+              track_all_mutex.lock();
+              trackAll[ntHashContig.get_forward_hash()].multiple +=1;
+              track_all_mutex.unlock();
+            }
+        }
+
+        // Reverse part
+        if(matePair.find(ntHashContig.get_reverse_hash()) != matePair.end() || 
+            mates.find(ntHashContig.get_reverse_hash()) != mates.end()) {
+            track_all_mutex.lock_shared();
+            if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
+              track_all_mutex.unlock_shared();
+              track_all_mutex.lock();
+              trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(contig_rank, i, i + k, 0, 1);
+              track_all_mutex.unlock();
+            } else {
+              track_all_mutex.unlock_shared();
+              track_all_mutex.lock();
+              trackAll[ntHashContig.get_reverse_hash()].multiple +=1;
+              track_all_mutex.unlock();
+            }
+        }
+    }
+}
 
 inline void
 LINKS::ExtractMatePairWorker::work()
@@ -560,6 +619,7 @@ LINKS::PopulateMateInfoWorker::work()
   //decltype(*(links.input_queue))::Block input_block(links.block_size);
   //(std::remove_reference<decltype(*(links.input_queue))>)::Block input_block(links.block_size);
   btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size);
+  unsigned cur_contig_rank;
 
   std::cout << "q test 2\n";
   for (;;) {
@@ -574,15 +634,20 @@ LINKS::PopulateMateInfoWorker::work()
     }
     Read& read = input_block.data[input_block.current++];
     std::cout << "q test 5\n";
+
+    links.contig_rank_mutex.lock();
+    cur_contig_rank = links.last_contig_rank;
+    ++links.last_contig_rank;
+    links.contig_rank_mutex.unlock();
+
     if (links.k <= read.seq.size()) {
-        //links.extract_mate_pair(read.seq);
+        links.populate_mate_info(read.seq,std::to_string(cur_contig_rank));
         std::cout << "q test 6\n";
         continue;
     } else {
       std::cout << "q test 7\n";
       continue; // nothing
     }
-
   }
 }
 

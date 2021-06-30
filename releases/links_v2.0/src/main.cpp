@@ -19,6 +19,12 @@ int main(int argc, char** argv){
     milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
     std::cout << milliseconds.count() << "ms\n";
 
+    start = std::chrono::high_resolution_clock::now();
+    links->start_read_contig();
+    finish = std::chrono::high_resolution_clock::now();
+    milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
+    std::cout << milliseconds.count() << "ms\n";
+
     delete(linksArgParser);
     std::cout << "test 4: " << std::endl;
     delete(links);
