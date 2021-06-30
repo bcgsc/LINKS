@@ -240,10 +240,13 @@ private:
     bool does_file_exist(std::string fileName);
     std::atomic<bool> fasta{ false };
 
-    btllib::KmerBloomFilter * bloom;
-    btllib::SeqReader* reader;
-    btllib::OrderQueueSPMC<Read> input_queue;
-    InputWorker input_worker;
+    //btllib::KmerBloomFilter * bloom;
+    std::shared_ptr<btllib::KmerBloomFilter> bloom;
+    //btllib::SeqReader* reader;
+    std::shared_ptr<btllib::SeqReader> reader;
+    std::shared_ptr<btllib::OrderQueueSPMC<Read>> input_queue;
+    //InputWorker* input_worker;
+    std::shared_ptr<InputWorker> input_worker;
     std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
     std::vector<PopulateMateInfoWorker> populate_mate_info_workers;
     std::shared_mutex mate_pair_mutex;
@@ -329,14 +332,14 @@ inline LINKS::LINKS(InputParser* inputParser)
         , bfFile(inputParser->bfFile)
         , bfOff(inputParser->bfOff)
         , threads(inputParser->thread)
-        , input_queue(buffer_size, block_size)
-        , input_worker(*this)
+        , input_queue(std::shared_ptr<btllib::OrderQueueSPMC<Read>>(new btllib::OrderQueueSPMC<Read>(buffer_size, block_size)))
+        , input_worker(std::shared_ptr<InputWorker>(new InputWorker(*this)))
         {}
 
 inline void
 LINKS::init_bloom_filter(){
   int64_t bf_elements = get_file_size(inputParser->assemblyFile);
-  bloom = make_bf(bf_elements,inputParser);
+  bloom = std::shared_ptr<btllib::KmerBloomFilter>(make_bf(bf_elements,inputParser));
 }
 
 
@@ -344,15 +347,20 @@ LINKS::init_bloom_filter(){
 inline void
 LINKS::InputWorker::work()
 {
+  std::cout << "test 0\n";
   if (links.reader->get_format() == btllib::SeqReader::Format::FASTA) {
     links.fasta = true;
   } else {
     links.fasta = false;
   }
+  std::cout << "test 1\n";
+  //decltype(*(links.input_queue))::Block block(links.block_size);
+  //(std::remove_reference<decltype(*(links.input_queue))>)::Block input_block(links.block_size);
+  btllib::OrderQueueSPMC<Read>::Block block(links.block_size); 
 
-  decltype(links.input_queue)::Block block(links.block_size);
   size_t current_block_num = 0;
   Read read;
+  std::cout << "test 2\n";
 
   uint counterx = 0;
   for(auto record : (*(links.reader))){
@@ -362,20 +370,22 @@ LINKS::InputWorker::work()
                                     std::move(record.seq));
     if (block.count == links.block_size) {
       block.num = current_block_num++;
-      links.input_queue.write(block);
+      links.input_queue->write(block);
       block.count = 0;
     }
+    //std::cout << "test 2.5\n";
   }
+  std::cout << "test 3\n";
 
   if (block.count > 0) {
     block.num = current_block_num++;
-    links.input_queue.write(block);
+    links.input_queue->write(block);
   }
   for (unsigned i = 0; i < links.threads; i++) {
     block.num = current_block_num++;
     block.current = 0;
     block.count = 0;
-    links.input_queue.write(block);
+    links.input_queue->write(block);
   }
 }
 
@@ -384,10 +394,10 @@ LINKS::start_read_fasta(){
   matePair.reserve(10000);
   mates.reserve(10000);
   
-  reader = new btllib::SeqReader(std::move(longReads.front()), btllib::SeqReader::Flag::LONG_MODE);
+  reader = std::shared_ptr<btllib::SeqReader>(new btllib::SeqReader(std::move(longReads.front()), btllib::SeqReader::Flag::LONG_MODE));
   longReads.pop();
   extract_mate_pair_workers = std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
-  input_worker.start();
+  input_worker->start();
   // start
   for (auto& worker : extract_mate_pair_workers) {
     worker.start();
@@ -396,7 +406,7 @@ LINKS::start_read_fasta(){
   for (auto& worker : extract_mate_pair_workers) {
     worker.join();
   }
-  input_worker.join();
+  input_worker->join();
 
   std::cout << "matepair size: " << matePair.size() << std::endl;
   std::cout << "mates size: " << mates.size() << std::endl;
@@ -404,19 +414,39 @@ LINKS::start_read_fasta(){
 inline void 
 LINKS::start_read_contig(){
   trackAll.reserve(mates.size());
+  std::cout << "t test 0\n";
+  //delete(reader);
+  reader.reset();
+  reader = std::shared_ptr<btllib::SeqReader>(new btllib::SeqReader(assemblyFile, btllib::SeqReader::Flag::LONG_MODE));
+  //delete input_worker;
+  input_worker.reset();
+  std::cout << "t test 1\n";
 
-  delete(reader);
-  reader = new btllib::SeqReader(assemblyFile, btllib::SeqReader::Flag::LONG_MODE);
+  input_queue.reset();
+  std::cout << "t test 1.1\n";
+  input_queue = std::shared_ptr<btllib::OrderQueueSPMC<Read>>(new btllib::OrderQueueSPMC<Read>(buffer_size, block_size));
+  std::cout << "t test 1.2\n";
+
+  input_worker = std::shared_ptr<InputWorker>(new InputWorker(*this));
+  input_worker->start();
+  std::cout << "t test 2\n";
 
   populate_mate_info_workers = std::vector<PopulateMateInfoWorker>(threads, PopulateMateInfoWorker(*this));
 
+  std::cout << "t test 3\n";  
   for (auto& worker : populate_mate_info_workers) {
     worker.start();
   }
+  std::cout << "t test 4\n";
   // wait
   for (auto& worker : populate_mate_info_workers) {
     worker.join();
   }
+  std::cout << "t test 5\n";
+  input_worker->join();
+  std::cout << "t test 6\n";
+  input_queue.reset();
+  std::cout << "t test 7\n";
 }
 
 inline void
@@ -492,14 +522,19 @@ LINKS::extract_mate_pair(const std::string& seq)
   }
 } 
 
+
 inline void
 LINKS::ExtractMatePairWorker::work()
 {
-  decltype(links.input_queue)::Block input_block(links.block_size);
+  std::cout << "y test 1\n";
+  //decltype(*(links.input_queue))::Block input_block(links.block_size);
+  //(std::remove_reference<decltype(*(links.input_queue))>)::Block input_block(links.block_size);
+  btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size); 
 
+  std::cout << "y test 2\n";
   for (;;) {
     if (input_block.current == input_block.count) {
-      links.input_queue.read(input_block);
+      links.input_queue->read(input_block);
     }
     
     if (input_block.count == 0) {
@@ -515,27 +550,36 @@ LINKS::ExtractMatePairWorker::work()
     }
 
   }
+  std::cout << "y test 3\n";
 }
 
 inline void
 LINKS::PopulateMateInfoWorker::work()
 {
-  decltype(links.input_queue)::Block input_block(links.block_size);
+  std::cout << "q test 1\n";
+  //decltype(*(links.input_queue))::Block input_block(links.block_size);
+  //(std::remove_reference<decltype(*(links.input_queue))>)::Block input_block(links.block_size);
+  btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size);
 
+  std::cout << "q test 2\n";
   for (;;) {
+    std::cout << "q test 3\n";
     if (input_block.current == input_block.count) {
-      links.input_queue.read(input_block);
+      std::cout << "q test 3.5\n";
+      links.input_queue->read(input_block);
     }
-    
+    std::cout << "q test 4\n";
     if (input_block.count == 0) {
       break;
     }
     Read& read = input_block.data[input_block.current++];
-
+    std::cout << "q test 5\n";
     if (links.k <= read.seq.size()) {
         //links.extract_mate_pair(read.seq);
+        std::cout << "q test 6\n";
         continue;
     } else {
+      std::cout << "q test 7\n";
       continue; // nothing
     }
 
