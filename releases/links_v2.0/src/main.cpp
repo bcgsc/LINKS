@@ -13,14 +13,23 @@ int main(int argc, char** argv){
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
     std::cout << milliseconds.count() << "ms\n";
 
+    std::cout << "Read fasta stage\n";
     start = std::chrono::high_resolution_clock::now();
     links->start_read_fasta();
     finish = std::chrono::high_resolution_clock::now();
     milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
     std::cout << milliseconds.count() << "ms\n";
 
+    std::cout << "Read contig stage\n";
     start = std::chrono::high_resolution_clock::now();
     links->start_read_contig();
+    finish = std::chrono::high_resolution_clock::now();
+    milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
+    std::cout << milliseconds.count() << "ms\n";
+
+    std::cout << "Pair contigs stage\n";
+    start = std::chrono::high_resolution_clock::now();
+    links->pair_contigs();
     finish = std::chrono::high_resolution_clock::now();
     milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
     std::cout << milliseconds.count() << "ms\n";
