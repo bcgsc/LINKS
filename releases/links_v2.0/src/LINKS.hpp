@@ -466,6 +466,8 @@ LINKS::start_read_contig(){
   //std::cout << "t test 6\n";
   input_queue.reset();
   //std::cout << "t test 7\n";
+  
+  std::cout << "trackAll.size() " << trackAll.size() << std::endl;
 }
 
 inline void
@@ -568,7 +570,7 @@ LINKS::populate_mate_info(const std::string& seq,
             if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
               track_all_mutex.unlock_shared();
               track_all_mutex.lock();
-              trackAll[ntHashContig.get_forward_hash()] = KmerInfo(contig_rank, i, i + k, 0, 0);
+              trackAll[ntHashContig.get_forward_hash()] = KmerInfo(contig_rank, i, i + k, 1, false);
               //std::cout << "trackAll not found\n";
               track_all_mutex.unlock();
             } else {
@@ -586,7 +588,7 @@ LINKS::populate_mate_info(const std::string& seq,
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
               track_all_mutex.unlock_shared();
               track_all_mutex.lock();
-              trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(contig_rank, i, i + k, 0, 1);
+              trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(contig_rank, i, i + k, 1, true);
               track_all_mutex.unlock();
             } else {
               track_all_mutex.unlock_shared();
@@ -809,21 +811,26 @@ LINKS::pair_contigs()
     KmerInfo kmer1, kmer2;
     std::unordered_map<uint64_t, MatePairInfo>::iterator mateListItr;
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> >::iterator matePairItr;
-    for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
+  
+  uint counter_1 = 0, counter_2 = 0, counter_3 = 0, counter_4 = 0, counter_5 = 0, counter_6 = 0, counter_7 = 0;  
+  for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
-            if( mateListItr->second.seen == false &&                 //matepair is not seen
+        ++counter_1;    
+	if( mateListItr->second.seen == false &&                 //matepair is not seen
                 trackAll.find(matePairItr->first) != trackAll.end() &&  //first mate is tracked
                 trackAll[matePairItr->first].multiple == 1 &&      //first mate seen once
                 trackAll.find(mateListItr->first) != trackAll.end() &&  //second mate is tracked
                 trackAll[mateListItr->first].multiple == 1) {      //second mate is seen once
-                mateListItr->second.seen = true;
+                ++counter_2;
+		mateListItr->second.seen = true;
                 insert_size = matePair[matePairItr->first][mateListItr->first].insert_size;
                 min_allowed = -1 * (insertStdev * insert_size); // check int
                 low_iz = insert_size + min_allowed; // check int
                 up_iz = insert_size - min_allowed; // check int
                 if(verbose) std::cout << "Pair read1Hash=" << matePairItr->first << " read2Hash=" << mateListItr->first << "\n";
                 if(trackAll[matePairItr->first].tig != "" && trackAll[mateListItr->first].tig != "") { //double check if tig names not null
-                    ct_both++;
+                    ++counter_3;
+		    ct_both++;
                     if(ct_both_hash.find(insert_size) == ct_both_hash.end()) {
                         ct_both_hash[insert_size] = 1;
                     } else {
@@ -854,27 +861,31 @@ LINKS::pair_contigs()
                         // MURATHAN DEBUG 11.5.21
                         if(!kmer1.orient){             // if kmer1 is forward
                             if(!kmer2.orient){         // if kmer2 is forward
-                                distance = getDistance(insert_size, tigLength[kmer1.tig], kmer1.start, kmer2.start);
+                                ++counter_4;
+				distance = getDistance(insert_size, tigLength[kmer1.tig], kmer1.start, kmer2.start);
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.tig, kmer2.tig, 0);
                                 }
                             }else{ 
-                                distance = getDistance(insert_size, tigLength[kmer1.tig], kmer1.start, tigLength[kmer2.tig] - kmer2.end);
+				++counter_5;  
+                             distance = getDistance(insert_size, tigLength[kmer1.tig], kmer1.start, tigLength[kmer2.tig] - kmer2.end);
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.tig, kmer2.tig, 1);
                                 }
                             }
                         }else{                              // if kmer1 is reverse
-                            if(!kmer2.orient){ 
+				if(!kmer2.orient){ 
+				++counter_6;
                                 distance = getDistance(insert_size, tigLength[kmer1.tig], tigLength[kmer1.tig] - kmer1.end, kmer2.start);
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.tig, kmer2.tig, 2);
                                 }
                             }else{                          // if kmer2 is reverse
-                                distance = getDistance(insert_size, tigLength[kmer2.tig], kmer2.end, kmer1.end);
+                                ++counter_7;
+				distance = getDistance(insert_size, tigLength[kmer2.tig], kmer2.end, kmer1.end);
                                 if(distance > min_allowed  && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.tig, kmer2.tig, 3);
@@ -930,13 +941,13 @@ LINKS::pair_contigs()
                                 ct_illogical_hash[insert_size] = ct_illogical_hash[insert_size] + 1;
                             }
                             // FOLLOWING IS NOT A DEBUGGING PRINT
-                            issuesFile << "Pairs unsatisfied in pairing logic within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig" << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+		issuesFile << "Pairs unsatisfied in pairing logic within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig" << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
                         }
                     }
                 } else { // both pairs assembled
                     ct_single++;
                     if(ct_single_hash.find(insert_size) == ct_single_hash.end()) {
-                        ct_single_hash[insert_size] = 1;
+       	   	ct_single_hash[insert_size] = 1;
                     } else {
                         ct_single_hash[insert_size] = ct_single_hash[insert_size] + 1;
                     }
@@ -951,6 +962,23 @@ LINKS::pair_contigs()
             }
         } // pairing read b
     } // pairing read a
+
+	std::cout << "counter_1: " << counter_1 << std::endl;
+	std::cout << "counter_2: " << counter_2 << std::endl;
+	std::cout << "counter_3: " << counter_3 << std::endl;
+	std::cout << "counter_4: " << counter_4 << std::endl;
+	std::cout << "counter_5: " << counter_5 << std::endl;
+	std::cout << "counter_6: " << counter_6 << std::endl;
+	std::cout << "counter_7: " << counter_7 << std::endl;
+	std::cout << "pair size: " << pair.size() << std::endl;
+
+	uint second_dim_size = 0;
+	std;;unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>::iterator pair_iterator;
+	for(itr = pair_iterator.begin(); itr != pair_iterator.end(); itr++){
+		second_dim_size += itr->second.size();
+	
+	}
+	std::cout << "second dim size: " << second_dim_size << std::endl;
 
     // Summary of the contig pair issues
     //std::cout << "------------- Putative issues with contig pairing - Summary  ----------------\n";

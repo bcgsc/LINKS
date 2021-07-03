@@ -543,10 +543,13 @@ int main(int argc, char** argv) {
             readFastaFastq(readFile,filtering,matePair,mates,dist,linksArgParser.k,linksArgParser.step);
         }
     }
+    std::cout << "matepair size: " << matePair.size() << std::endl;
+    std::cout << "mates size: " << mates.size() << std::endl;
 
     // Stage 3 -- read contigs to assign info to mates
     readContigs(linksArgParser.assemblyFile, trackAll, matePair, mates, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
-    
+   
+    std::cout << "trackAll size: " << trackAll.size() << std::endl;
     // Stage 4 -- pair contigs based on mates
     uint64_t totalpairs = 0;
     pairContigs(
@@ -609,7 +612,7 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
         std::string bfmsg = "\n\nWriting Bloom filter to disk (" + linksArgParser.bfFile + ") : " + std::to_string(time(0)) + "\n";
         // assemblyruninfo += bfmsg;
         std::cout << bfmsg;
-        assemblyBF->write("bftest.out");
+        assemblyBF->save("bftest.out");
         // std::cout << "Done mybf, printing stats...\n";
         printBloomStats(*assemblyBF, std::cout);
         
@@ -634,8 +637,8 @@ void readFastaFastq(
         bool reverseExists = false;
 
         for (btllib::SeqReader::Record record; (record = longReader.read());) {
-            btllib::NtHash nthash(record.seq, k, bloom.get_hash_num());
-            btllib::NtHash nthashLead(record.seq, k, bloom.get_hash_num(), delta);
+            btllib::NtHash nthash(record.seq, bloom.get_hash_num(), k);
+            btllib::NtHash nthashLead(record.seq, bloom.get_hash_num(), k, delta);
 
             for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=step) {
                 // roll for the number of steps
@@ -663,7 +666,6 @@ void readFastaFastq(
                 }
                
                 if(!reverseExists && bloom.contains(nthash.hashes()) && bloom.contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
-
                     mate_pair::iterator it = matePair.find(nthash.get_forward_hash());
                     if( it != matePair.end() ) {
                         std::unordered_map<uint64_t, BT_IS> &innerMap = it->second;
@@ -715,7 +717,7 @@ void inline kmerizeContig( std::string *seq,
                     unsigned hashFcts,
                     uint64_t step,
                     uint64_t &tmpCounter) {
-    btllib::NtHash ntHashContig(*seq, k, hashFcts); // hashFunc can be 1 after first step
+    btllib::NtHash ntHashContig(*seq, hashFcts, k); // hashFunc can be 1 after first step
 
     int breakFlag = 0;
     //unsigned seq_length = seq->length();
@@ -821,15 +823,16 @@ void pairContigs(
     std::unordered_map<uint64_t, BT_IS>::iterator mateListItr;
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> >::iterator matePairItr;
 
+  uint counter_1 = 0, counter_2 = 0, counter_3 = 0, counter_4 = 0, counter_5 = 0, counter_6 = 0, counter_7 = 0, counter_8 = 0;
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
-
+	++counter_1;
             if( mateListItr->second.getBT() == false &&                 //matepair is not seen
                 trackAll.find(matePairItr->first) != trackAll.end() &&  //first mate is tracked
                 trackAll[matePairItr->first].getMultiple() == 1 &&      //first mate seen once
                 trackAll.find(mateListItr->first) != trackAll.end() &&  //second mate is tracked
                 trackAll[mateListItr->first].getMultiple() == 1) {      //second mate is seen once
-                
+                ++counter_2;
                 mateListItr->second.setBT(true);
 
                 insert_size = matePair[matePairItr->first][mateListItr->first].getIS();
@@ -840,7 +843,8 @@ void pairContigs(
                 if(verbose) std::cout << "Pair read1Hash=" << matePairItr->first << " read2Hash=" << mateListItr->first << "\n";
 
                 if(trackAll[matePairItr->first].getTig() != "" && trackAll[mateListItr->first].getTig() != "") { //double check if tig names not null
-                    ct_both++;
+        ++counter_3;          
+	  ct_both++;
                     if(ct_both_hash.find(insert_size) == ct_both_hash.end()) {
                         ct_both_hash[insert_size] = 1;
                     } else {
@@ -872,12 +876,14 @@ void pairContigs(
                         // MURATHAN DEBUG 11.5.21
                         if(!kmer1.getOrient()){             // if kmer1 is forward
                             if(!kmer2.getOrient()){         // if kmer2 is forward
-                                distance = getDistance(insert_size, tigLength[kmer1.getTig()], kmer1.getStart(), kmer2.getStart());
+        			++counter_4;  
+	                      distance = getDistance(insert_size, tigLength[kmer1.getTig()], kmer1.getStart(), kmer2.getStart());
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 0);
                                 }
                             }else{                          // if kmer2 is reverse
+				++counter_5;
                                 distance = getDistance(insert_size, tigLength[kmer1.getTig()], kmer1.getStart(), tigLength[kmer2.getTig()] - kmer2.getEnd());
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
@@ -886,13 +892,15 @@ void pairContigs(
                             }
                         }else{                              // if kmer1 is reverse
                             if(!kmer2.getOrient()){         // if kmer2 is forward
-                                distance = getDistance(insert_size, tigLength[kmer1.getTig()], tigLength[kmer1.getTig()] - kmer1.getEnd(), kmer2.getStart());
+                                ++counter_6;
+				distance = getDistance(insert_size, tigLength[kmer1.getTig()], tigLength[kmer1.getTig()] - kmer1.getEnd(), kmer2.getStart());
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 2);
                                 }
                             }else{                          // if kmer2 is reverse
-                                distance = getDistance(insert_size, tigLength[kmer2.getTig()], kmer2.getEnd(), kmer1.getEnd());
+                                ++counter_7;
+				distance = getDistance(insert_size, tigLength[kmer2.getTig()], kmer2.getEnd(), kmer1.getEnd());
                                 if(distance > min_allowed  && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.getTig(), kmer2.getTig(), 3);
@@ -969,6 +977,22 @@ void pairContigs(
             }
         } // pairing read b
     } // pairing read a
+
+	std::cout << "counter_1: " << counter_1 << std::endl;
+	std::cout << "counter_2: " << counter_2 << std::endl;
+	std::cout << "counter_3: " << counter_3 << std::endl;
+	std::cout << "counter_4: " << counter_4 << std::endl;
+	std::cout << "counter_5: " << counter_5 << std::endl;
+	std::cout << "counter_6: " << counter_6 << std::endl;
+	std::cout << "counter_7: " << counter_7 << std::endl;
+    
+	uint second_dim_size = 0;
+        std;;unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>::iterator pair_iterator;
+        for(itr = pair_iterator.begin(); itr != pair_iterator.end(); itr++){
+                second_dim_size += itr->second.size();
+
+        }
+        std::cout << "second dim size: " << second_dim_size << std::endl;
 
     // Summary of the contig pair issues
     //std::cout << "------------- Putative issues with contig pairing - Summary  ----------------\n";
