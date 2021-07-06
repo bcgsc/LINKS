@@ -232,12 +232,12 @@ private:
     std::queue<std::string> longReads;
     unsigned threads;
     long id;
-    size_t buffer_size = 32;
-    size_t block_size = 8;
+    size_t buffer_size = 4;
+    size_t block_size = 1;
 
     btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
     void extract_mate_pair(const std::string& seq);
-    void populate_mate_info(const std::string& seq,const std::string& contig_rank);
+    void populate_mate_info(const std::string& seq,const std::string contig_rank);
     
     int getDistanceBin(int distance);
     int getDistance(uint64_t insert_size, 
@@ -245,9 +245,9 @@ private:
       uint64_t start_i, 
       uint64_t start_j);
     void addToPairMap(
-      int& isz,
+      int isz,
       std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>& pair,
-      int& distance,
+      int distance,
       std::string kmer1_name,
       std::string kmer2_name,
       unsigned orient_enum);
@@ -545,7 +545,7 @@ LINKS::extract_mate_pair(const std::string& seq)
 
 inline void
 LINKS::populate_mate_info(const std::string& seq,
-                          const std::string& contig_rank){
+                          const std::string contig_rank){
   
   btllib::NtHash ntHashContig(seq, bloom->get_hash_num(), k); // hashFunc can be 1 after first step
 
@@ -659,6 +659,7 @@ LINKS::PopulateMateInfoWorker::work()
     links.contig_rank_mutex.unlock();
 
     if (links.k <= read.seq.size()) {
+        links.tigLength[std::to_string(cur_contig_rank)] = read.seq.length();
         links.populate_mate_info(read.seq,std::to_string(cur_contig_rank));
         //std::cout << "q test 6\n";
         continue;
@@ -694,9 +695,9 @@ LINKS::does_file_exist(std::string fileName)
 
 inline void 
 LINKS::addToPairMap(
-    int& isz,
+    int isz,
     std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>& pair,
-    int& distance,
+    int distance,
     std::string kmer1_name,
     std::string kmer2_name,
     unsigned orient_enum
@@ -709,6 +710,8 @@ LINKS::addToPairMap(
 
         std::string rtig_a = "r" + kmer1_name;
         std::string rtig_b = "r" + kmer2_name;
+
+        std::cout << "orient enum: " << orient_enum << std::endl;
 
         switch (orient_enum)
         {
@@ -731,6 +734,10 @@ LINKS::addToPairMap(
         default:
             break;
         }
+        std::cout << "!!!!!!!" << std::endl;
+        std::cout << std::get<0>(first_pair) << " " << std::get<1>(first_pair) << std::endl;
+        std::cout << std::get<0>(second_pair) << " " << std::get<1>(second_pair) << std::endl;
+
         if(pair.find(std::get<0>(first_pair)) == pair.end() 
             || pair[std::get<0>(first_pair)].find(isz) == pair[std::get<0>(first_pair)].end() 
             || pair[std::get<0>(first_pair)][isz].find(std::get<1>(first_pair)) == pair[std::get<0>(first_pair)][isz].end()) {
@@ -787,35 +794,37 @@ LINKS::pair_contigs()
   std::string tigpair_checkpoint = inputParser->baseName + ".tigpair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
   std::string simplepair_checkpoint = inputParser->baseName + ".simplepair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if cras
   uint64_t totalPairs = 0;
-    uint64_t ct_illogical = 0, ct_ok_contig = 0, ct_ok_pairs = 0, ct_problem_pairs = 0, ct_iz_issues = 0, ct_single = 0, ct_multiple = 0, ct_both = 0, trackInsert = 0;
-    std::unordered_map<uint64_t, uint64_t> ct_single_hash, ct_both_hash, ct_illogical_hash, ct_ok_contig_hash, ct_ok_pairs_hash, ct_problem_pairs_hash, ct_iz_issues_hash;
-    // Mapping of tiga_head -> insertSize -> tigb_head -> links & gaps
-    std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> > > pair;
-    std::unordered_map<std::string, std::unordered_map<std::string, PairLinkInfo> >simplePair;
-    std::unordered_map<std::string, PairLinkInfo> err;
-    std::string order1;
-    std::string order2;
-    if(verbose) std::cout << "Pairing contigs...\n";
-    std::ofstream issuesFile;
-    issuesFile.open (issues);
-    int64_t insert_size = 0;
-    int min_allowed = 0;
-    uint low_iz = 0;
-    uint up_iz = 0;
-    int distance;
-    int isz;
+  uint64_t ct_illogical = 0, ct_ok_contig = 0, ct_ok_pairs = 0, ct_problem_pairs = 0, ct_iz_issues = 0, ct_single = 0, ct_multiple = 0, ct_both = 0, trackInsert = 0;
+  std::unordered_map<uint64_t, uint64_t> ct_single_hash, ct_both_hash, ct_illogical_hash, ct_ok_contig_hash, ct_ok_pairs_hash, ct_problem_pairs_hash, ct_iz_issues_hash;
+  // Mapping of tiga_head -> insertSize -> tigb_head -> links & gaps
+  std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> > > pair;
+  std::unordered_map<std::string, std::unordered_map<std::string, PairLinkInfo> >simplePair;
+  std::unordered_map<std::string, PairLinkInfo> err;
+  std::string order1;
+  std::string order2;
+  if(verbose) std::cout << "Pairing contigs...\n";
+  std::ofstream issuesFile;
+  issuesFile.open (issues);
+  int64_t insert_size = 0;
+  int min_allowed = 0;
+  uint low_iz = 0;
+  uint up_iz = 0;
+  int distance;
+  int isz;
 
-    std::string tig_a, tig_b, ftig_a, ftig_b, rtig_a, rtig_b;
-    uint64_t A_length = 0, A_start = 0, A_end = 0, B_length = 0, B_start = 0, B_end = 0;
+  std::string tig_a, tig_b, ftig_a, ftig_b, rtig_a, rtig_b;
+  uint64_t A_length = 0, A_start = 0, A_end = 0, B_length = 0, B_start = 0, B_end = 0;
 
-    KmerInfo kmer1, kmer2;
-    std::unordered_map<uint64_t, MatePairInfo>::iterator mateListItr;
-    std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> >::iterator matePairItr;
+  KmerInfo kmer1, kmer2;
+  std::unordered_map<uint64_t, MatePairInfo>::iterator mateListItr;
+  std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> >::iterator matePairItr;
   
   uint counter_1 = 0, counter_2 = 0, counter_3 = 0, counter_4 = 0, counter_5 = 0, counter_6 = 0, counter_7 = 0;  
   for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
         ++counter_1;    
+        //std::cout << "trackAll[matePairItr->first].multiple " << trackAll[matePairItr->first].multiple << std::endl;
+        //std::cout << "trackAll[mateListItr->first].multiple " << trackAll[mateListItr->first].multiple << std::endl;
 	if( mateListItr->second.seen == false &&                 //matepair is not seen
                 trackAll.find(matePairItr->first) != trackAll.end() &&  //first mate is tracked
                 trackAll[matePairItr->first].multiple == 1 &&      //first mate seen once
@@ -857,12 +866,20 @@ LINKS::pair_contigs()
                     kmer1 = trackAll[matePairItr->first];
                     kmer2 = trackAll[mateListItr->first];
 
+                    std::cout << "pre kmer1: " << kmer1.tig << " kmer2: " << kmer2.tig << std::endl;
+
                     if(kmer1.tig != kmer2.tig) { // paired reads located on <> contigs
+                    std::cout << "aft kmer1: " << kmer1.tig << " kmer2: " << kmer2.tig << std::endl;
+                    std::cout << "kmer1 ori: " << kmer1.orient << " kmer2 ori: " << kmer2.orient << std::endl;
                         // MURATHAN DEBUG 11.5.21
                         if(!kmer1.orient){             // if kmer1 is forward
                             if(!kmer2.orient){         // if kmer2 is forward
                                 ++counter_4;
+                                std::cout << "here\n";
+        std::cout << "tigLength[kmer1.tig] " << tigLength[kmer1.tig] 
+        << " kmer1.start " << kmer1.start << " kmer2.start " << kmer2.start << std::endl;
 				distance = getDistance(insert_size, tigLength[kmer1.tig], kmer1.start, kmer2.start);
+        std::cout << "distance: " << distance << std::endl;
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.tig, kmer2.tig, 0);
@@ -972,13 +989,56 @@ LINKS::pair_contigs()
 	std::cout << "counter_7: " << counter_7 << std::endl;
 	std::cout << "pair size: " << pair.size() << std::endl;
 
-	uint second_dim_size = 0;
-	std;;unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>::iterator pair_iterator;
-	for(itr = pair_iterator.begin(); itr != pair_iterator.end(); itr++){
-		second_dim_size += itr->second.size();
+  // std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>>
+  // (12, (15, (false, 1000)))
+  uint second_dim_size = 0;
+  uint third_dim_size = 0;
+  uint fourth_dim_size = 0;
+  for (auto it = matePair.begin(); it != matePair.end(); it++) {
+    //std::cout << *it << endl;
+    std::cout << "it->second.size(): " << it->second.size() << std::endl; 
+    second_dim_size += it->second.size();
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+      //third_dim_size += it2->second.links;
+      /*for (auto it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+        fourth_dim_size += it3->second.size(); 
+      }*/
+    }
+  } 
+  std::cout << "second dim size: " << second_dim_size << std::endl;
+  std::cout << "third dim size: " << third_dim_size << std::endl;
+  std::cout << "fourth dim size: " << fourth_dim_size << std::endl;
+
+  // std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> > >:
+  //("f13",(1000, ("r12",(12000,12))))
+  uint pair_second_dim_size = 0;
+  uint pair_third_dim_size = 0;
+  uint pair_fourth_dim_size = 0;
+  for (auto it = pair.begin(); it != pair.end(); it++) {
+    //std::cout << *it << endl;
+    //std::cout << "it->second.size(): " << it->second.size() << std::endl;
+    std::cout << "*********************" << std::endl; 
+    pair_second_dim_size += it->second.size();
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+      pair_third_dim_size += it2->second.size();
+      std::cout << "---------------------" << std::endl;
+      for (auto it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+        std::cout << "map: " << it3->first << std::endl;
+        pair_fourth_dim_size += it3->second.links;
+      }
+    }
+  } 
+  std::cout << "second dim size: " << pair_second_dim_size << std::endl;
+  std::cout << "third dim size: " << pair_third_dim_size << std::endl;
+  std::cout << "fourth dim size: " << pair_fourth_dim_size << std::endl;
+
+	//uint second_dim_size = 0;
+	//std;;unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>::iterator pair_iterator;
+	//for(itr = pair_iterator.begin(); itr != pair_iterator.end(); itr++){
+	//	second_dim_size += itr->second.size();
 	
-	}
-	std::cout << "second dim size: " << second_dim_size << std::endl;
+	//}
+	//std::cout << "second dim size: " << second_dim_size << std::endl;
 
     // Summary of the contig pair issues
     //std::cout << "------------- Putative issues with contig pairing - Summary  ----------------\n";
