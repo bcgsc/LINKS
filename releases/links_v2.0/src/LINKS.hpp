@@ -24,7 +24,7 @@
 #include <thread>
 #include <vector>
 #include <mutex>
-#include <shared_mutex>
+//#include <shared_mutex>
 
 
 
@@ -236,7 +236,7 @@ private:
     size_t block_size = 1;
 
     btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
-    void extract_mate_pair(const std::string& seq);
+    void extract_mate_pair(const std::string& seq, std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>>& own_mate_pair,std::unordered_set<uint64_t>& own_mates);
     void populate_mate_info(const std::string& seq,const std::string contig_rank);
     
     int getDistanceBin(int distance);
@@ -479,9 +479,11 @@ LINKS::start_read_contig(){
 }
 
 inline void
-LINKS::extract_mate_pair(const std::string& seq)
+LINKS::extract_mate_pair(const std::string& seq,
+  std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>>& own_mate_pair,
+  std::unordered_set<uint64_t>& own_mates)
 {
-
+  //std::cout << "here 1" << std::endl;
   for(auto distance : distances){
     //std::cout << "dist: " << distance << std::endl;
     uint64_t delta = distance - k;
@@ -504,12 +506,12 @@ LINKS::extract_mate_pair(const std::string& seq)
         if(breakFlag){break;}
         // for step ----
         // check if reverse pair exist
-
+        //std::cout << "here 2" << std::endl;
         // mutexes commented out for test
         //mate_pair_mutex.lock_shared();
-        mate_pair::iterator it = matePair.find(nthashLead.get_reverse_hash());
+        mate_pair::iterator it = own_mate_pair.find(nthashLead.get_reverse_hash());
         //mate_pair_mutex.unlock_shared();
-        if( it != matePair.end() ) {
+        if( it != own_mate_pair.end() ) {
             std::unordered_map<uint64_t, MatePairInfo > &innerMap = it->second;
             //mate_pair_mutex.lock_shared();
             std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(nthash.get_reverse_hash());
@@ -521,33 +523,35 @@ LINKS::extract_mate_pair(const std::string& seq)
                 reverseExists = true;
             }
         }
-        
+        //std::cout << "here 3" << std::endl;
         if(!reverseExists && bloom->contains(nthash.hashes()) && bloom->contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
             //mate_pair_mutex.lock_shared();
-            mate_pair::iterator it = matePair.find(nthash.get_forward_hash());
+            mate_pair::iterator it = own_mate_pair.find(nthash.get_forward_hash());
             //mate_pair_mutex.unlock_shared();
-            if( it != matePair.end() ) {
+            if( it != own_mate_pair.end() ) {
                 std::unordered_map<uint64_t, MatePairInfo> &innerMap = it->second;
                 //mate_pair_mutex.lock_shared();
                 std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(nthashLead.get_forward_hash());
                 //mate_pair_mutex.unlock_shared();
                 if( innerit != innerMap.end() ){
                     //mate_pair_mutex.lock();
-                    matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()].insert_size = distance;
+                    own_mate_pair[nthash.get_forward_hash()][nthashLead.get_forward_hash()].insert_size = distance;
                     //mate_pair_mutex.unlock();
                 }else{
                     //mate_pair_mutex.lock();
-                    matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
+                    own_mate_pair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
                     //mate_pair_mutex.unlock();
                 }
+                //std::cout << "here 4" << std::endl;
             }else{
                 //mate_pair_mutex.lock();
-                matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
+                own_mate_pair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
                 //mate_pair_mutex.unlock();
             }
 
             //std::lock_guard<std::mutex> guard(mates_mutex);
-            mates.insert(nthashLead.get_forward_hash());
+            own_mates.insert(nthashLead.get_forward_hash());
+            //std::cout << "here 4" << std::endl;
         }
     }
   }
@@ -618,7 +622,8 @@ LINKS::ExtractMatePairWorker::work()
   //(std::remove_reference<decltype(*(links.input_queue))>)::Block input_block(links.block_size);
   btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size); 
 
-  
+  std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> own_mate_pair;
+  std::unordered_set<uint64_t> own_mates;
 
   //std::cout << "y test 2\n";
   for (;;) {
@@ -633,7 +638,7 @@ LINKS::ExtractMatePairWorker::work()
     Read& read = input_block.data[input_block.current++];
 
     if (links.k <= read.seq.size()) {
-        links.extract_mate_pair(read.seq);
+        links.extract_mate_pair(read.seq,own_mate_pair,own_mates);
     } else {
       continue; // nothing
     }
