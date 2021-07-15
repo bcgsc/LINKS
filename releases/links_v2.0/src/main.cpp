@@ -9,9 +9,12 @@ int main(int argc, char** argv){
 
     auto start = std::chrono::high_resolution_clock::now();
     links->init_bloom_filter();
+    std::cout << "back from init bf\n";
     auto finish = std::chrono::high_resolution_clock::now();
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
     std::cout << milliseconds.count() << "ms\n";
+
+    //return 0;
 
     std::cout << "Read fasta stage\n";
     start = std::chrono::high_resolution_clock::now();

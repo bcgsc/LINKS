@@ -517,11 +517,18 @@ int main(int argc, char** argv) {
         // // k-merize long reads
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, BT_IS> > matePair;
 
+
+
     std::unordered_map<uint64_t, KmerInfo> trackAll;
     std::unordered_map<std::string, uint64_t> tigLength;
 
     // store second mates in a set
     std::unordered_set<uint64_t> mates;
+
+        //test purpose
+    matePair.reserve(50000000);
+    mates.reserve(50000000);
+    trackAll.reserve(50000000);
     
 
     // Stage 1 -- populate bloom filter with contigs
@@ -599,7 +606,7 @@ btllib::KmerBloomFilter *makeBF(uint64_t bfElements, InputParser linksArgParser)
         // std::cout << "- Filter output file : " << outFileBf << "\n";
         std::cout << "- Filter output file : " << linksArgParser.k << "\n";
         assemblyBF = new btllib::KmerBloomFilter(m/8, hashFct, linksArgParser.k);
-        btllib::SeqReader assemblyReader(linksArgParser.assemblyFile, 8, 1);
+        btllib::SeqReader assemblyReader(linksArgParser.assemblyFile, 8);
         // int builder = 0;
         for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
             // if(builder % 100 == 0) {
@@ -627,16 +634,26 @@ void readFastaFastq(
                 const uint64_t distance,
                 const uint64_t k,
                 const uint64_t step) {
-        btllib::SeqReader longReader(file, 8, 1); // CHECK FOR FLAG MODES
-
+        btllib::SeqReader longReader(file, 8); // CHECK FOR FLAG MODES
+        std::cout << "here 1" << std::endl;
         //uint64_t delta = distance - (2 * k);
         uint64_t delta = distance - k;
         //uint64_t delta = distance;
-
+        std::cout << "here 2" << std::endl;
         int breakFlag = 0;
         bool reverseExists = false;
+        uint read_counter = 0;
+        std::cout << "here 3" << std::endl;
 
         for (btllib::SeqReader::Record record; (record = longReader.read());) {
+            if(read_counter % 1000 == 0){
+                std::cout << "read counter: " << read_counter << std::endl;
+            }
+            //if(read_counter > 20000){
+            //    break;
+            //}
+            ++read_counter;
+
             btllib::NtHash nthash(record.seq, bloom.get_hash_num(), k);
             btllib::NtHash nthashLead(record.seq, bloom.get_hash_num(), k, delta);
 
@@ -769,7 +786,7 @@ void readContigs(
         uint64_t step) {
     // std::cout << "hashFct in readContig: " << hashFcts << "\n";
     uint64_t cttig = 0;
-    btllib::SeqReader contigReader(assemblyFile, 8, 1);// CHANGE TO FLAGS LATER
+    btllib::SeqReader contigReader(assemblyFile, 8);// CHANGE TO FLAGS LATER
     uint64_t tmpCounter = 0;
     for (btllib::SeqReader::Record record; (record = contigReader.read());) {
         cttig++;
@@ -826,7 +843,12 @@ void pairContigs(
   uint counter_1 = 0, counter_2 = 0, counter_3 = 0, counter_4 = 0, counter_5 = 0, counter_6 = 0, counter_7 = 0, counter_8 = 0;
     for(matePairItr = matePair.begin(); matePairItr != matePair.end(); matePairItr++) {
         for(mateListItr = matePairItr->second.begin(); mateListItr != matePairItr->second.end(); mateListItr++) {
-	++counter_1;
+            //std::cout << "*****" << std::endl;
+            //std::cout << "trackAll[matePairItr->first].getMultiple(): " << trackAll[matePairItr->first].getMultiple() << std::endl;
+            //std::cout << "trackAll[mateListItr->first].getMultiple(): " << trackAll[mateListItr->first].getMultiple() << std::endl;
+            //std::cout << "*****" << std::endl;
+            
+            ++counter_1;
             if( mateListItr->second.getBT() == false &&                 //matepair is not seen
                 trackAll.find(matePairItr->first) != trackAll.end() &&  //first mate is tracked
                 trackAll[matePairItr->first].getMultiple() == 1 &&      //first mate seen once
@@ -985,14 +1007,44 @@ void pairContigs(
 	std::cout << "counter_5: " << counter_5 << std::endl;
 	std::cout << "counter_6: " << counter_6 << std::endl;
 	std::cout << "counter_7: " << counter_7 << std::endl;
+   
     
-	uint second_dim_size = 0;
-        std;;unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>::iterator pair_iterator;
-        for(itr = pair_iterator.begin(); itr != pair_iterator.end(); itr++){
-                second_dim_size += itr->second.size();
+    // uint second_dim_size = 0;
+    // uint third_dim_size = 0;
+    // uint fourth_dim_size = 0;
+    // for (auto it = matePair.begin(); it != matePair.end(); it++) {
+    // //std::cout << *it << endl;
+    //     second_dim_size += it->second.size();
+    //     for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+    //         third_dim_size += it2->second.links;
+    //         /*for (auto it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+    //             fourth_dim_size += it3->second.size(); 
+    //         }*/
+    //     }
+    // } 
 
+    // std::cout << "second dim size: " << second_dim_size << std::endl;
+    // std::cout << "third dim size: " << third_dim_size << std::endl;
+    // std::cout << "fourth dim size: " << fourth_dim_size << std::endl;
+    
+
+    uint pair_second_dim_size = 0;
+    uint pair_third_dim_size = 0;
+    uint pair_fourth_dim_size = 0;
+    for (auto it = pair.begin(); it != pair.end(); it++) {
+        //std::cout << *it << endl;
+        //std::cout << "it->second.size(): " << it->second.size() << std::endl; 
+        pair_second_dim_size += it->second.size();
+        for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+        pair_third_dim_size += it2->second.size();
+        for (auto it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+            pair_fourth_dim_size += it3->second.getLinks(); 
         }
-        std::cout << "second dim size: " << second_dim_size << std::endl;
+        }
+    } 
+    std::cout << "second dim size: " << pair_second_dim_size << std::endl;
+    std::cout << "third dim size: " << pair_third_dim_size << std::endl;
+    std::cout << "fourth dim size: " << pair_fourth_dim_size << std::endl;
 
     // Summary of the contig pair issues
     //std::cout << "------------- Putative issues with contig pairing - Summary  ----------------\n";

@@ -265,10 +265,12 @@ private:
     std::shared_ptr<InputWorker> input_worker;
     std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
     std::vector<PopulateMateInfoWorker> populate_mate_info_workers;
-    std::shared_mutex mate_pair_mutex;
-    std::mutex mates_mutex;
+
+    // commented out muro debug
+    //std::shared_mutex mate_pair_mutex;
+    //std::mutex mates_mutex;
     std::mutex contig_rank_mutex;
-    std::shared_mutex track_all_mutex;
+    //std::shared_mutex track_all_mutex;
     
 
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
@@ -312,21 +314,21 @@ LINKS::make_bf(uint64_t bfElements, InputParser* linksArgParser){
         std::cout << "- Filter output file : " << linksArgParser->k << "\n";
         assemblyBF = new btllib::KmerBloomFilter(m/8, hashFct, linksArgParser->k);
         btllib::SeqReader assemblyReader(linksArgParser->assemblyFile, 8, 1);
-        // int builder = 0;
+        uint builder = 0;
         for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
-            // if(builder % 100 == 0) {
-            //     std::cout << "reading... builder: " << builder << "\n";
-            // }
-            // builder++;
-
-            assemblyBF->insert(record.seq);
+          if(builder % 10 == 0) {
+                //std::cout << "reading... builder: " << builder << "\n";
+          }
+          builder++;
+          //std::cout << "here 1\n";
+          assemblyBF->insert(record.seq);
+          //std::cout << "here 2\n";
         }
         std::string bfmsg = "\n\nWriting Bloom filter to disk (" + linksArgParser->bfFile + ") : " + std::to_string(time(0)) + "\n";
         // assemblyruninfo += bfmsg;
         std::cout << bfmsg;
         assemblyBF->save("bftest.out");
         // std::cout << "Done mybf, printing stats...\n";
-        
         //printBloomStats(*assemblyBF, std::cout);
         
     }
@@ -378,11 +380,17 @@ LINKS::InputWorker::work()
   btllib::OrderQueueSPMC<Read>::Block block(links.block_size); 
 
   size_t current_block_num = 0;
+  size_t read_c = 0;
   Read read;
   //std::cout << "test 2\n";
 
   uint counterx = 0;
   for(auto record : (*(links.reader))){
+    read_c++;
+    if(read_c % 100 == 0){
+      std::cout << "read_counter: " << read_c << std::endl;
+    }
+
     block.data[block.count++] = Read(record.num,
                                     std::move(record.id),
                                     std::move(record.comment),
@@ -496,47 +504,49 @@ LINKS::extract_mate_pair(const std::string& seq)
         if(breakFlag){break;}
         // for step ----
         // check if reverse pair exist
-        mate_pair_mutex.lock_shared();
+
+        // mutexes commented out for test
+        //mate_pair_mutex.lock_shared();
         mate_pair::iterator it = matePair.find(nthashLead.get_reverse_hash());
-        mate_pair_mutex.unlock_shared();
+        //mate_pair_mutex.unlock_shared();
         if( it != matePair.end() ) {
             std::unordered_map<uint64_t, MatePairInfo > &innerMap = it->second;
-            mate_pair_mutex.lock_shared();
+            //mate_pair_mutex.lock_shared();
             std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(nthash.get_reverse_hash());
-            mate_pair_mutex.unlock_shared();
+            //mate_pair_mutex.unlock_shared();
             if( innerit != innerMap.end() ){
-                mate_pair_mutex.lock();
+                //mate_pair_mutex.lock();
                 innerit->second.insert_size = distance;
-                mate_pair_mutex.unlock();
+                //mate_pair_mutex.unlock();
                 reverseExists = true;
             }
         }
         
         if(!reverseExists && bloom->contains(nthash.hashes()) && bloom->contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
-            mate_pair_mutex.lock_shared();
+            //mate_pair_mutex.lock_shared();
             mate_pair::iterator it = matePair.find(nthash.get_forward_hash());
-            mate_pair_mutex.unlock_shared();
+            //mate_pair_mutex.unlock_shared();
             if( it != matePair.end() ) {
                 std::unordered_map<uint64_t, MatePairInfo> &innerMap = it->second;
-                mate_pair_mutex.lock_shared();
+                //mate_pair_mutex.lock_shared();
                 std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(nthashLead.get_forward_hash());
-                mate_pair_mutex.unlock_shared();
+                //mate_pair_mutex.unlock_shared();
                 if( innerit != innerMap.end() ){
-                    mate_pair_mutex.lock();
+                    //mate_pair_mutex.lock();
                     matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()].insert_size = distance;
-                    mate_pair_mutex.unlock();
+                    //mate_pair_mutex.unlock();
                 }else{
-                    mate_pair_mutex.lock();
+                    //mate_pair_mutex.lock();
                     matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
-                    mate_pair_mutex.unlock();
+                    //mate_pair_mutex.unlock();
                 }
             }else{
-                mate_pair_mutex.lock();
+                //mate_pair_mutex.lock();
                 matePair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
-                mate_pair_mutex.unlock();
+                //mate_pair_mutex.unlock();
             }
 
-            std::lock_guard<std::mutex> guard(mates_mutex);
+            //std::lock_guard<std::mutex> guard(mates_mutex);
             mates.insert(nthashLead.get_forward_hash());
         }
     }
@@ -566,35 +576,35 @@ LINKS::populate_mate_info(const std::string& seq,
         // Forward part
 	    if(matePair.find(ntHashContig.get_forward_hash()) != matePair.end() || 
             mates.find(ntHashContig.get_forward_hash()) != mates.end()) {
-            track_all_mutex.lock_shared();
+            //track_all_mutex.lock_shared();
             if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
-              track_all_mutex.unlock_shared();
-              track_all_mutex.lock();
+              //track_all_mutex.unlock_shared();
+              //track_all_mutex.lock();
               trackAll[ntHashContig.get_forward_hash()] = KmerInfo(contig_rank, i, i + k, 1, false);
               //std::cout << "trackAll not found\n";
-              track_all_mutex.unlock();
+              //track_all_mutex.unlock();
             } else {
-              track_all_mutex.unlock_shared();
-              track_all_mutex.lock();
+              //track_all_mutex.unlock_shared();
+              //track_all_mutex.lock();
               trackAll[ntHashContig.get_forward_hash()].multiple +=1;
-              track_all_mutex.unlock();
+              //track_all_mutex.unlock();
             }
         }
 
         // Reverse part
         if(matePair.find(ntHashContig.get_reverse_hash()) != matePair.end() || 
             mates.find(ntHashContig.get_reverse_hash()) != mates.end()) {
-            track_all_mutex.lock_shared();
+            //track_all_mutex.lock_shared();
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
-              track_all_mutex.unlock_shared();
-              track_all_mutex.lock();
+              //track_all_mutex.unlock_shared();
+              //track_all_mutex.lock();
               trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(contig_rank, i, i + k, 1, true);
-              track_all_mutex.unlock();
+              //track_all_mutex.unlock();
             } else {
-              track_all_mutex.unlock_shared();
-              track_all_mutex.lock();
+              //track_all_mutex.unlock_shared();
+              //track_all_mutex.lock();
               trackAll[ntHashContig.get_reverse_hash()].multiple +=1;
-              track_all_mutex.unlock();
+              //track_all_mutex.unlock();
             }
         }
     }
@@ -607,6 +617,8 @@ LINKS::ExtractMatePairWorker::work()
   //decltype(*(links.input_queue))::Block input_block(links.block_size);
   //(std::remove_reference<decltype(*(links.input_queue))>)::Block input_block(links.block_size);
   btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size); 
+
+  
 
   //std::cout << "y test 2\n";
   for (;;) {
@@ -625,6 +637,8 @@ LINKS::ExtractMatePairWorker::work()
     } else {
       continue; // nothing
     }
+
+
 
   }
   //std::cout << "y test 3\n";
@@ -659,7 +673,7 @@ LINKS::PopulateMateInfoWorker::work()
     links.contig_rank_mutex.unlock();
 
     if (links.k <= read.seq.size()) {
-        links.tigLength[std::to_string(cur_contig_rank)] = read.seq.length();
+        links.tigLength[std::to_string(cur_contig_rank)] = read.seq.size();
         links.populate_mate_info(read.seq,std::to_string(cur_contig_rank));
         //std::cout << "q test 6\n";
         continue;
@@ -711,7 +725,7 @@ LINKS::addToPairMap(
         std::string rtig_a = "r" + kmer1_name;
         std::string rtig_b = "r" + kmer2_name;
 
-        std::cout << "orient enum: " << orient_enum << std::endl;
+        //std::cout << "orient enum: " << orient_enum << std::endl;
 
         switch (orient_enum)
         {
@@ -734,9 +748,9 @@ LINKS::addToPairMap(
         default:
             break;
         }
-        std::cout << "!!!!!!!" << std::endl;
-        std::cout << std::get<0>(first_pair) << " " << std::get<1>(first_pair) << std::endl;
-        std::cout << std::get<0>(second_pair) << " " << std::get<1>(second_pair) << std::endl;
+        //std::cout << "!!!!!!!" << std::endl;
+        //std::cout << std::get<0>(first_pair) << " " << std::get<1>(first_pair) << std::endl;
+        //std::cout << std::get<0>(second_pair) << " " << std::get<1>(second_pair) << std::endl;
 
         if(pair.find(std::get<0>(first_pair)) == pair.end() 
             || pair[std::get<0>(first_pair)].find(isz) == pair[std::get<0>(first_pair)].end() 
@@ -866,20 +880,24 @@ LINKS::pair_contigs()
                     kmer1 = trackAll[matePairItr->first];
                     kmer2 = trackAll[mateListItr->first];
 
-                    std::cout << "pre kmer1: " << kmer1.tig << " kmer2: " << kmer2.tig << std::endl;
+                    //std::cout << "pre kmer1: " << kmer1.tig << " kmer2: " << kmer2.tig << std::endl;
 
                     if(kmer1.tig != kmer2.tig) { // paired reads located on <> contigs
-                    std::cout << "aft kmer1: " << kmer1.tig << " kmer2: " << kmer2.tig << std::endl;
-                    std::cout << "kmer1 ori: " << kmer1.orient << " kmer2 ori: " << kmer2.orient << std::endl;
+                    //std::cout << "aft kmer1: " << kmer1.tig << " kmer2: " << kmer2.tig << std::endl;
+                    //std::cout << "kmer1 ori: " << kmer1.orient << " kmer2 ori: " << kmer2.orient << std::endl;
+                    //std::cout << "tigLength[kmer1.tig] " << tigLength[kmer1.tig] 
+                    //<< " kmer1.start " << kmer1.start << std::endl;
+                    //std::cout << "tigLength[kmer2.tig] " << tigLength[kmer2.tig] 
+                    //<< " kmer2.start " << kmer2.start << std::endl;
                         // MURATHAN DEBUG 11.5.21
                         if(!kmer1.orient){             // if kmer1 is forward
                             if(!kmer2.orient){         // if kmer2 is forward
                                 ++counter_4;
-                                std::cout << "here\n";
-        std::cout << "tigLength[kmer1.tig] " << tigLength[kmer1.tig] 
-        << " kmer1.start " << kmer1.start << " kmer2.start " << kmer2.start << std::endl;
+                                //std::cout << "here\n";
+        //std::cout << "tigLength[kmer1.tig] " << tigLength[kmer1.tig] 
+        //<< " kmer1.start " << kmer1.start << " kmer2.start " << kmer2.start << std::endl;
 				distance = getDistance(insert_size, tigLength[kmer1.tig], kmer1.start, kmer2.start);
-        std::cout << "distance: " << distance << std::endl;
+        //std::cout << "distance: " << distance << std::endl;
                                 if(distance > min_allowed && distance < insert_size){
                                     isz = getDistanceBin(distance);
                                     addToPairMap( isz, pair, distance, kmer1.tig, kmer2.tig, 0);
@@ -909,6 +927,7 @@ LINKS::pair_contigs()
                                 }
                             }
                         }
+                        //std::cout << "distance: " << distance << std::endl;
                     } else { // Clone, paired reads located on the same contig -- could be used to investigate misassemblies
                         if (verbose) std::cout << "Pair (" << matePairItr->first << " and " << mateListItr->first << ") located on same contig " << tig_a << " (" << A_length << " nt)\n";
                         uint64_t pet_size = 0;
@@ -980,6 +999,7 @@ LINKS::pair_contigs()
         } // pairing read b
     } // pairing read a
 
+/*
 	std::cout << "counter_1: " << counter_1 << std::endl;
 	std::cout << "counter_2: " << counter_2 << std::endl;
 	std::cout << "counter_3: " << counter_3 << std::endl;
@@ -988,6 +1008,7 @@ LINKS::pair_contigs()
 	std::cout << "counter_6: " << counter_6 << std::endl;
 	std::cout << "counter_7: " << counter_7 << std::endl;
 	std::cout << "pair size: " << pair.size() << std::endl;
+*/
 
   // std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>>
   // (12, (15, (false, 1000)))
@@ -996,7 +1017,7 @@ LINKS::pair_contigs()
   uint fourth_dim_size = 0;
   for (auto it = matePair.begin(); it != matePair.end(); it++) {
     //std::cout << *it << endl;
-    std::cout << "it->second.size(): " << it->second.size() << std::endl; 
+    //std::cout << "it->second.size(): " << it->second.size() << std::endl; 
     second_dim_size += it->second.size();
     for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
       //third_dim_size += it2->second.links;
@@ -1005,9 +1026,11 @@ LINKS::pair_contigs()
       }*/
     }
   } 
+  /*
   std::cout << "second dim size: " << second_dim_size << std::endl;
   std::cout << "third dim size: " << third_dim_size << std::endl;
   std::cout << "fourth dim size: " << fourth_dim_size << std::endl;
+  */
 
   // std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> > >:
   //("f13",(1000, ("r12",(12000,12))))
@@ -1017,20 +1040,22 @@ LINKS::pair_contigs()
   for (auto it = pair.begin(); it != pair.end(); it++) {
     //std::cout << *it << endl;
     //std::cout << "it->second.size(): " << it->second.size() << std::endl;
-    std::cout << "*********************" << std::endl; 
+    //std::cout << "*********************" << std::endl; 
     pair_second_dim_size += it->second.size();
     for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
       pair_third_dim_size += it2->second.size();
-      std::cout << "---------------------" << std::endl;
+      //std::cout << "---------------------" << std::endl;
       for (auto it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
-        std::cout << "map: " << it3->first << std::endl;
+        //std::cout << "map: " << it3->first << std::endl;
         pair_fourth_dim_size += it3->second.links;
       }
     }
   } 
+  
   std::cout << "second dim size: " << pair_second_dim_size << std::endl;
   std::cout << "third dim size: " << pair_third_dim_size << std::endl;
   std::cout << "fourth dim size: " << pair_fourth_dim_size << std::endl;
+  
 
 	//uint second_dim_size = 0;
 	//std;;unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>::iterator pair_iterator;
