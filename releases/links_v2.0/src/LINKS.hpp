@@ -251,7 +251,10 @@ private:
       std::string kmer1_name,
       std::string kmer2_name,
       unsigned orient_enum);
+    void merge_mate_pair(mate_pair& main_mate_pair, 
+                        mate_pair& own_mate_pair);
 
+    // helper functions
     uint64_t get_file_size(std::string filename);
     bool does_file_exist(std::string fileName);
     std::atomic<bool> fasta{ false };
@@ -269,6 +272,7 @@ private:
     // commented out muro debug
     //std::shared_mutex mate_pair_mutex;
     //std::mutex mates_mutex;
+    std::mutex mate_pair_mutex;
     std::mutex contig_rank_mutex;
     //std::shared_mutex track_all_mutex;
     
@@ -435,7 +439,7 @@ LINKS::start_read_fasta(){
   }
   input_worker->join();
 
-  std::cout << "matepair size: " << matePair.size() << std::endl;
+  std::cout << "after join matepair size: " << matePair.size() << std::endl;
   std::cout << "mates size: " << mates.size() << std::endl;
 }
 inline void 
@@ -615,6 +619,56 @@ LINKS::populate_mate_info(const std::string& seq,
 }
 
 inline void
+LINKS::merge_mate_pair( mate_pair& main_mate_pair, 
+                        mate_pair& own_mate_pair){
+
+  //std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > 
+
+  for (auto own_first_mate = own_mate_pair.begin(); 
+        own_first_mate != own_mate_pair.end(); own_first_mate++) {
+    //std::cout << "own_first_mate: " << own_first_mate->first << std::endl;
+    auto main_first_mate = main_mate_pair.find(own_first_mate->first);
+    if(main_first_mate != main_mate_pair.end()){
+      //std::cout << "yes-found" << std::endl;
+      for (auto own_second_mate = own_first_mate->second.begin(); 
+        own_second_mate != own_first_mate->second.end(); own_second_mate++) {
+
+        auto main_second_mate = main_first_mate->second.find(own_second_mate->first);
+        if(main_second_mate == main_first_mate->second.end()){
+          main_mate_pair[own_first_mate->first][own_second_mate->first] = own_second_mate->second;
+        }
+      }
+    } else{
+      //std::cout << "no-found" << std::endl;
+      for (auto own_second_mate = own_first_mate->second.begin(); 
+        own_second_mate != own_first_mate->second.end(); own_second_mate++) {
+          main_mate_pair[own_first_mate->first][own_second_mate->first] = own_second_mate->second; 
+      }
+    }
+  }
+
+
+  //mate_pair::iterator it3;
+  /*
+  for (auto own_first_dim_it = own_mate_pair.begin(); 
+        own_first_dim_it != own_mate_pair.end(); own_first_dim_it++) { //iterate own matepair map first dim
+    auto main_first_dim_it = main_mate_pair.find(own_first_dim_it->first);  // find first dim in main matepair map
+    if(main_first_dim_it != main_mate_pair.end()){    // first dim exist in main matepair
+      for ( auto own_second_dim_it = own_first_dim_it->second.begin(); // iterate mates of found mate in own matepair
+        own_second_dim_it != own_first_dim_it->second.end(); own_second_dim_it++) {
+          auto main_second_dim_it = main_first_dim_it->second.find(own_second_dim_it->first);  
+        if(it4 != it3->second.end())
+      } 
+    } */
+    //for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+      //third_dim_size += it2->second.links;
+      /*for (auto it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
+        fourth_dim_size += it3->second.size(); 
+      }*/
+    //}
+} 
+
+inline void
 LINKS::ExtractMatePairWorker::work()
 {
   //std::cout << "y test 1\n";
@@ -642,10 +696,11 @@ LINKS::ExtractMatePairWorker::work()
     } else {
       continue; // nothing
     }
-
-
-
   }
+    links.mate_pair_mutex.lock();
+    links.merge_mate_pair(links.matePair,own_mate_pair);
+    std::cout << "main mate pair size: " << links.matePair.size() << std::endl; 
+    links.mate_pair_mutex.unlock();
   //std::cout << "y test 3\n";
 }
 
