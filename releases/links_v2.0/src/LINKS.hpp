@@ -24,7 +24,7 @@
 #include <thread>
 #include <vector>
 #include <mutex>
-#include <shared_mutex>
+//#include <shared_mutex>
 
 
 
@@ -242,7 +242,9 @@ private:
 
     btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
     void extract_mate_pair(const std::string& seq, std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>>& own_mate_pair,std::unordered_set<uint64_t>& own_mates);
-    void populate_mate_info(const std::string& seq,const std::string contig_rank);
+    void populate_mate_info(const std::string& seq,
+                          const std::string contig_rank,
+                          std::unordered_map<uint64_t, KmerInfo>& own_track_all);
     
     int getDistanceBin(int distance);
     int getDistance(uint64_t insert_size, 
@@ -258,6 +260,7 @@ private:
       unsigned orient_enum);
     void merge_mate_pair_map(mate_pair& own_mate_pair);
     void merge_mates_set(std::unordered_set<uint64_t>& own_mates);
+    void merge_track_all(std::unordered_map<uint64_t, KmerInfo>& own_track_all);
     // helper functions
     uint64_t get_file_size(std::string filename);
     bool does_file_exist(std::string fileName);
@@ -278,8 +281,9 @@ private:
     //std::mutex mates_mutex;
     std::mutex mate_pair_mutex;
     std::mutex contig_rank_mutex;
-    std::mutex tig_length_mutex; 
-    std::shared_mutex track_all_mutex;
+    std::mutex tig_length_mutex;
+    std::mutex track_all_mutex;
+    //std::shared_mutex track_all_mutex;
     
 
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
@@ -460,7 +464,6 @@ LINKS::start_read_fasta(){
   std::cout << "second dim size: " << second_dim_size << std::endl;
   std::cout << "total insert size size: " << third_dim_size << std::endl; 
   std::cout << "mates size: " << mates.size() << std::endl;
-  sleep(5);
 }
 inline void 
 LINKS::start_read_contig(){
@@ -585,25 +588,11 @@ LINKS::extract_mate_pair(const std::string& seq,
 
 inline void
 LINKS::populate_mate_info(const std::string& seq,
-                          const std::string contig_rank){
+                          const std::string contig_rank,
+                          std::unordered_map<uint64_t, KmerInfo>& own_track_all){
   
   btllib::NtHash ntHashContig(seq, bloom->get_hash_num(), k); // hashFunc can be 1 after first step
-  //std::cout << "t test 20\n";
-  //std::cout << "matepair size:" << matePair.size() << " t test 21\n";
 
-  uint second_dim_size = 0;
-    uint third_dim_size = 0;
-    uint fourth_dim_size = 0;
-    for (auto it = matePair.begin(); it != matePair.end(); it++) {
-    //std::cout << *it << endl;
-    //std::cout << "it->second.size(): " << it->second.size() << std::endl; 
-    second_dim_size += it->second.size();
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
-      third_dim_size += it2->second.insert_size;
-    }
-  }
-  //std::cout << "second dim size: " << second_dim_size << std::endl;
-  //std::cout << "total insert size size: " << third_dim_size << std::endl; 
 
   int breakFlag = 0;
   //unsigned seq_length = seq->length();
@@ -622,39 +611,39 @@ LINKS::populate_mate_info(const std::string& seq,
         // Forward part
 	    if(matePair.find(ntHashContig.get_forward_hash()) != matePair.end() || 
             mates.find(ntHashContig.get_forward_hash()) != mates.end()) {
-            track_all_mutex.lock_shared();
+            //track_all_mutex.lock_shared();
             
             //std::cout << "matepair size:" << matePair.size() << " test xx\n";
             //std::cout << "t test yy\n";
-            if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
+            if(own_track_all.find(ntHashContig.get_forward_hash()) == own_track_all.end()) {
               //std::cout << "t test zz\n";
-              track_all_mutex.unlock_shared();
-              track_all_mutex.lock();
-              trackAll[ntHashContig.get_forward_hash()] = KmerInfo(contig_rank, i, i + k, 1, false);
+              //track_all_mutex.unlock_shared();
+              //track_all_mutex.lock();
+              own_track_all[ntHashContig.get_forward_hash()] = KmerInfo(contig_rank, i, i + k, 1, false);
               //std::cout << "trackAll not found\n";
-              track_all_mutex.unlock();
+              //track_all_mutex.unlock();
             } else {
-              track_all_mutex.unlock_shared();
-              track_all_mutex.lock();
-              trackAll[ntHashContig.get_forward_hash()].multiple +=1;
-              track_all_mutex.unlock();
+              //track_all_mutex.unlock_shared();
+              //track_all_mutex.lock();
+              own_track_all[ntHashContig.get_forward_hash()].multiple +=1;
+              //track_all_mutex.unlock();
             }
         }
 
         // Reverse part
         if(matePair.find(ntHashContig.get_reverse_hash()) != matePair.end() || 
             mates.find(ntHashContig.get_reverse_hash()) != mates.end()) {
-            track_all_mutex.lock_shared();
-            if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
-              track_all_mutex.unlock_shared();
-              track_all_mutex.lock();
-              trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(contig_rank, i, i + k, 1, true);
-              track_all_mutex.unlock();
+            //track_all_mutex.lock_shared();
+            if(own_track_all.find(ntHashContig.get_reverse_hash()) == own_track_all.end()) {
+              //track_all_mutex.unlock_shared();
+              //track_all_mutex.lock();
+              own_track_all[ntHashContig.get_reverse_hash()] = KmerInfo(contig_rank, i, i + k, 1, true);
+              //track_all_mutex.unlock();
             } else {
-              track_all_mutex.unlock_shared();
-              track_all_mutex.lock();
-              trackAll[ntHashContig.get_reverse_hash()].multiple +=1;
-              track_all_mutex.unlock();
+              //track_all_mutex.unlock_shared();
+              //track_all_mutex.lock();
+              own_track_all[ntHashContig.get_reverse_hash()].multiple +=1;
+              //track_all_mutex.unlock();
             }
         }
     }
@@ -691,7 +680,24 @@ LINKS::merge_mate_pair_map(mate_pair& own_mate_pair){
     }
   }
 } 
+inline void
+LINKS::merge_track_all(std::unordered_map<uint64_t, KmerInfo>& own_track_all){
+  std::cout << "own_track_all.size() " << own_track_all.size() << std::endl;
 
+  for (auto iterator = own_track_all.begin(); 
+    iterator != own_track_all.end(); iterator++) {
+
+    if(trackAll.find(iterator->first) == trackAll.end()) {
+      trackAll[iterator->first] = KmerInfo(iterator->second.tig,
+                                            iterator->second.start, 
+                                            iterator->second.end, 
+                                            iterator->second.multiple, 
+                                            iterator->second.orient);
+    } else {
+      own_track_all[iterator->first].multiple +=1;
+    }
+  }
+}
 inline void
 LINKS::ExtractMatePairWorker::work()
 {
@@ -752,6 +758,7 @@ LINKS::PopulateMateInfoWorker::work()
   //(std::remove_reference<decltype(*(links.input_queue))>)::Block input_block(links.block_size);
   btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size);
   unsigned cur_contig_rank;
+  std::unordered_map<uint64_t, KmerInfo> own_track_all;
 
   std::cout << "t test 10\n";
   //std::cout << "q test 2\n";
@@ -782,7 +789,7 @@ LINKS::PopulateMateInfoWorker::work()
         links.tigLength[std::to_string(cur_contig_rank)] = read.seq.size();
         links.tig_length_mutex.unlock();
         //std::cout << "t test 12\n";
-        links.populate_mate_info(read.seq,std::to_string(cur_contig_rank));
+        links.populate_mate_info(read.seq,std::to_string(cur_contig_rank), own_track_all);
         //std::cout << "q test 6\n";
         continue;
     } else {
@@ -790,6 +797,9 @@ LINKS::PopulateMateInfoWorker::work()
       continue; // nothing
     }
   }
+  links.track_all_mutex.lock();
+  links.merge_track_all(own_track_all);
+  links.track_all_mutex.unlock();
 }
 
 inline LINKS::~LINKS()

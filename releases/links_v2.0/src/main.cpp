@@ -1,6 +1,7 @@
 #include "LINKS.hpp"
 #include "InputParser.hpp"
 #include <chrono>
+#include <stdlib.h> // for sleep
 
 int main(int argc, char** argv){
     InputParser* linksArgParser = new InputParser(argc, argv);
@@ -14,11 +15,10 @@ int main(int argc, char** argv){
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
     std::cout << milliseconds.count() << "ms\n";
 
-    //return 0;
-
     std::cout << "Read fasta stage\n";
     start = std::chrono::high_resolution_clock::now();
     links->start_read_fasta();
+    std::cout << "Read fasta stage finish\n";
     finish = std::chrono::high_resolution_clock::now();
     milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finish-start);
     std::cout << milliseconds.count() << "ms\n";
