@@ -24,7 +24,7 @@
 #include <thread>
 #include <vector>
 #include <mutex>
-//#include <shared_mutex>
+#include <shared_mutex>
 
 
 
@@ -82,7 +82,12 @@ class LINKS
     struct MatePairInfo
     {
       MatePairInfo() = default;
-
+      /*
+      MatePairInfo(MatePairInfo& copy)
+        : seen(copy.seen)
+        , insert_size(copy.insert_size)
+      {}
+*/
       MatePairInfo(   bool seen,
                       int64_t insert_size)
         : seen(seen)
@@ -251,9 +256,8 @@ private:
       std::string kmer1_name,
       std::string kmer2_name,
       unsigned orient_enum);
-    void merge_mate_pair(mate_pair& main_mate_pair, 
-                        mate_pair& own_mate_pair);
-
+    void merge_mate_pair_map(mate_pair& own_mate_pair);
+    void merge_mates_set(std::unordered_set<uint64_t>& own_mates);
     // helper functions
     uint64_t get_file_size(std::string filename);
     bool does_file_exist(std::string fileName);
@@ -274,7 +278,8 @@ private:
     //std::mutex mates_mutex;
     std::mutex mate_pair_mutex;
     std::mutex contig_rank_mutex;
-    //std::shared_mutex track_all_mutex;
+    std::mutex tig_length_mutex; 
+    std::shared_mutex track_all_mutex;
     
 
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
@@ -422,8 +427,8 @@ LINKS::InputWorker::work()
 
 inline void 
 LINKS::start_read_fasta(){
-  matePair.reserve(10000);
-  mates.reserve(10000);
+  //matePair.reserve(10000);
+  //mates.reserve(10000);
   
   reader = std::shared_ptr<btllib::SeqReader>(new btllib::SeqReader(std::move(longReads.front()), btllib::SeqReader::Flag::LONG_MODE));
   longReads.pop();
@@ -436,42 +441,64 @@ LINKS::start_read_fasta(){
   // wait
   for (auto& worker : extract_mate_pair_workers) {
     worker.join();
+    std::cout << "joined\n";
   }
   input_worker->join();
 
   std::cout << "after join matepair size: " << matePair.size() << std::endl;
+  uint second_dim_size = 0;
+  uint third_dim_size = 0;
+  uint fourth_dim_size = 0;
+  for (auto it = matePair.begin(); it != matePair.end(); it++) {
+    //std::cout << *it << endl;
+    //std::cout << "it->second.size(): " << it->second.size() << std::endl; 
+    second_dim_size += it->second.size();
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+      third_dim_size += it2->second.insert_size;
+    }
+  }
+  std::cout << "second dim size: " << second_dim_size << std::endl;
+  std::cout << "total insert size size: " << third_dim_size << std::endl; 
   std::cout << "mates size: " << mates.size() << std::endl;
+  sleep(5);
 }
 inline void 
 LINKS::start_read_contig(){
   trackAll.reserve(mates.size());
   //std::cout << "t test 0\n";
   //delete(reader);
+  std::cout << "t test 0\n";
   reader.reset();
   reader = std::shared_ptr<btllib::SeqReader>(new btllib::SeqReader(assemblyFile, btllib::SeqReader::Flag::LONG_MODE));
   //delete input_worker;
+  std::cout << "t test 1\n";
   input_worker.reset();
-  //std::cout << "t test 1\n";
+  std::cout << "t test 2\n";
 
   input_queue.reset();
-  //std::cout << "t test 1.1\n";
+  std::cout << "t test 3\n";
   input_queue = std::shared_ptr<btllib::OrderQueueSPMC<Read>>(new btllib::OrderQueueSPMC<Read>(buffer_size, block_size));
   //std::cout << "t test 1.2\n";
+
+  std::cout << "t test 4\n";
 
   input_worker = std::shared_ptr<InputWorker>(new InputWorker(*this));
   input_worker->start();
   //std::cout << "t test 2\n";
+  std::cout << "t test 5\n";
 
   populate_mate_info_workers = std::vector<PopulateMateInfoWorker>(threads, PopulateMateInfoWorker(*this));
 
-  //std::cout << "t test 3\n";  
+  std::cout << "t test 6\n";  
   for (auto& worker : populate_mate_info_workers) {
     worker.start();
   }
   //std::cout << "t test 4\n";
   // wait
+  std::cout << "t test 7\n";
   for (auto& worker : populate_mate_info_workers) {
     worker.join();
+    std::cout << "t test 8\n";
   }
   //std::cout << "t test 5\n";
   input_worker->join();
@@ -497,6 +524,8 @@ LINKS::extract_mate_pair(const std::string& seq,
     btllib::NtHash nthash(seq, bloom->get_hash_num(), k);
     btllib::NtHash nthashLead(seq, bloom->get_hash_num(), k, delta);
 
+    uint64_t hash_a, hash_b;    
+
     for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=step) {
         // roll for the number of steps
         breakFlag = 0;
@@ -509,53 +538,46 @@ LINKS::extract_mate_pair(const std::string& seq,
         }  
         if(breakFlag){break;}
         // for step ----
-        // check if reverse pair exist
-        //std::cout << "here 2" << std::endl;
-        // mutexes commented out for test
-        //mate_pair_mutex.lock_shared();
+
+        if(nthash.get_forward_hash() < nthashLead.get_reverse_hash()){
+          hash_a = nthashLead.get_reverse_hash();
+          hash_b = nthash.get_reverse_hash();
+        }else{
+          hash_a = nthash.get_forward_hash();
+          hash_b = nthashLead.get_forward_hash();
+        }
+
+        /*
         mate_pair::iterator it = own_mate_pair.find(nthashLead.get_reverse_hash());
-        //mate_pair_mutex.unlock_shared();
+
         if( it != own_mate_pair.end() ) {
             std::unordered_map<uint64_t, MatePairInfo > &innerMap = it->second;
-            //mate_pair_mutex.lock_shared();
+
             std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(nthash.get_reverse_hash());
-            //mate_pair_mutex.unlock_shared();
+
             if( innerit != innerMap.end() ){
-                //mate_pair_mutex.lock();
+
                 innerit->second.insert_size = distance;
-                //mate_pair_mutex.unlock();
+
                 reverseExists = true;
             }
         }
-        //std::cout << "here 3" << std::endl;
-        if(!reverseExists && bloom->contains(nthash.hashes()) && bloom->contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
-            //mate_pair_mutex.lock_shared();
-            mate_pair::iterator it = own_mate_pair.find(nthash.get_forward_hash());
-            //mate_pair_mutex.unlock_shared();
+        */
+        if(bloom->contains(nthash.hashes()) && bloom->contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
+            mate_pair::iterator it = own_mate_pair.find(hash_a);
             if( it != own_mate_pair.end() ) {
                 std::unordered_map<uint64_t, MatePairInfo> &innerMap = it->second;
-                //mate_pair_mutex.lock_shared();
-                std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(nthashLead.get_forward_hash());
-                //mate_pair_mutex.unlock_shared();
+                std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(hash_b);
                 if( innerit != innerMap.end() ){
-                    //mate_pair_mutex.lock();
-                    own_mate_pair[nthash.get_forward_hash()][nthashLead.get_forward_hash()].insert_size = distance;
-                    //mate_pair_mutex.unlock();
+                    own_mate_pair[hash_a][hash_b].insert_size = distance;
                 }else{
-                    //mate_pair_mutex.lock();
-                    own_mate_pair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
-                    //mate_pair_mutex.unlock();
+                    own_mate_pair[hash_a][hash_b] = MatePairInfo(false, distance);
                 }
-                //std::cout << "here 4" << std::endl;
             }else{
-                //mate_pair_mutex.lock();
-                own_mate_pair[nthash.get_forward_hash()][nthashLead.get_forward_hash()] = MatePairInfo(false, distance);
-                //mate_pair_mutex.unlock();
+                own_mate_pair[hash_a][hash_b] = MatePairInfo(false, distance);
             }
-
             //std::lock_guard<std::mutex> guard(mates_mutex);
-            own_mates.insert(nthashLead.get_forward_hash());
-            //std::cout << "here 4" << std::endl;
+            own_mates.insert(hash_b);
         }
     }
   }
@@ -566,6 +588,22 @@ LINKS::populate_mate_info(const std::string& seq,
                           const std::string contig_rank){
   
   btllib::NtHash ntHashContig(seq, bloom->get_hash_num(), k); // hashFunc can be 1 after first step
+  //std::cout << "t test 20\n";
+  //std::cout << "matepair size:" << matePair.size() << " t test 21\n";
+
+  uint second_dim_size = 0;
+    uint third_dim_size = 0;
+    uint fourth_dim_size = 0;
+    for (auto it = matePair.begin(); it != matePair.end(); it++) {
+    //std::cout << *it << endl;
+    //std::cout << "it->second.size(): " << it->second.size() << std::endl; 
+    second_dim_size += it->second.size();
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+      third_dim_size += it2->second.insert_size;
+    }
+  }
+  //std::cout << "second dim size: " << second_dim_size << std::endl;
+  //std::cout << "total insert size size: " << third_dim_size << std::endl; 
 
   int breakFlag = 0;
   //unsigned seq_length = seq->length();
@@ -580,92 +618,78 @@ LINKS::populate_mate_info(const std::string& seq,
         // for rolling step
 
       i = ntHashContig.get_pos();
-        
+      //std::cout << "t test 21\n";
         // Forward part
 	    if(matePair.find(ntHashContig.get_forward_hash()) != matePair.end() || 
             mates.find(ntHashContig.get_forward_hash()) != mates.end()) {
-            //track_all_mutex.lock_shared();
+            track_all_mutex.lock_shared();
+            
+            //std::cout << "matepair size:" << matePair.size() << " test xx\n";
+            //std::cout << "t test yy\n";
             if(trackAll.find(ntHashContig.get_forward_hash()) == trackAll.end()) {
-              //track_all_mutex.unlock_shared();
-              //track_all_mutex.lock();
+              //std::cout << "t test zz\n";
+              track_all_mutex.unlock_shared();
+              track_all_mutex.lock();
               trackAll[ntHashContig.get_forward_hash()] = KmerInfo(contig_rank, i, i + k, 1, false);
               //std::cout << "trackAll not found\n";
-              //track_all_mutex.unlock();
+              track_all_mutex.unlock();
             } else {
-              //track_all_mutex.unlock_shared();
-              //track_all_mutex.lock();
+              track_all_mutex.unlock_shared();
+              track_all_mutex.lock();
               trackAll[ntHashContig.get_forward_hash()].multiple +=1;
-              //track_all_mutex.unlock();
+              track_all_mutex.unlock();
             }
         }
 
         // Reverse part
         if(matePair.find(ntHashContig.get_reverse_hash()) != matePair.end() || 
             mates.find(ntHashContig.get_reverse_hash()) != mates.end()) {
-            //track_all_mutex.lock_shared();
+            track_all_mutex.lock_shared();
             if(trackAll.find(ntHashContig.get_reverse_hash()) == trackAll.end()) {
-              //track_all_mutex.unlock_shared();
-              //track_all_mutex.lock();
+              track_all_mutex.unlock_shared();
+              track_all_mutex.lock();
               trackAll[ntHashContig.get_reverse_hash()] = KmerInfo(contig_rank, i, i + k, 1, true);
-              //track_all_mutex.unlock();
+              track_all_mutex.unlock();
             } else {
-              //track_all_mutex.unlock_shared();
-              //track_all_mutex.lock();
+              track_all_mutex.unlock_shared();
+              track_all_mutex.lock();
               trackAll[ntHashContig.get_reverse_hash()].multiple +=1;
-              //track_all_mutex.unlock();
+              track_all_mutex.unlock();
             }
         }
     }
 }
-
+inline void 
+LINKS::merge_mates_set(std::unordered_set<uint64_t>& own_mates){
+  //main_mates.insert(own_mates.begin(), own_mates.end());
+}
 inline void
-LINKS::merge_mate_pair( mate_pair& main_mate_pair, 
-                        mate_pair& own_mate_pair){
+LINKS::merge_mate_pair_map(mate_pair& own_mate_pair){
 
   //std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > 
 
   for (auto own_first_mate = own_mate_pair.begin(); 
-        own_first_mate != own_mate_pair.end(); own_first_mate++) {
+    own_first_mate != own_mate_pair.end(); own_first_mate++) {
     //std::cout << "own_first_mate: " << own_first_mate->first << std::endl;
-    auto main_first_mate = main_mate_pair.find(own_first_mate->first);
-    if(main_first_mate != main_mate_pair.end()){
+    auto main_first_mate = matePair.find(own_first_mate->first);
+    if(main_first_mate != matePair.end()){
       //std::cout << "yes-found" << std::endl;
       for (auto own_second_mate = own_first_mate->second.begin(); 
         own_second_mate != own_first_mate->second.end(); own_second_mate++) {
 
         auto main_second_mate = main_first_mate->second.find(own_second_mate->first);
         if(main_second_mate == main_first_mate->second.end()){
-          main_mate_pair[own_first_mate->first][own_second_mate->first] = own_second_mate->second;
+          matePair[own_first_mate->first][own_second_mate->first] = MatePairInfo(false, own_second_mate->second.insert_size);
         }
       }
     } else{
       //std::cout << "no-found" << std::endl;
       for (auto own_second_mate = own_first_mate->second.begin(); 
         own_second_mate != own_first_mate->second.end(); own_second_mate++) {
-          main_mate_pair[own_first_mate->first][own_second_mate->first] = own_second_mate->second; 
+          matePair[own_first_mate->first][own_second_mate->first] = MatePairInfo(false, own_second_mate->second.insert_size);
       }
     }
   }
-
-
-  //mate_pair::iterator it3;
-  /*
-  for (auto own_first_dim_it = own_mate_pair.begin(); 
-        own_first_dim_it != own_mate_pair.end(); own_first_dim_it++) { //iterate own matepair map first dim
-    auto main_first_dim_it = main_mate_pair.find(own_first_dim_it->first);  // find first dim in main matepair map
-    if(main_first_dim_it != main_mate_pair.end()){    // first dim exist in main matepair
-      for ( auto own_second_dim_it = own_first_dim_it->second.begin(); // iterate mates of found mate in own matepair
-        own_second_dim_it != own_first_dim_it->second.end(); own_second_dim_it++) {
-          auto main_second_dim_it = main_first_dim_it->second.find(own_second_dim_it->first);  
-        if(it4 != it3->second.end())
-      } 
-    } */
-    //for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
-      //third_dim_size += it2->second.links;
-      /*for (auto it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
-        fourth_dim_size += it3->second.size(); 
-      }*/
-    //}
 } 
 
 inline void
@@ -698,8 +722,24 @@ LINKS::ExtractMatePairWorker::work()
     }
   }
     links.mate_pair_mutex.lock();
-    links.merge_mate_pair(links.matePair,own_mate_pair);
-    std::cout << "main mate pair size: " << links.matePair.size() << std::endl; 
+    links.merge_mate_pair_map(own_mate_pair);
+    own_mate_pair.clear();
+    links.merge_mates_set(own_mates);
+    std::cout << "main mate pair first dim size: " << links.matePair.size() << std::endl;
+    uint second_dim_size = 0;
+    uint third_dim_size = 0;
+    uint fourth_dim_size = 0;
+    for (auto it = links.matePair.begin(); it != links.matePair.end(); it++) {
+    //std::cout << *it << endl;
+    //std::cout << "it->second.size(): " << it->second.size() << std::endl; 
+    second_dim_size += it->second.size();
+    for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
+      third_dim_size += it2->second.insert_size;
+
+    }
+  }
+    std::cout << "second dim size: " << second_dim_size << std::endl;
+    std::cout << "total insert size size: " << third_dim_size << std::endl; 
     links.mate_pair_mutex.unlock();
   //std::cout << "y test 3\n";
 }
@@ -713,6 +753,7 @@ LINKS::PopulateMateInfoWorker::work()
   btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size);
   unsigned cur_contig_rank;
 
+  std::cout << "t test 10\n";
   //std::cout << "q test 2\n";
   for (;;) {
     //std::cout << "q test 3\n";
@@ -733,7 +774,14 @@ LINKS::PopulateMateInfoWorker::work()
     links.contig_rank_mutex.unlock();
 
     if (links.k <= read.seq.size()) {
+        //std::cout << "t test 11\n";
+        //std::cout << "read size: " << read.seq.size() << std::endl;
+        //std::cout << "std::to_string(cur_contig_rank) " << std::to_string(cur_contig_rank) << std::endl;
+        //std::cout << "tigLength.size() " << links.tigLength.size() << std::endl;
+        links.tig_length_mutex.lock(); 
         links.tigLength[std::to_string(cur_contig_rank)] = read.seq.size();
+        links.tig_length_mutex.unlock();
+        //std::cout << "t test 12\n";
         links.populate_mate_info(read.seq,std::to_string(cur_contig_rank));
         //std::cout << "q test 6\n";
         continue;
@@ -746,7 +794,7 @@ LINKS::PopulateMateInfoWorker::work()
 
 inline LINKS::~LINKS()
 {
-  
+ std::cout << "here deleting LINKS" << std::endl;
 }
 
 inline uint64_t 
