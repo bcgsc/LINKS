@@ -732,20 +732,6 @@ LINKS::ExtractMatePairWorker::work()
     own_mate_pair.clear();
     links.merge_mates_set(own_mates);
     std::cout << "main mate pair first dim size: " << links.matePair.size() << std::endl;
-    uint second_dim_size = 0;
-    uint third_dim_size = 0;
-    uint fourth_dim_size = 0;
-    for (auto it = links.matePair.begin(); it != links.matePair.end(); it++) {
-    //std::cout << *it << endl;
-    //std::cout << "it->second.size(): " << it->second.size() << std::endl; 
-    second_dim_size += it->second.size();
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
-      third_dim_size += it2->second.insert_size;
-
-    }
-  }
-    std::cout << "second dim size: " << second_dim_size << std::endl;
-    std::cout << "total insert size size: " << third_dim_size << std::endl; 
     links.mate_pair_mutex.unlock();
   //std::cout << "y test 3\n";
 }
