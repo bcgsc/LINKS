@@ -26,6 +26,7 @@
 #include <mutex>
 //#include <shared_mutex>
 
+#include <boost/functional/hash.hpp>
 
 
 class LINKS
@@ -137,7 +138,18 @@ class LINKS
       uint64_t multiple = 1;
       bool orient = 0;
     };
-    
+
+    struct pair_hash {
+    template <class T1, class T2>
+    std::size_t operator () (const std::pair<T1,T2> &p) const {
+      std::size_t seed = 0;
+      boost::hash_combine(seed, p.first);
+      boost::hash_combine(seed, p.second);
+      return seed;
+      }
+    };
+
+    typedef std::unordered_map<std::pair<uint64_t,uint64_t>, MatePairInfo, pair_hash> mate_pair_type;
     typedef std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > mate_pair;
 private:
   class Worker
@@ -285,6 +297,8 @@ private:
     std::mutex track_all_mutex;
     //std::shared_mutex track_all_mutex;
     
+
+    mate_pair_type new_mate_pair;
 
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
     std::unordered_map<uint64_t, KmerInfo> trackAll;
@@ -668,7 +682,8 @@ LINKS::merge_mate_pair_map(mate_pair& own_mate_pair){
 
         auto main_second_mate = main_first_mate->second.find(own_second_mate->first);
         if(main_second_mate == main_first_mate->second.end()){
-          matePair[own_first_mate->first][own_second_mate->first] = MatePairInfo(false, own_second_mate->second.insert_size);
+          //matePair[own_first_mate->first][own_second_mate->first] = MatePairInfo(false, own_second_mate->second.insert_size);
+          //new_mate_pair[std::make_pair(own_first_mate->first,own_second_mate->first)] = MatePairInfo(false, own_second_mate->second.insert_size); 
         }
       }
     } else{
@@ -676,6 +691,7 @@ LINKS::merge_mate_pair_map(mate_pair& own_mate_pair){
       for (auto own_second_mate = own_first_mate->second.begin(); 
         own_second_mate != own_first_mate->second.end(); own_second_mate++) {
           matePair[own_first_mate->first][own_second_mate->first] = MatePairInfo(false, own_second_mate->second.insert_size);
+          new_mate_pair[std::make_pair(own_first_mate->first,own_second_mate->first)] = MatePairInfo(false, own_second_mate->second.insert_size); 
       }
     }
   }
@@ -732,8 +748,8 @@ LINKS::ExtractMatePairWorker::work()
     own_mate_pair.clear();
     links.merge_mates_set(own_mates);
     std::cout << "main mate pair first dim size: " << links.matePair.size() << std::endl;
+    std::cout << "new mate pair first dim size: " << links.new_mate_pair.size() << std::endl;
     links.mate_pair_mutex.unlock();
-  //std::cout << "y test 3\n";
 }
 
 inline void
