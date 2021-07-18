@@ -594,7 +594,8 @@ LINKS::extract_mate_pair(const std::string& seq,
                 own_mate_pair[hash_a][hash_b] = MatePairInfo(false, distance);
             }
             //std::lock_guard<std::mutex> guard(mates_mutex);
-            own_mates.insert(hash_b);
+            own_mates.insert(hash_a); // with new data structure have to insert both
+            own_mates.insert(hash_b); 
         }
     }
   }
@@ -623,8 +624,10 @@ LINKS::populate_mate_info(const std::string& seq,
       i = ntHashContig.get_pos();
       //std::cout << "t test 21\n";
         // Forward part
-	    if(matePair.find(ntHashContig.get_forward_hash()) != matePair.end() || 
-            mates.find(ntHashContig.get_forward_hash()) != mates.end()) {
+	    //if(matePair.find(ntHashContig.get_forward_hash()) != matePair.end() || 
+      //      mates.find(ntHashContig.get_forward_hash()) != mates.end()) {
+      if(mates.find(ntHashContig.get_forward_hash()) != mates.end()){
+
             //track_all_mutex.lock_shared();
             
             //std::cout << "matepair size:" << matePair.size() << " test xx\n";
@@ -645,8 +648,10 @@ LINKS::populate_mate_info(const std::string& seq,
         }
 
         // Reverse part
-        if(matePair.find(ntHashContig.get_reverse_hash()) != matePair.end() || 
-            mates.find(ntHashContig.get_reverse_hash()) != mates.end()) {
+        //if(matePair.find(ntHashContig.get_reverse_hash()) != matePair.end() || 
+        //    mates.find(ntHashContig.get_reverse_hash()) != mates.end()) {
+        
+        if(mates.find(ntHashContig.get_reverse_hash()) != mates.end()){
             //track_all_mutex.lock_shared();
             if(own_track_all.find(ntHashContig.get_reverse_hash()) == own_track_all.end()) {
               //track_all_mutex.unlock_shared();
@@ -664,7 +669,7 @@ LINKS::populate_mate_info(const std::string& seq,
 }
 inline void 
 LINKS::merge_mates_set(std::unordered_set<uint64_t>& own_mates){
-  //main_mates.insert(own_mates.begin(), own_mates.end());
+  mates.insert(own_mates.begin(), own_mates.end());
 }
 inline void
 LINKS::merge_mate_pair_map(mate_pair& own_mate_pair){
@@ -690,7 +695,7 @@ LINKS::merge_mate_pair_map(mate_pair& own_mate_pair){
       //std::cout << "no-found" << std::endl;
       for (auto own_second_mate = own_first_mate->second.begin(); 
         own_second_mate != own_first_mate->second.end(); own_second_mate++) {
-          matePair[own_first_mate->first][own_second_mate->first] = MatePairInfo(false, own_second_mate->second.insert_size);
+          //matePair[own_first_mate->first][own_second_mate->first] = MatePairInfo(false, own_second_mate->second.insert_size);
           new_mate_pair[std::make_pair(own_first_mate->first,own_second_mate->first)] = MatePairInfo(false, own_second_mate->second.insert_size); 
       }
     }
