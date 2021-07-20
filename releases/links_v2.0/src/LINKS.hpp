@@ -25,6 +25,7 @@
 #include <vector>
 #include <mutex>
 //#include <shared_mutex>
+#include <chrono>
 
 #include <boost/functional/hash.hpp>
 
@@ -744,6 +745,7 @@ LINKS::ExtractMatePairWorker::work()
   std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> own_mate_pair;
   std::unordered_set<uint64_t> own_mates;
 
+  auto start = std::chrono::high_resolution_clock::now();
   //std::cout << "y test 2\n";
   for (;;) {
     if (input_block.current == input_block.count) {
@@ -762,16 +764,30 @@ LINKS::ExtractMatePairWorker::work()
       continue; // nothing
     }
   }
-    links.mate_pair_mutex.lock();
-    if(links.new_mate_pair.size() <= 1){
-      links.new_mate_pair.reserve(own_new_mate_pair.size() * links.threads);
-    }
-    links.merge_mate_pair_map(own_new_mate_pair);
-    //own_mate_pair.clear();
-    links.merge_mates_set(own_mates);
-    std::cout << "main mate pair first dim size: " << links.matePair.size() << std::endl;
-    std::cout << "new mate pair first dim size: " << links.new_mate_pair.size() << std::endl;
-    links.mate_pair_mutex.unlock();
+  links.mate_pair_mutex.lock();
+  if(links.new_mate_pair.size() <= 1){
+    links.new_mate_pair.reserve(own_new_mate_pair.size() * links.threads);
+  }
+
+  auto finish = std::chrono::high_resolution_clock::now();
+  auto seconds = std::chrono::duration_cast<std::chrono::seconds>(finish-start);
+  std::cout << "Extracted pairs in " << seconds.count() << " ms\n";
+
+  start = std::chrono::high_resolution_clock::now();
+  links.merge_mate_pair_map(own_new_mate_pair);
+  finish = std::chrono::high_resolution_clock::now();
+  seconds = std::chrono::duration_cast<std::chrono::seconds>(finish-start);
+  std::cout << "Merged map in " << seconds.count() << " ms\n";
+  //own_mate_pair.clear();
+  start = std::chrono::high_resolution_clock::now();
+  links.merge_mates_set(own_mates);
+  finish = std::chrono::high_resolution_clock::now();
+  seconds = std::chrono::duration_cast<std::chrono::seconds>(finish-start);
+  std::cout << "Merged set in " << seconds.count() << " ms\n";
+
+  std::cout << "main mate pair first dim size: " << links.matePair.size() << std::endl;
+  std::cout << "new mate pair first dim size: " << links.new_mate_pair.size() << std::endl;
+  links.mate_pair_mutex.unlock();
 }
 
 inline void
@@ -822,6 +838,9 @@ LINKS::PopulateMateInfoWorker::work()
     }
   }
   links.track_all_mutex.lock();
+  if(links.new_mate_pair.size() <= 1){
+    links.trackAll.reserve(own_track_all.size() * links.threads);
+  }
   links.merge_track_all(own_track_all);
   links.track_all_mutex.unlock();
 }
