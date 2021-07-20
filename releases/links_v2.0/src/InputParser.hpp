@@ -22,8 +22,8 @@ class InputParser {
 	int help = 0;
     char* end = nullptr;
 
-    std::vector<uint64_t> splitDistanceInput(std::string input){
-        std::vector<uint64_t> distances; 
+    std::vector<uint16_t> splitDistanceInput(std::string input){
+        std::vector<uint16_t> distances; 
 
         std::stringstream ss(input);
 
@@ -31,7 +31,7 @@ class InputParser {
         {
             std::string substr;
             getline( ss, substr, ',' );
-            distances.push_back(static_cast<unsigned int>(std::stoul(substr) ));
+            distances.push_back(static_cast<uint16_t>(std::stoul(substr) ));
         }
         return distances;
     }
@@ -53,7 +53,7 @@ class InputParser {
     std::string assemblyFile = "";
     std::string fofFile = "";
     std::queue<std::string> longReads;
-    std::vector<uint64_t> distances = {4000};
+    std::vector<uint16_t> distances = {4000};
     //uint64_t distances = 4000;
     uint64_t k = 15;
     bool verbose = false;

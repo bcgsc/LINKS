@@ -45,7 +45,7 @@ class LINKS
 
     std::string assemblyFile;
     std::string fofFile;
-    std::vector<uint64_t> distances = {2000,4000};
+    std::vector<uint16_t> distances = {2000,4000};
     //uint64_t distances = 4000;
     uint64_t k = 15;
     bool verbose = false;
@@ -63,6 +63,21 @@ class LINKS
     uint64_t bfOff = 0;
 
     static const size_t MAX_SIMULTANEOUS_INDEXLRS = 128;
+
+    struct MateData
+    {
+      MateData() {}
+
+      MateData(uint64_t kmer_1_hash, uint64_t kmer_2_hash, uint16_t distance)
+        : kmer_1_hash(kmer_1_hash)
+        , kmer_2_hash(kmer_2_hash)
+        , distance(distance)
+      {}
+
+      uint64_t kmer_1_hash; 
+      uint64_t kmer_2_hash;
+      uint16_t distance;
+    };
 
     struct Read
     {
@@ -221,6 +236,8 @@ private:
         ExtractMatePairWorker& operator=(ExtractMatePairWorker&& worker) = delete;
 
         void work() override;
+
+        
     };
 
     class PopulateMateInfoWorker : public Worker
@@ -250,13 +267,17 @@ private:
     std::queue<std::string> longReads;
     unsigned threads;
     long id;
-    size_t buffer_size = 4;
-    size_t block_size = 1;
+    size_t buffer_size = 16;
+    size_t block_size = 4;
+
+    size_t mate_pair_buffer_size = 16;
+    size_t mate_pair_block_size = 1000000;
 
     btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
     void extract_mate_pair( const std::string& seq,
                             mate_pair_type& own_new_mate_pair,
-                            std::unordered_set<uint64_t>& own_mates);
+                            std::unordered_set<uint64_t>& own_mates,
+                            btllib::OrderQueueSPMC<MateData>::Block& mate_pair_block);
     void populate_mate_info(const std::string& seq,
                             const std::string contig_rank,
                             std::unordered_map<uint64_t, KmerInfo>& own_track_all);
@@ -286,6 +307,8 @@ private:
     //btllib::SeqReader* reader;
     std::shared_ptr<btllib::SeqReader> reader;
     std::shared_ptr<btllib::OrderQueueSPMC<Read>> input_queue;
+    
+    btllib::OrderQueueSPMC<MateData> mate_pair_input_queue;
     //InputWorker* input_worker;
     std::shared_ptr<InputWorker> input_worker;
     std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
@@ -309,6 +332,8 @@ private:
     // store second mates in a set
     std::unordered_set<uint64_t> mates;
     unsigned last_contig_rank = 0;
+
+    std::atomic<std::uint32_t> mate_pair_current_block_num = 0;
 };
 
 inline btllib::KmerBloomFilter*
@@ -384,6 +409,7 @@ inline LINKS::LINKS(InputParser* inputParser)
         , bfOff(inputParser->bfOff)
         , threads(inputParser->thread)
         , input_queue(std::shared_ptr<btllib::OrderQueueSPMC<Read>>(new btllib::OrderQueueSPMC<Read>(buffer_size, block_size)))
+        , mate_pair_input_queue(mate_pair_buffer_size, mate_pair_block_size)
         , input_worker(std::shared_ptr<InputWorker>(new InputWorker(*this)))
         {}
 
@@ -430,9 +456,7 @@ LINKS::InputWorker::work()
       links.input_queue->write(block);
       block.count = 0;
     }
-    //std::cout << "test 2.5\n";
   }
-  //std::cout << "test 3\n";
 
   if (block.count > 0) {
     block.num = current_block_num++;
@@ -509,7 +533,7 @@ LINKS::start_read_contig(){
 
   populate_mate_info_workers = std::vector<PopulateMateInfoWorker>(threads, PopulateMateInfoWorker(*this));
 
-  std::cout << "t test 6\n";  
+  std::cout << "t test 6\n";
   for (auto& worker : populate_mate_info_workers) {
     worker.start();
   }
@@ -532,13 +556,12 @@ LINKS::start_read_contig(){
 inline void
 LINKS::extract_mate_pair(const std::string& seq,
   mate_pair_type& own_new_mate_pair,
-  std::unordered_set<uint64_t>& own_mates)
+  std::unordered_set<uint64_t>& own_mates,
+  btllib::OrderQueueSPMC<MateData>::Block& mate_pair_block)
 {
-  //std::cout << "here 1" << std::endl;
+
   for(auto distance : distances){
-    //std::cout << "dist: " << distance << std::endl;
     uint64_t delta = distance - k;
-    //uint64_t delta = distance;
     int breakFlag = 0;
     bool reverseExists = false;
     btllib::NtHash nthash(seq, bloom->get_hash_num(), k);
@@ -567,45 +590,22 @@ LINKS::extract_mate_pair(const std::string& seq,
           hash_b = nthashLead.get_forward_hash();
         }
 
-        /*
-        mate_pair::iterator it = own_mate_pair.find(nthashLead.get_reverse_hash());
-
-        if( it != own_mate_pair.end() ) {
-            std::unordered_map<uint64_t, MatePairInfo > &innerMap = it->second;
-
-            std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(nthash.get_reverse_hash());
-
-            if( innerit != innerMap.end() ){
-
-                innerit->second.insert_size = distance;
-
-                reverseExists = true;
-            }
-        }
-        */
         if(bloom->contains(nthash.hashes()) && bloom->contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
-            if(own_new_mate_pair.find(std::make_pair(hash_a,hash_b)) == own_new_mate_pair.end()){
-              own_new_mate_pair[std::make_pair(hash_a,hash_b)] = MatePairInfo(false, distance);
-            }
-            //own_new_mate_pair.insert(std::make_pair<std::make_pair<uint64_t,uint64_t>,MatePairInfo>)()
-            /*
-            mate_pair::iterator it = own_mate_pair.find(hash_a);
-            if( it != own_mate_pair.end() ) {
-              
-                std::unordered_map<uint64_t, MatePairInfo> &innerMap = it->second;
-                std::unordered_map<uint64_t, MatePairInfo>::iterator innerit = innerMap.find(hash_b);
-                if( innerit != innerMap.end() ){
-                    own_mate_pair[hash_a][hash_b].insert_size = distance;
-                }else{
-                    own_mate_pair[hash_a][hash_b] = MatePairInfo(false, distance);
-                }
-            }else{
-                own_mate_pair[hash_a][hash_b] = MatePairInfo(false, distance);
-            }
-            //std::lock_guard<std::mutex> guard(mates_mutex);
-            */
-            own_mates.insert(hash_a); // with new data structure have to insert both
-            own_mates.insert(hash_b); 
+          if(own_new_mate_pair.find(std::make_pair(hash_a,hash_b)) == own_new_mate_pair.end()){
+            own_new_mate_pair[std::make_pair(hash_a,hash_b)] = MatePairInfo(false, distance);
+          }
+          own_mates.insert(hash_a); // with new data structure have to insert both
+          own_mates.insert(hash_b);
+
+          mate_pair_block.data[mate_pair_block.count++] = MateData(hash_a,
+                                  hash_b,
+                                  distance);
+          if (mate_pair_block.count == mate_pair_block_size) {
+            mate_pair_block.num = mate_pair_current_block_num++;
+            mate_pair_input_queue.write(mate_pair_block);
+            mate_pair_block.count = 0;
+            std::cout << "here written the block\n";
+          } 
         }
     }
   }
@@ -739,7 +739,9 @@ LINKS::ExtractMatePairWorker::work()
   //std::cout << "y test 1\n";
   //decltype(*(links.input_queue))::Block input_block(links.block_size);
   //(std::remove_reference<decltype(*(links.input_queue))>)::Block input_block(links.block_size);
-  btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size); 
+  btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size);
+
+  btllib::OrderQueueSPMC<MateData>::Block mate_pair_block(links.mate_pair_block_size); 
 
   mate_pair_type own_new_mate_pair;
   std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> own_mate_pair;
@@ -759,10 +761,14 @@ LINKS::ExtractMatePairWorker::work()
     Read& read = input_block.data[input_block.current++];
 
     if (links.k <= read.seq.size()) {
-        links.extract_mate_pair(read.seq,own_new_mate_pair,own_mates);
+        links.extract_mate_pair(read.seq,own_new_mate_pair,own_mates,mate_pair_block);
     } else {
       continue; // nothing
     }
+  }
+  if (mate_pair_block.count > 0) {
+    mate_pair_block.num = links.mate_pair_current_block_num++;
+    links.mate_pair_input_queue.write(mate_pair_block);
   }
   links.mate_pair_mutex.lock();
   if(links.new_mate_pair.size() <= 1){
@@ -847,7 +853,6 @@ LINKS::PopulateMateInfoWorker::work()
 
 inline LINKS::~LINKS()
 {
- std::cout << "here deleting LINKS" << std::endl;
 }
 
 inline uint64_t 
