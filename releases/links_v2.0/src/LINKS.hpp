@@ -271,7 +271,7 @@ private:
     size_t block_size = 4;
 
     size_t mate_pair_buffer_size = 16;
-    size_t mate_pair_block_size = 1000000;
+    size_t mate_pair_block_size = 100000;
 
     btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
     void extract_mate_pair( const std::string& seq,
@@ -297,6 +297,7 @@ private:
     void merge_mate_pair_map(mate_pair_type& own_new_mate_pair);
     void merge_mates_set(std::unordered_set<uint64_t>& own_mates);
     void merge_track_all(std::unordered_map<uint64_t, KmerInfo>& own_track_all);
+    void write_from_block_to_map();
     // helper functions
     uint64_t get_file_size(std::string filename);
     bool does_file_exist(std::string fileName);
@@ -325,6 +326,7 @@ private:
     
 
     mate_pair_type new_mate_pair;
+    mate_pair_type test_mate_pair;
 
     std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
     std::unordered_map<uint64_t, KmerInfo> trackAll;
@@ -334,6 +336,7 @@ private:
     unsigned last_contig_rank = 0;
 
     std::atomic<std::uint32_t> mate_pair_current_block_num = 0;
+    std::atomic<std::uint16_t> mate_pair_threads_done_writing = 0;
 };
 
 inline btllib::KmerBloomFilter*
@@ -419,7 +422,52 @@ LINKS::init_bloom_filter(){
   bloom = std::shared_ptr<btllib::KmerBloomFilter>(make_bf(bf_elements,inputParser));
 }
 
+inline void
+LINKS::write_from_block_to_map(){
+  //btllib::OrderQueueSPMC<Read>::Block input_block(.block_size);
 
+  btllib::OrderQueueSPMC<MateData>::Block mate_pair_block(mate_pair_block_size); 
+
+  for (;;) {
+    if (mate_pair_block.current == mate_pair_block.count) {
+      mate_pair_input_queue.read(mate_pair_block);
+    }
+    
+    if (mate_pair_threads_done_writing == threads) {
+      break;
+    }
+    
+    MateData& mate_data = mate_pair_block.data[mate_pair_block.current++];
+
+    if(test_mate_pair.find(std::make_pair(mate_data.kmer_1_hash,mate_data.kmer_2_hash)) == test_mate_pair.end()){
+      test_mate_pair[std::make_pair(mate_data.kmer_1_hash,mate_data.kmer_2_hash)] = MatePairInfo(false, mate_data.distance);
+    }
+  }
+
+  std::cout << "writer leaves\n";
+  std::cout << "test_mate_pair.size() " << test_mate_pair.size() << std::endl;
+  /*
+  for (;;) {
+    if (mate_pair_block.current == mate_pair_block.count) {
+      mate_pair_input_queue.read(mate_pair_block);
+      std::cout << "writer reads\n";
+    }
+    
+    if (mate_pair_block.count == 0) {
+      break;
+    }
+
+    while( mate_pair_block.current != mate_pair_block.count ){
+      MateData& mate_data = mate_pair_block.data[mate_pair_block.current++];
+      if(test_mate_pair.find(std::make_pair(mate_data.kmer_1_hash,mate_data.kmer_2_hash)) == test_mate_pair.end()){
+        test_mate_pair[std::make_pair(mate_data.kmer_1_hash,mate_data.kmer_2_hash)] = MatePairInfo(false, mate_data.distance);
+      }
+      //mates.insert(mate_data.kmer_1_hash); // with new data structure have to insert both
+      //mates.insert(mate_data.kmer_2_hash);
+    }
+  }
+  */
+}
 
 inline void
 LINKS::InputWorker::work()
@@ -479,7 +527,7 @@ LINKS::start_read_fasta(){
   longReads.pop();
   extract_mate_pair_workers = std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
   input_worker->start();
-  // start
+  std::thread writer_thread(&LINKS::write_from_block_to_map, this);
   for (auto& worker : extract_mate_pair_workers) {
     worker.start();
   }
@@ -488,6 +536,7 @@ LINKS::start_read_fasta(){
     worker.join();
     std::cout << "joined\n";
   }
+  writer_thread.join();
   input_worker->join();
 
   std::cout << "after join matepair size: " << matePair.size() << std::endl;
@@ -770,6 +819,9 @@ LINKS::ExtractMatePairWorker::work()
     mate_pair_block.num = links.mate_pair_current_block_num++;
     links.mate_pair_input_queue.write(mate_pair_block);
   }
+  links.mate_pair_threads_done_writing++;
+
+
   links.mate_pair_mutex.lock();
   if(links.new_mate_pair.size() <= 1){
     links.new_mate_pair.reserve(own_new_mate_pair.size() * links.threads);
