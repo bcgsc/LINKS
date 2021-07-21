@@ -550,12 +550,19 @@ int main(int argc, char** argv) {
             readFastaFastq(readFile,filtering,matePair,mates,dist,linksArgParser.k,linksArgParser.step);
         }
     }
+    std::cout << "read fasta done\n";
     std::cout << "matepair size: " << matePair.size() << std::endl;
+    size_t total_size = 0;
+    for(auto it = matePair.begin(); it != matePair.end(); ++it){
+        total_size += it->second.size();
+    }
+    std::cout << "total matePair size: " << total_size << std::endl;
     std::cout << "mates size: " << mates.size() << std::endl;
 
     // Stage 3 -- read contigs to assign info to mates
     readContigs(linksArgParser.assemblyFile, trackAll, matePair, mates, tigLength, linksArgParser.k, linksArgParser.minSize, hashFct, linksArgParser.step);
-   
+  
+    std::cout << "read fasta done\n";
     std::cout << "trackAll size: " << trackAll.size() << std::endl;
     // Stage 4 -- pair contigs based on mates
     uint64_t totalpairs = 0;

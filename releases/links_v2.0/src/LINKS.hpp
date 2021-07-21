@@ -196,6 +196,13 @@ class LINKS
       }
     };
 
+    struct single_hash {
+    template <class T1>
+    std::size_t operator () (const T1 &p) const {
+      return p;
+      }
+    };
+
     typedef std::unordered_map<std::pair<uint64_t,uint64_t>, MatePairInfo, pair_hash> mate_pair_type;
     typedef std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > mate_pair;
 private:
@@ -364,8 +371,8 @@ private:
     std::unordered_map<uint64_t, KmerInfo> track_all_test;
     std::unordered_map<std::string, uint64_t> tigLength;
     // store second mates in a set
-    std::unordered_set<uint64_t> mates;
-    unsigned last_contig_rank = 0;
+    std::unordered_set<uint64_t, single_hash> mates;
+    unsigned last_contig_rank = 1;
 
     std::atomic<std::uint32_t> mate_pair_current_block_num = 0;
     std::atomic<std::uint16_t> mate_pair_threads_done_writing = 0;
@@ -470,7 +477,7 @@ LINKS::write_from_block_to_map(){
       mate_pair_input_queue.read(mate_pair_block);
     }
     
-    if (mate_pair_threads_done_writing == threads) {
+    if (mate_pair_threads_done_writing == threads  && mate_pair_block.count == 0) {
       break;
     }
     
@@ -482,7 +489,7 @@ LINKS::write_from_block_to_map(){
       mates.insert(mate_data.kmer_2_hash);
     }
   }
-  std::cout << "writer leaves\n";
+  //std::cout << "writer leaves\n";
   std::cout << "test_mate_pair.size() " << test_mate_pair.size() << std::endl;
   std::cout << "mates.size() " << mates.size() << std::endl;
 }
@@ -497,7 +504,7 @@ LINKS::write_from_block_to_set(){
       mate_input_queue.read(mate_block);
     }
     
-    if (mate_threads_done_writing == threads) {
+    if (mate_threads_done_writing == threads && mate_block.count == 0) {
       break;
     }
     
@@ -533,11 +540,11 @@ LINKS::InputWorker::work()
   uint counterx = 0;
   for(auto record : (*(links.reader))){
     read_c++;
-    if(read_c % 100 == 0){
+    if(read_c % 1000 == 0){
       std::cout << "read_counter: " << read_c << std::endl;
     }
 
-    block.data[block.count++] = Read(record.num,
+    block.data[block.count++] = Read(read_c, //read_c instead of record.num
                                     std::move(record.id),
                                     std::move(record.comment),
                                     std::move(record.seq));
@@ -611,7 +618,6 @@ LINKS::start_read_contig(){
   input_queue.reset();
   
   std::cout << "track_all_test.size() " << track_all_test.size() << std::endl;
-  //std::cout << "trackAll.size() " << trackAll.size() << std::endl;
 }
 
 inline void
@@ -657,7 +663,6 @@ LINKS::extract_mate_pair(const std::string& seq,
             mate_pair_block.num = mate_pair_current_block_num++;
             mate_pair_input_queue.write(mate_pair_block);
             mate_pair_block.count = 0;
-            std::cout << "here written the block\n";
           } 
         }
     }
@@ -695,7 +700,6 @@ LINKS::populate_mate_info(const std::string& seq,
             mate_info_block.num = mate_pair_current_block_num++;
             mate_input_queue.write(mate_info_block);
             mate_info_block.count = 0;
-            std::cout << "here written the block\n";
           }
           /*
             if(own_track_all.find(ntHashContig.get_forward_hash()) == own_track_all.end()) {
@@ -719,7 +723,6 @@ LINKS::populate_mate_info(const std::string& seq,
             mate_info_block.num = mate_pair_current_block_num++;
             mate_input_queue.write(mate_info_block);
             mate_info_block.count = 0;
-            std::cout << "here written the block\n";
           }
           /*
             if(own_track_all.find(ntHashContig.get_reverse_hash()) == own_track_all.end()) {
@@ -741,8 +744,6 @@ LINKS::ExtractMatePairWorker::work()
 
   btllib::OrderQueueSPMC<BufferMatePairData>::Block mate_pair_block(links.mate_pair_block_size); 
 
-  auto start = std::chrono::high_resolution_clock::now();
-  //std::cout << "y test 2\n";
   for (;;) {
     if (input_block.current == input_block.count) {
       links.input_queue->read(input_block);
@@ -765,13 +766,16 @@ LINKS::ExtractMatePairWorker::work()
     links.mate_pair_input_queue.write(mate_pair_block);
   }
   links.mate_pair_threads_done_writing++;
-
-  auto finish = std::chrono::high_resolution_clock::now();
-  auto seconds = std::chrono::duration_cast<std::chrono::seconds>(finish-start);
-  std::cout << "Extracted pairs in " << seconds.count() << " ms\n";
-
-  //std::cout << "main mate pair first dim size: " << links.matePair.size() << std::endl;
-  std::cout << "new mate pair first dim size: " << links.new_mate_pair.size() << std::endl;
+  if(links.mate_pair_threads_done_writing == links.threads){
+    for (size_t i = 0; i < links.threads; i++)
+    {
+      mate_pair_block.num = links.mate_pair_current_block_num++;
+      mate_pair_block.current = 0;
+      mate_pair_block.count = 0;
+      links.mate_pair_input_queue.write(mate_pair_block);
+    }
+    
+  }
 }
 
 inline void
@@ -799,15 +803,28 @@ LINKS::PopulateMateInfoWorker::work()
 
     if (links.k <= read.seq.size()) {
         links.tig_length_mutex.lock(); 
-        links.tigLength[std::to_string(cur_contig_rank)] = read.seq.size();
+        links.tigLength[std::to_string(read.num)] = read.seq.size();
         links.tig_length_mutex.unlock();
-        links.populate_mate_info(read.seq,std::to_string(cur_contig_rank), mate_block);
+        links.populate_mate_info(read.seq,std::to_string(read.num), mate_block);
         continue;
     } else {
       continue; // nothing
     }
   }
+  if (mate_block.count > 0) {
+    mate_block.num = links.mate_current_block_num++;
+    links.mate_input_queue.write(mate_block);
+  }
   links.mate_threads_done_writing++;
+  if(links.mate_threads_done_writing == links.threads){
+  for (size_t i = 0; i < links.threads; i++)
+  {
+    mate_block.num = links.mate_current_block_num++;
+    mate_block.current = 0;
+    mate_block.count = 0;
+    links.mate_input_queue.write(mate_block);
+  }
+  }
 }
 
 inline LINKS::~LINKS()
