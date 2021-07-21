@@ -186,13 +186,13 @@ class LINKS
     struct pair_hash {
     template <class T1, class T2>
     std::size_t operator () (const std::pair<T1,T2> &p) const {
-      return p.first ^ p.second;
-      /* 
+      //return p.first ^ p.second;
+      
       std::size_t seed = 0;
       boost::hash_combine(seed, p.first);
       boost::hash_combine(seed, p.second);
       return seed;
-      */
+      
       }
     };
 
@@ -731,36 +731,6 @@ LINKS::populate_mate_info(const std::string& seq,
         }
     }
 }
-inline void 
-LINKS::merge_mates_set(std::unordered_set<uint64_t>& own_mates){
-  mates.insert(own_mates.begin(), own_mates.end());
-}
-inline void
-LINKS::merge_mate_pair_map(mate_pair_type& own_new_mate_pair){
-
-  new_mate_pair.insert(own_new_mate_pair.begin(), own_new_mate_pair.end());
-  return;
-} 
-inline void
-LINKS::merge_track_all(std::unordered_map<uint64_t, KmerInfo>& own_track_all){
-  /*
-  std::cout << "own_track_all.size() " << own_track_all.size() << std::endl;
-
-  for (auto iterator = own_track_all.begin(); 
-    iterator != own_track_all.end(); iterator++) {
-
-    if(trackAll.find(iterator->first) == trackAll.end()) {
-      trackAll[iterator->first] = KmerInfo(iterator->second.tig,
-                                            iterator->second.start, 
-                                            iterator->second.end, 
-                                            iterator->second.multiple, 
-                                            iterator->second.orient);
-    } else {
-      own_track_all[iterator->first].multiple +=1;
-    }
-  }
-  */
-}
 inline void
 LINKS::ExtractMatePairWorker::work()
 {
@@ -1195,52 +1165,6 @@ LINKS::pair_contigs()
 	std::cout << "pair size: " << pair.size() << std::endl;
 */
 
-  // std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>>
-  // (12, (15, (false, 1000)))
- 
-  uint second_dim_size = 0;
-  uint third_dim_size = 0;
-  uint fourth_dim_size = 0;
-
-  
-  /*
-  std::cout << "second dim size: " << second_dim_size << std::endl;
-  std::cout << "third dim size: " << third_dim_size << std::endl;
-  std::cout << "fourth dim size: " << fourth_dim_size << std::endl;
-  */
-
-  // std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> > >:
-  //("f13",(1000, ("r12",(12000,12))))
-  uint pair_second_dim_size = 0;
-  uint pair_third_dim_size = 0;
-  uint pair_fourth_dim_size = 0;
-  for (auto it = pair.begin(); it != pair.end(); it++) {
-    //std::cout << *it << endl;
-    //std::cout << "it->second.size(): " << it->second.size() << std::endl;
-    //std::cout << "*********************" << std::endl; 
-    pair_second_dim_size += it->second.size();
-    for (auto it2 = it->second.begin(); it2 != it->second.end(); it2++) {
-      pair_third_dim_size += it2->second.size();
-      //std::cout << "---------------------" << std::endl;
-      for (auto it3 = it2->second.begin(); it3 != it2->second.end(); it3++) {
-        //std::cout << "map: " << it3->first << std::endl;
-        pair_fourth_dim_size += it3->second.links;
-      }
-    }
-  } 
-  
-  std::cout << "second dim size: " << pair_second_dim_size << std::endl;
-  std::cout << "third dim size: " << pair_third_dim_size << std::endl;
-  std::cout << "fourth dim size: " << pair_fourth_dim_size << std::endl;
-  
-
-	//uint second_dim_size = 0;
-	//std;;unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>::iterator pair_iterator;
-	//for(itr = pair_iterator.begin(); itr != pair_iterator.end(); itr++){
-	//	second_dim_size += itr->second.size();
-	
-	//}
-	//std::cout << "second dim size: " << second_dim_size << std::endl;
 
     // Summary of the contig pair issues
     //std::cout << "------------- Putative issues with contig pairing - Summary  ----------------\n";
