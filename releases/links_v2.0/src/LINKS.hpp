@@ -356,10 +356,10 @@ private:
     // commented out muro debug
     //std::shared_mutex mate_pair_mutex;
     //std::mutex mates_mutex;
-    std::mutex mate_pair_mutex;
-    std::mutex contig_rank_mutex;
+    //std::mutex mate_pair_mutex;
+    //std::mutex contig_rank_mutex;
     std::mutex tig_length_mutex;
-    std::mutex track_all_mutex;
+    //std::mutex track_all_mutex;
     //std::shared_mutex track_all_mutex;
     
 
@@ -371,8 +371,8 @@ private:
     std::unordered_map<uint64_t, KmerInfo> track_all_test;
     std::unordered_map<std::string, uint64_t> tigLength;
     // store second mates in a set
-    std::unordered_set<uint64_t, single_hash> mates;
-    unsigned last_contig_rank = 1;
+    std::unordered_set<uint64_t> mates;
+    //unsigned last_contig_rank = 1;
 
     std::atomic<std::uint32_t> mate_pair_current_block_num = 0;
     std::atomic<std::uint16_t> mate_pair_threads_done_writing = 0;
@@ -544,7 +544,7 @@ LINKS::InputWorker::work()
       std::cout << "read_counter: " << read_c << std::endl;
     }
 
-    block.data[block.count++] = Read(read_c, //read_c instead of record.num
+    block.data[block.count++] = Read(record.num, //read_c instead of record.num
                                     std::move(record.id),
                                     std::move(record.comment),
                                     std::move(record.seq));
@@ -783,7 +783,6 @@ LINKS::PopulateMateInfoWorker::work()
 {
   btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size);
   btllib::OrderQueueSPMC<BufferMateData>::Block mate_block(links.mate_pair_block_size); 
-  unsigned cur_contig_rank;
   std::unordered_map<uint64_t, KmerInfo> own_track_all;
 
   std::cout << "t test 10\n";
@@ -796,16 +795,11 @@ LINKS::PopulateMateInfoWorker::work()
     }
     Read& read = input_block.data[input_block.current++];
 
-    links.contig_rank_mutex.lock();
-    cur_contig_rank = links.last_contig_rank;
-    ++links.last_contig_rank;
-    links.contig_rank_mutex.unlock();
-
     if (links.k <= read.seq.size()) {
         links.tig_length_mutex.lock(); 
-        links.tigLength[std::to_string(read.num)] = read.seq.size();
+        links.tigLength[std::to_string(read.num+1)] = read.seq.size();
         links.tig_length_mutex.unlock();
-        links.populate_mate_info(read.seq,std::to_string(read.num), mate_block);
+        links.populate_mate_info(read.seq,std::to_string(read.num+1), mate_block);
         continue;
     } else {
       continue; // nothing
