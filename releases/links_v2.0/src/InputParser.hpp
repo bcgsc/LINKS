@@ -36,6 +36,20 @@ class InputParser {
         return distances;
     }
 
+    std::vector<uint16_t> splitStepSizesInput(std::string input){
+        std::vector<uint16_t> step_sizes; 
+
+        std::stringstream ss(input);
+
+        while( ss.good() )
+        {
+            std::string substr;
+            getline( ss, substr, ',' );
+            step_sizes.push_back(static_cast<uint16_t>(std::stoul(substr) ));
+        }
+        return step_sizes;
+    }
+
     std::queue<std::string> parseFofInput(std::string fofFile){
         std::queue<std::string> longReads; 
 
@@ -54,13 +68,14 @@ class InputParser {
     std::string fofFile = "";
     std::queue<std::string> longReads;
     std::vector<uint16_t> distances = {4000};
+    std::vector<uint16_t> step_sizes = {2};
     //uint64_t distances = 4000;
     uint64_t k = 15;
     bool verbose = false;
     uint64_t minLinks = 5;
     uint64_t minSize = 500;
     float maxLinkRatio = 0.3;
-    uint64_t step = 2;
+    //uint64_t step = 2;
     // Added for MPET
     uint64_t readLength;         // MPET
     float insertStdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
@@ -106,7 +121,8 @@ class InputParser {
                     k = strtoul(optarg, &end, BASE_TEN);
                     break;
                 case 't':
-                    step = strtoul(optarg, &end, BASE_TEN);
+                    step_sizes = splitStepSizesInput(optarg);
+                    //step = strtoul(optarg, &end, BASE_TEN);
                     break;
                 case 'j':
                     thread = strtoul(optarg, &end, BASE_TEN);
@@ -145,13 +161,16 @@ class InputParser {
                     exit(EXIT_FAILURE);
                 }
             }
+            if(distances.size() > step_sizes.size()){
+                uint last_step = step_sizes.back();
+                for(int i = step_sizes.size(); i < distances.size(); i++){
+                    step_sizes.push_back(last_step);
+                }
+            }
+            if(distances.size() < step_sizes.size()){
+                std::cerr << "\n Number of provided distances can't be lower than number of step sizes provided.\n";
+            }
         }
-    // class 
-    static void
-    printErrorMsg(const std::string& progname, const std::string& msg) {
-        std::cerr << progname << ": " << msg << "\nTry 'physlr-makebf --help' for more information.\n";
-    }
-
     static void
     printUsage(const std::string& progname) {
         std::cout << "Usage:  " << progname << " " << version << "\n"
@@ -192,7 +211,7 @@ class InputParser {
                     << "  -m " << readLength << "\n" 
                     //<< "  -d " << distances.str() << "\n" TODO: print distances
                     << "  -k " << k << "\n"
-                    << "  -t " << step << "\n"
+                    //<< "  -t " << step << "\n"
                     << "  -o " << offset << "\n"
                     << "  -e " << insertStdev << "\n"
                     << "  -l " << minLinks << "\n"

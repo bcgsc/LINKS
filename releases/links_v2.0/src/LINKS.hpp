@@ -46,13 +46,14 @@ class LINKS
     std::string assemblyFile;
     std::string fofFile;
     std::vector<uint16_t> distances = {2000,4000};
+    std::vector<uint16_t> step_sizes = {2};
     //uint64_t distances = 4000;
     uint64_t k = 15;
     bool verbose = false;
     uint64_t minLinks = 5;
     uint64_t minSize = 500;
     float maxLinkRatio = 0.3;
-    uint64_t step = 2;
+    //uint64_t step = 2;
     // Added for MPET
     uint64_t readLength;         // MPET
     float insertStdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
@@ -445,7 +446,8 @@ inline LINKS::LINKS(InputParser* inputParser)
         , k(inputParser->k)
         , verbose(inputParser->verbose)
         , minSize(inputParser->minSize)
-        , step(inputParser->step)
+        , step_sizes(inputParser->step_sizes)
+        //, step(inputParser->step)
         , insertStdev(inputParser->insertStdev)
         , baseName(inputParser->baseName)
         , offset(inputParser->offset)
@@ -475,6 +477,13 @@ LINKS::write_from_block_to_map(){
   for (;;) {
     if (mate_pair_block.current == mate_pair_block.count) {
       mate_pair_input_queue.read(mate_pair_block);
+      /*
+      if (mate_pair_block.count != 0) {
+        std::cout << "block num after read: " << mate_pair_block.num << std::endl;
+      }else{
+        std::cout << "block num after read2: " << mate_pair_block.num << std::endl;
+      }
+      */
     }
     
     if (mate_pair_block.count == 0) {
@@ -482,6 +491,7 @@ LINKS::write_from_block_to_map(){
     }
     
     BufferMatePairData& mate_data = mate_pair_block.data[mate_pair_block.current++];
+    
 
     if(test_mate_pair.find(std::make_pair(mate_data.kmer_1_hash,mate_data.kmer_2_hash)) == test_mate_pair.end()){
       test_mate_pair[std::make_pair(mate_data.kmer_1_hash,mate_data.kmer_2_hash)] = MatePairInfo(false, mate_data.distance);
@@ -502,6 +512,13 @@ LINKS::write_from_block_to_set(){
   for (;;) {
     if (mate_block.current == mate_block.count) {
       mate_input_queue.read(mate_block);
+      /*
+      if (mate_block.count != 0) {
+        std::cout << "block num after read: " << mate_block.num << std::endl;
+      }else{
+        std::cout << "block num after read2: " << mate_block.num << std::endl;
+      }
+      */
     }
     
     if (mate_block.count == 0) {
@@ -626,8 +643,11 @@ inline void
 LINKS::extract_mate_pair(const std::string& seq,
   btllib::OrderQueueSPMC<BufferMatePairData>::Block& mate_pair_block)
 {
-
+  uint step_index = 0;
   for(auto distance : distances){
+    uint cur_step_size = step_sizes[step_index];
+    step_index++;
+    std::cout << "distance: " << distance << " step size: " << cur_step_size << std::endl;
     uint64_t delta = distance - k;
     int breakFlag = 0;
     bool reverseExists = false;
@@ -636,12 +656,12 @@ LINKS::extract_mate_pair(const std::string& seq,
 
     uint64_t hash_a, hash_b;    
 
-    for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=step) {
+    for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=cur_step_size) {
         // roll for the number of steps
         breakFlag = 0;
         reverseExists = false;
         // for step ----
-        for(uint j = 1; j < step; j++) {
+        for(uint j = 1; j < cur_step_size; j++) {
             if(!nthashLead.roll() || !nthash.roll()) {
                 breakFlag = 1;
             }
@@ -663,6 +683,7 @@ LINKS::extract_mate_pair(const std::string& seq,
                                   distance);
           if (mate_pair_block.count == mate_pair_block_size) {
             mate_pair_block.num = mate_pair_current_block_num++;
+            //std::cout << "block num after write: " << mate_pair_block.num  << std::endl;
             mate_pair_input_queue.write(mate_pair_block);
             mate_pair_block.count = 0;
           } 
@@ -679,8 +700,9 @@ LINKS::populate_mate_info(const std::string& seq,
   btllib::NtHash ntHashContig(seq, bloom->get_hash_num(), k); // hashFunc can be 1 after first step
 
   int breakFlag = 0;
-  for (size_t i = 0; ntHashContig.roll(); i+=step) {
+  for (size_t i = 0; ntHashContig.roll(); i+=1) {
       // for rolling step
+      /*
       for(uint j = 1; j < step; j++) {
           if(!ntHashContig.roll()) {
               breakFlag = 1;
@@ -688,7 +710,7 @@ LINKS::populate_mate_info(const std::string& seq,
       }
       if(breakFlag) {break;}
         // for rolling step
-
+      */
       i = ntHashContig.get_pos();
       if(mates.find(ntHashContig.get_forward_hash()) != mates.end()){
           mate_info_block.data[mate_info_block.count++] = BufferMateData(
@@ -699,7 +721,7 @@ LINKS::populate_mate_info(const std::string& seq,
                       1, 
                       false);
           if (mate_info_block.count == mate_pair_block_size) {
-            mate_info_block.num = mate_pair_current_block_num++;
+            mate_info_block.num = mate_current_block_num++;
             mate_input_queue.write(mate_info_block);
             mate_info_block.count = 0;
           }
@@ -722,7 +744,8 @@ LINKS::populate_mate_info(const std::string& seq,
               1, 
               true);
           if (mate_info_block.count == mate_pair_block_size) {
-            mate_info_block.num = mate_pair_current_block_num++;
+            mate_info_block.num = mate_current_block_num++;
+            //std::cout << "block num after write: " << mate_info_block.num << std::endl;
             mate_input_queue.write(mate_info_block);
             mate_info_block.count = 0;
           }
@@ -765,6 +788,7 @@ LINKS::ExtractMatePairWorker::work()
   }
   if (mate_pair_block.count > 0) {
     mate_pair_block.num = links.mate_pair_current_block_num++;
+    //std::cout << "block num after write2: " << mate_pair_block.num << std::endl;
     links.mate_pair_input_queue.write(mate_pair_block);
   }
   links.mate_pair_threads_done_writing++;
@@ -814,6 +838,7 @@ LINKS::PopulateMateInfoWorker::work()
   }
   if (mate_block.count > 0) {
     mate_block.num = links.mate_current_block_num++;
+    //std::cout << "block num after write2: " << mate_block.num  << std::endl;
     links.mate_input_queue.write(mate_block);
   }
   links.mate_threads_done_writing++;
