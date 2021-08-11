@@ -647,7 +647,7 @@ LINKS::extract_mate_pair(const std::string& seq,
   for(auto distance : distances){
     uint cur_step_size = step_sizes[step_index];
     step_index++;
-    std::cout << "distance: " << distance << " step size: " << cur_step_size << std::endl;
+    //std::cout << "distance: " << distance << " step size: " << cur_step_size << std::endl;
     uint64_t delta = distance - k;
     int breakFlag = 0;
     bool reverseExists = false;
