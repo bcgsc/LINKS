@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 # Pipeline for the LINKS program
-# Written by Murathan Goktas
+# Written by T Murathan Goktas
 #Default Parameters
 
 # Input Names 
