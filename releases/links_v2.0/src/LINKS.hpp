@@ -375,11 +375,11 @@ private:
     std::unordered_set<uint64_t> mates;
     //unsigned last_contig_rank = 1;
 
-    std::atomic<std::uint32_t> mate_pair_current_block_num = 0;
-    std::atomic<std::uint16_t> mate_pair_threads_done_writing = 0;
+    std::atomic<std::size_t> mate_pair_current_block_num = 0;
+    std::atomic<std::size_t> mate_pair_threads_done_writing = 0;
 
-    std::atomic<std::uint32_t> mate_current_block_num = 0;
-    std::atomic<std::uint16_t> mate_threads_done_writing = 0;
+    std::atomic<std::size_t> mate_current_block_num = 0;
+    std::atomic<std::size_t> mate_threads_done_writing = 0;
 };
 
 inline btllib::KmerBloomFilter*
@@ -415,7 +415,7 @@ LINKS::make_bf(uint64_t bfElements, InputParser* linksArgParser){
         std::cout << "- Filter output file : " << linksArgParser->k << "\n";
         assemblyBF = new btllib::KmerBloomFilter(m/8, hashFct, linksArgParser->k);
         btllib::SeqReader assemblyReader(linksArgParser->assemblyFile, 8, 1);
-        uint builder = 0;
+        size_t builder = 0;
         for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
           if(builder % 10 == 0) {
                 //std::cout << "reading... builder: " << builder << "\n";
@@ -554,7 +554,7 @@ LINKS::InputWorker::work()
   size_t read_c = 0;
   Read read;
 
-  uint counterx = 0;
+  size_t counterx = 0;
   for(auto record : (*(links.reader))){
     read_c++;
     if(read_c % 1000 == 0){
@@ -996,7 +996,7 @@ LINKS::pair_contigs()
   std::unordered_map<uint64_t, MatePairInfo>::iterator mateListItr;
   std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>>::iterator matePairItr;
 
-  uint counter_1 = 0, counter_2 = 0, counter_3 = 0, counter_4 = 0, counter_5 = 0, counter_6 = 0, counter_7 = 0;
+  size_t counter_1 = 0, counter_2 = 0, counter_3 = 0, counter_4 = 0, counter_5 = 0, counter_6 = 0, counter_7 = 0;
 
   mate_pair_type::iterator mate_pair_iterator;
   for (mate_pair_iterator = test_mate_pair.begin(); mate_pair_iterator != test_mate_pair.end(); mate_pair_iterator++)
