@@ -428,7 +428,7 @@ LINKS::make_bf(uint64_t bfElements, InputParser* linksArgParser){
         std::string bfmsg = "\n\nWriting Bloom filter to disk (" + linksArgParser->bfFile + ") : " + std::to_string(time(0)) + "\n";
         // assemblyruninfo += bfmsg;
         std::cout << bfmsg;
-        assemblyBF->save("bftest.out");
+        assemblyBF->save(".bloom");
         // std::cout << "Done mybf, printing stats...\n";
         //printBloomStats(*assemblyBF, std::cout);
         
