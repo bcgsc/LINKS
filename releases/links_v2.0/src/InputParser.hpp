@@ -83,7 +83,7 @@ class InputParser {
     uint64_t offset = 0;
     std::string bfFile = "";
     float fpr = 0.001;
-    uint64_t bfOff = 0;
+    bool bfOff = false;
     uint thread = 4;
 
     // std::string bfout = $base_name . ".bloom";
@@ -95,7 +95,7 @@ class InputParser {
             this->argc = argc;
             static const struct option longopts[] = { { "help", no_argument, &help, 1 },
 		                                      { nullptr, 0, nullptr, 0 } };
-            while ((c = getopt_long(argc, argv, "f:s:m:d:k:t:j:o:e:l:a:z:b:r:p:x:v", longopts, &optindex)) != -1) {
+            while ((c = getopt_long(argc, argv, "f:s:m:d:k:t:j:o:e:l:a:z:b:r:p:x:v:", longopts, &optindex)) != -1) {
                 switch (c) {
                 case 0:
                     break;
@@ -152,10 +152,14 @@ class InputParser {
                     fpr = strtof(optarg, &end);
                     break;
                 case 'x':
-                    bfOff = strtoul(optarg, &end, BASE_TEN);
+                    if(strtoul(optarg, &end, BASE_TEN) == 1){
+                        bfOff = true;
+                    }
                     break;
                 case 'v':
-                    verbose = true;
+                    if(strtoul(optarg, &end, BASE_TEN) == 1){
+                        verbose = true;
+                    }
                     break;
                 default:
                     exit(EXIT_FAILURE);
