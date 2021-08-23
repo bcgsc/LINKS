@@ -61,7 +61,7 @@ class LINKS
     uint64_t offset = 0;
     std::string bfFile;
     float fpr = 0.001;
-    uint64_t bfOff = 0;
+    bool bfOff = false;
 
     static const size_t MAX_SIMULTANEOUS_INDEXLRS = 128;
 
@@ -557,9 +557,12 @@ LINKS::InputWorker::work()
   size_t counterx = 0;
   for(auto record : (*(links.reader))){
     read_c++;
-    if(read_c % 1000 == 0){
+    if(read_c % 10000 == 0){
       std::cout << "read_counter: " << read_c << std::endl;
     }
+    //if(read_c == 1000000){
+    //  break;
+    //}
 
     block.data[block.count++] = Read(record.num, //read_c instead of record.num
                                     std::move(record.id),
@@ -651,8 +654,8 @@ LINKS::extract_mate_pair(const std::string& seq,
     uint64_t delta = distance - k;
     int breakFlag = 0;
     bool reverseExists = false;
-    btllib::NtHash nthash(seq, bloom->get_hash_num(), k);
-    btllib::NtHash nthashLead(seq, bloom->get_hash_num(), k, delta);
+    btllib::NtHash nthash(seq, bloom->get_hash_num(), k, offset);
+    btllib::NtHash nthashLead(seq, bloom->get_hash_num(), k, delta + offset);
 
     uint64_t hash_a, hash_b;    
 
@@ -993,16 +996,21 @@ LINKS::pair_contigs()
   uint64_t A_length = 0, A_start = 0, A_end = 0, B_length = 0, B_start = 0, B_end = 0;
 
   KmerInfo kmer1, kmer2;
-  std::unordered_map<uint64_t, MatePairInfo>::iterator mateListItr;
-  std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>>::iterator matePairItr;
+  //std::unordered_map<uint64_t, MatePairInfo>::iterator mateListItr;
+  //std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>>::iterator matePairItr;
 
-  size_t counter_1 = 0, counter_2 = 0, counter_3 = 0, counter_4 = 0, counter_5 = 0, counter_6 = 0, counter_7 = 0;
+  //size_t counter_1 = 0, counter_2 = 0, counter_3 = 0, counter_4 = 0, counter_5 = 0, counter_6 = 0, counter_7 = 0;
 
+  size_t counter = 0;
+  size_t percent_size = test_mate_pair.size() / 100;
   mate_pair_type::iterator mate_pair_iterator;
   for (mate_pair_iterator = test_mate_pair.begin(); mate_pair_iterator != test_mate_pair.end(); mate_pair_iterator++)
   {
-
-    ++counter_1;
+    if(counter % percent_size == 0){
+      std::cout << "Done: %" << uint(counter / percent_size) << std::endl;
+    }
+    ++counter;
+    //++counter_1;
     if (mate_pair_iterator->second.seen == false &&                                      //matepair is not seen
         track_all_test.find(mate_pair_iterator->first.first) != track_all_test.end() &&  //first mate is tracked
         track_all_test[mate_pair_iterator->first.first].multiple == 1 &&                 //first mate seen once
@@ -1010,7 +1018,7 @@ LINKS::pair_contigs()
         track_all_test[mate_pair_iterator->first.second].multiple == 1)
     {
 
-      ++counter_2;
+      //++counter_2;
 
       mate_pair_iterator->second.seen = true;
 
@@ -1024,7 +1032,7 @@ LINKS::pair_contigs()
 
       if (track_all_test[mate_pair_iterator->first.first].tig != "" && track_all_test[mate_pair_iterator->first.second].tig != "")
       { //double check if tig names not null
-        ++counter_3;
+        //++counter_3;
         ct_both++;
         if (ct_both_hash.find(insert_size) == ct_both_hash.end())
         {
@@ -1046,7 +1054,7 @@ LINKS::pair_contigs()
           { // if kmer1 is forward
             if (!kmer2.orient)
             { // if kmer2 is forward
-              ++counter_4;
+              //++counter_4;
               distance = getDistance(insert_size, tigLength[kmer1.tig], kmer1.start, kmer2.start);
               if (distance > min_allowed && distance < insert_size)
               {
@@ -1056,7 +1064,7 @@ LINKS::pair_contigs()
             }
             else
             {
-              ++counter_5;
+              //++counter_5;
               distance = getDistance(insert_size, tigLength[kmer1.tig], kmer1.start, tigLength[kmer2.tig] - kmer2.end);
               if (distance > min_allowed && distance < insert_size)
               {
@@ -1069,7 +1077,7 @@ LINKS::pair_contigs()
           { // if kmer1 is reverse
             if (!kmer2.orient)
             {
-              ++counter_6;
+              //++counter_6;
               distance = getDistance(insert_size, tigLength[kmer1.tig], tigLength[kmer1.tig] - kmer1.end, kmer2.start);
               if (distance > min_allowed && distance < insert_size)
               {
@@ -1079,7 +1087,7 @@ LINKS::pair_contigs()
             }
             else
             { // if kmer2 is reverse
-              ++counter_7;
+              //++counter_7;
               distance = getDistance(insert_size, tigLength[kmer2.tig], kmer2.end, kmer1.end);
               if (distance > min_allowed && distance < insert_size)
               {
@@ -1092,7 +1100,8 @@ LINKS::pair_contigs()
         else
         { // Clone, paired reads located on the same contig -- could be used to investigate misassemblies
           if (verbose)
-            std::cout << "Pair (" << matePairItr->first << " and " << mateListItr->first << ") located on same contig " << tig_a << " (" << A_length << " nt)\n";
+            std::cout << "Pair (" << mate_pair_iterator->first.first << " and " << mate_pair_iterator->first.second << ") located on same contig " << tig_a << " (" << A_length << " nt)\n";
+            //std::cout << "Pair (" << matePairItr->first << " and " << mateListItr->first << ") located on same contig " << tig_a << " (" << A_length << " nt)\n";
           uint64_t pet_size = 0;
           if (A_start > B_start && (B_start < B_end) && (A_start > A_end))
           { // B --> <-- A
@@ -1112,7 +1121,8 @@ LINKS::pair_contigs()
             }
             else
             {
-              issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
+              issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << mate_pair_iterator->first.first << " and " << mate_pair_iterator->first.second << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
+              //issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
               ct_iz_issues++;
               if (ct_iz_issues_hash.find(insert_size) == ct_iz_issues_hash.end())
               {
@@ -1142,7 +1152,8 @@ LINKS::pair_contigs()
             }
             else
             {
-              issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+              issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << mate_pair_iterator->first.first << " and " << mate_pair_iterator->first.second << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+              //issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
               ct_iz_issues++;
               if (ct_iz_issues_hash.find(insert_size) == ct_iz_issues_hash.end())
               {
