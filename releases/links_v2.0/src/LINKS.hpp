@@ -45,7 +45,7 @@ class LINKS
 
     std::string assemblyFile;
     std::string fofFile;
-    std::vector<uint16_t> distances = {2000,4000};
+    std::vector<uint32_t> distances = {2000,4000};
     std::vector<uint16_t> step_sizes = {2};
     //uint64_t distances = 4000;
     uint64_t k = 15;
@@ -71,7 +71,7 @@ class LINKS
 
       BufferMatePairData( uint64_t kmer_1_hash, 
                           uint64_t kmer_2_hash, 
-                          uint16_t distance)
+                          uint32_t distance)
         : kmer_1_hash(kmer_1_hash)
         , kmer_2_hash(kmer_2_hash)
         , distance(distance)
@@ -79,7 +79,7 @@ class LINKS
 
       uint64_t kmer_1_hash; 
       uint64_t kmer_2_hash;
-      uint16_t distance;
+      uint32_t distance;
     };
 
     struct BufferMateData
@@ -373,6 +373,13 @@ private:
     std::unordered_map<std::string, uint64_t> tigLength;
     // store second mates in a set
     std::unordered_set<uint64_t> mates;
+
+    // hash collision debug
+    std::mutex mates_string_mutex;
+    std::unordered_set<std::string> mates_string;
+    uint64_t insert_counter = 0;
+    // hash collision debug
+
     //unsigned last_contig_rank = 1;
 
     std::atomic<std::size_t> mate_pair_current_block_num = 0;
@@ -502,6 +509,11 @@ LINKS::write_from_block_to_map(){
   //std::cout << "writer leaves\n";
   std::cout << "test_mate_pair.size() " << test_mate_pair.size() << std::endl;
   std::cout << "mates.size() " << mates.size() << std::endl;
+
+  // hash collision debug
+  std::cout << "mates_string.size() " << mates_string.size() << std::endl; 
+  std::cout << "insert_counter " << insert_counter << std::endl;
+  // hash collision debug
 }
 inline void
 LINKS::write_from_block_to_set(){
@@ -684,6 +696,16 @@ LINKS::extract_mate_pair(const std::string& seq,
           mate_pair_block.data[mate_pair_block.count++] = BufferMatePairData(hash_a,
                                   hash_b,
                                   distance);
+          
+          // hash collision debug
+          mates_string_mutex.lock();
+          mates_string.insert(seq.substr(nthash.get_pos(),k));
+          mates_string.insert(seq.substr(nthashLead.get_pos(),k));
+          ++insert_counter;
+          mates_string_mutex.unlock();
+          // hash collision debug
+
+
           if (mate_pair_block.count == mate_pair_block_size) {
             mate_pair_block.num = mate_pair_current_block_num++;
             //std::cout << "block num after write: " << mate_pair_block.num  << std::endl;

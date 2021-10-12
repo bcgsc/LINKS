@@ -32,6 +32,12 @@ j=2
 l=5
 a=0.3
 
+r=
+r_conditional=
+ifneq ($r,)
+r_conditional=-r
+endif
+
 b=k$k_t$t_l$l_a$a_o$o_e$e
 
 bin=$(dir $(realpath $(firstword $(MAKEFILE_LIST))))
@@ -115,8 +121,8 @@ help:
 	@echo "			NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE"
 	@echo "			IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)"
 	@echo "	p	Bloom filter false positive rate (default -p 0.001, optional; increase to prevent memory allocation errors)"
-	@echo "	x	Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)"
-	@echo "	v	Runs in verbose mode (-v 1 = yes, default = no, optional)"
+	@echo "	x	Turn off Bloom filter functionality (1 = yes, default = no, optional)"
+	@echo "	v	Runs in verbose mode (1 = yes, default = no, optional)"
 	@echo ""
 
 clean:
@@ -132,10 +138,10 @@ empty.fof:
 
 $(b).tigpair_checkpoint.tsv : $(draft) $(readsFof)
 	echo $(d)
-	$(gtime) $(bin)/LINKS -f $(draft) -s $(readsFof) -d $d -k $k -t $t -o $o -e $e -z $z -p $p -x $x -b $b
+	$(gtime) $(bin)/LINKS -f $(draft) -s $(readsFof) $(r_conditional) $r -d $d -k $k -t $t -o $o -e $e -z $z -p $p -b $b -v $v -x $x
 
 $(b).scaffold.fa : $(b).tigpair_checkpoint.tsv empty.fof
-	$(gtime) $(bin)/../../links_v1.8.7/LINKS.pl -f $(draft) -s empty.fof -b $b -l $l -a $a
+	$(gtime) /gsc/btl/linuxbrew/bin/LINKS -f $(draft) -s empty.fof -b $b -l $l -a $a -v $v
 
 # Run LINKS
 LINKS: $(b).scaffold.fa
