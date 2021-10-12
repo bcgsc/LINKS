@@ -11,6 +11,7 @@
 
 //Globals
 #define BASE_TEN 10
+std::string progname = "LINKS";
 std::string version = "2.0";
 
 class InputParser {
@@ -66,6 +67,7 @@ class InputParser {
     public:
     std::string assemblyFile = "";
     std::string fofFile = "";
+    bool arguments_satisfied = true;
     std::queue<std::string> longReads;
     std::vector<uint32_t> distances = {4000};
     std::vector<uint16_t> step_sizes = {2};
@@ -85,6 +87,62 @@ class InputParser {
     float fpr = 0.001;
     bool bfOff = false;
     uint thread = 4;
+
+    static void
+    printUsage() {
+        std::cout << "Usage:  " << progname << " " << version << "\n"
+                << "  -f  sequences to scaffold (Multi-FASTA format, required)\n"
+                    "  -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)\n"
+                    "  -m  MPET reads (default -m 1 = yes, default = no, optional)\n"
+                    "  \t! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s\n"
+                    "  \t! Paired MPET reads in their original outward orientation <- -> must be separated by \":\"\n"
+                    "  \t  >template_name\n\t  ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC\n"
+                    "  -d  distance between k-mer pairs (ie. target distances to re-scaffold on. default -d 4000, optional)\n"
+                    "  \tMultiple distances are separated by comma. eg. -d 500,1000,2000,3000\n"
+                    "  -k  k-mer value (default -k 15, optional)\n"
+                    "  -t  step of sliding window when extracting k-mer pairs from long reads (default -t 2, optional)\n"
+                    "  \tMultiple steps are separated by comma. eg. -t 10,5\n"
+                    "  -o  offset position for extracting k-mer pairs (default -o 0, optional)\n"
+                    "  -e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10% (default -e 0.1, optional)\n"
+                    "  -l  minimum number of links (k-mer pairs) to compute scaffold (default -l 5, optional)\n"
+                    "  -a  maximum link ratio between two best contig pairs (default -a 0.3, optional)\n"
+                    "  \t *higher values lead to least accurate scaffolding*\n"
+                    "  -z  minimum contig length to consider for scaffolding (default -z 500, optional)\n"
+                    "  -b  base name for your output files (optional)\n"
+                    "  -r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)\n"
+                    "  \t NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE\n"
+                    "  \t IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)\n"
+                    "  -p  Bloom filter false positive rate (default -p 0.001, optional; increase to prevent memory allocation errors)\n"
+                    "  -x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)\n"
+                    "  -v  Runs in verbose mode (-v 1 = yes, default = no, optional)\n";
+                    
+                    //  nError: Missing mandatory options -f and -s.\n\n";
+    }
+    void
+    printOpts() {
+        // Command to test all input parsing
+        // -f inputFasta.fa -s fofLongReads.txt -m 10 -d 20 -k 30 -t 40 -o 50 -e 60.45 -l 70 -a 1.345 -z 80 -b mybase -r myBloomFilter -p 0.003 -x 34 -v
+
+        std::cout   << "  -f " << assemblyFile << "\n" 
+                    << "  -s " << fofFile << "\n" 
+                    << "  -m " << readLength << "\n" 
+                    //<< "  -d " << distances.str() << "\n" TODO: print distances
+                    << "  -k " << k << "\n"
+                    //<< "  -t " << step << "\n"
+                    << "  -o " << offset << "\n"
+                    << "  -e " << insertStdev << "\n"
+                    << "  -l " << minLinks << "\n"
+                    << "  -a " << maxLinkRatio << "\n"
+                    << "  -z " << minSize << "\n"
+                    << "  -b " << baseName << "\n"
+                    << "  -r " << bfFile << "\n"
+                    << "  -p " << fpr << "\n"
+                    << "  -x " << bfOff << "\n"
+                    << "  -v " << verbose << "\n";
+    }
+
+
+
 
     // std::string bfout = $base_name . ".bloom";
     // $base_name = $assemblyfile . ".scaff_s-" . $fofFile . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
@@ -174,58 +232,10 @@ class InputParser {
             if(distances.size() < step_sizes.size()){
                 std::cerr << "\n Number of provided distances can't be lower than number of step sizes provided.\n";
             }
+            if(assemblyFile == "" || fofFile == ""){
+                printUsage();
+                arguments_satisfied = false;
+            }
         }
-    static void
-    printUsage(const std::string& progname) {
-        std::cout << "Usage:  " << progname << " " << version << "\n"
-                << "  -f  sequences to scaffold (Multi-FASTA format, required)\n"
-                    "  -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)\n"
-                    "  -m  MPET reads (default -m 1 = yes, default = no, optional)\n"
-                    "  \t! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s\n"
-                    "  \t! Paired MPET reads in their original outward orientation <- -> must be separated by \":\"\n"
-                    "  \t  >template_name\n\t  ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC\n"
-                    "  -d  distance between k-mer pairs (ie. target distances to re-scaffold on. default -d $distances, optional)\n"
-                    "  \tMultiple distances are separated by comma. eg. -d 500,1000,2000,3000\n"
-                    "  -k  k-mer value (default -k $k, optional)\n"
-                    "  -t  step of sliding window when extracting k-mer pairs from long reads (default -t $step, optional)\n"
-                    "  \tMultiple steps are separated by comma. eg. -t 10,5\n"
-                    "  -o  offset position for extracting k-mer pairs (default -o $offset, optional)\n"
-                    "  -e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10% (default -e $insert_stdev, optional)\n"
-                    "  -l  minimum number of links (k-mer pairs) to compute scaffold (default -l $min_links, optional)\n"
-                    "  -a  maximum link ratio between two best contig pairs (default -a $max_link_ratio, optional)\n"
-                    "  \t *higher values lead to least accurate scaffolding*\n"
-                    "  -z  minimum contig length to consider for scaffolding (default -z $min_size, optional)\n"
-                    "  -b  base name for your output files (optional)\n"
-                    "  -r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)\n"
-                    "  \t NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE\n"
-                    "  \t IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)\n"
-                    "  -p  Bloom filter false positive rate (default -p $fpr, optional; increase to prevent memory allocation errors)\n"
-                    "  -x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)\n"
-                    "  -v  Runs in verbose mode (-v 1 = yes, default = no, optional)\n";
-                    
-                    //  nError: Missing mandatory options -f and -s.\n\n";
-    }
-    void
-    printOpts() {
-        // Command to test all input parsing
-        // -f inputFasta.fa -s fofLongReads.txt -m 10 -d 20 -k 30 -t 40 -o 50 -e 60.45 -l 70 -a 1.345 -z 80 -b mybase -r myBloomFilter -p 0.003 -x 34 -v
-
-        std::cout   << "  -f " << assemblyFile << "\n" 
-                    << "  -s " << fofFile << "\n" 
-                    << "  -m " << readLength << "\n" 
-                    //<< "  -d " << distances.str() << "\n" TODO: print distances
-                    << "  -k " << k << "\n"
-                    //<< "  -t " << step << "\n"
-                    << "  -o " << offset << "\n"
-                    << "  -e " << insertStdev << "\n"
-                    << "  -l " << minLinks << "\n"
-                    << "  -a " << maxLinkRatio << "\n"
-                    << "  -z " << minSize << "\n"
-                    << "  -b " << baseName << "\n"
-                    << "  -r " << bfFile << "\n"
-                    << "  -p " << fpr << "\n"
-                    << "  -x " << bfOff << "\n"
-                    << "  -v " << verbose << "\n";
-    }
 };
 #endif

@@ -380,13 +380,10 @@ private:
     uint64_t insert_counter = 0;
     // hash collision debug
 
-    //unsigned last_contig_rank = 1;
-
-    std::atomic<std::size_t> mate_pair_current_block_num = 0;
-    std::atomic<std::size_t> mate_pair_threads_done_writing = 0;
-
-    std::atomic<std::size_t> mate_current_block_num = 0;
-    std::atomic<std::size_t> mate_threads_done_writing = 0;
+    std::atomic<std::size_t> mate_pair_current_block_num = { 0 };
+    std::atomic<std::size_t> mate_pair_threads_done_writing = { 0 };
+    std::atomic<std::size_t> mate_current_block_num = { 0 };
+    std::atomic<std::size_t> mate_threads_done_writing = { 0 };
 };
 
 inline btllib::KmerBloomFilter*
