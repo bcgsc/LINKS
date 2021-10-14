@@ -1,7 +1,7 @@
 bin_PROGRAMS = LINKS
-LINKS_CXXFLAGS = $(AM_CXXFLAGS)
+LINKS_CXXFLAGS = $(AM_CXXFLAGS) -pthread
 
-LINKS_CPPFLAGS = -I$(top_srcdir)/btllib/include/
+LINKS_CPPFLAGS = -I$(top_srcdir)/btllib/include/ 
 
 #arcs_LDADD = $(top_builddir)/DataLayer/libdatalayer.a \
 	$(top_builddir)/Common/libcommon.a -lz
