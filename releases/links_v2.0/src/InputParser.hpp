@@ -69,7 +69,9 @@ class InputParser {
     std::string fofFile = "";
     bool arguments_satisfied = true;
     std::queue<std::string> longReads;
+    std::string distances_text = "";
     std::vector<uint32_t> distances = {4000};
+    std::string step_sizes_text = "";
     std::vector<uint16_t> step_sizes = {2};
     //uint64_t distances = 4000;
     uint64_t k = 15;
@@ -171,7 +173,8 @@ class InputParser {
                     break;
                 case 'd':
                     //distances.clear();
-                    distances = splitDistanceInput(optarg);
+                    distances_text.assign(optarg); 
+                    distances = splitDistanceInput(distances_text);
                     //distances = strtoul(optarg, &end, BASE_TEN);
                     //std::cout << optarg << "\n";
                     break;
@@ -179,7 +182,8 @@ class InputParser {
                     k = strtoul(optarg, &end, BASE_TEN);
                     break;
                 case 't':
-                    step_sizes = splitStepSizesInput(optarg);
+                    step_sizes_text.assign(optarg);
+                    step_sizes = splitStepSizesInput(step_sizes_text);
                     //step = strtoul(optarg, &end, BASE_TEN);
                     break;
                 case 'j':
@@ -231,6 +235,10 @@ class InputParser {
             }
             if(distances.size() < step_sizes.size()){
                 std::cerr << "\n Number of provided distances can't be lower than number of step sizes provided.\n";
+            }
+            if(baseName == ""){
+                // copied from v1.8.7 -- add pid to basename
+                baseName = assemblyFile + "scaff_s-" + fofFile + "_d" + distances_text + "_k" + std::to_string(k) + "_e" + std::to_string(insertStdev) + "_l" + std::to_string(minLinks) + "_a" + std::to_string(maxLinkRatio) + "_z" + std::to_string(minSize) + "_t" + step_sizes_text + "_o" + std::to_string(offset) + "_r-" + (bfOff ? "-" : bfFile) + "_p" + std::to_string(fpr) + "_x" + std::to_string(bfOff) + "_m" + std::to_string(readLength);
             }
             if(assemblyFile == "" || fofFile == ""){
                 printUsage();
