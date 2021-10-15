@@ -27,7 +27,7 @@
 //#include <shared_mutex>
 #include <chrono>
 
-#include <boost/functional/hash.hpp>
+//#include <boost/functional/hash.hpp>
 
 
 class LINKS
@@ -189,10 +189,12 @@ class LINKS
     std::size_t operator () (const std::pair<T1,T2> &p) const {
       //return p.first ^ p.second;
       
-      std::size_t seed = 0;
-      boost::hash_combine(seed, p.first);
-      boost::hash_combine(seed, p.second);
-      return seed;
+      /// commented for ease of CI testing
+      //std::size_t seed = 0;
+      //boost::hash_combine(seed, p.first);
+      //boost::hash_combine(seed, p.second);
+      //return seed;
+      return p.first ^ p.second; 
       
       }
     };
