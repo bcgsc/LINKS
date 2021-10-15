@@ -142,6 +142,7 @@ $(b).tigpair_checkpoint.tsv : $(draft) $(readsFof)
 
 $(b).scaffold.fa : $(b).tigpair_checkpoint.tsv empty.fof
 	$(gtime) /gsc/btl/linuxbrew/bin/LINKS -f $(draft) -s empty.fof -b $b -l $l -a $a -v $v
+#$(gtime) perl $(bin)/src/LINKS.pl -f $(draft) -s empty.fof -b $b -l $l -a $a -v $v
 
 # Run LINKS
 LINKS: $(b).scaffold.fa
