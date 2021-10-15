@@ -37,53 +37,53 @@ my $ARCKS_RUN = 0;### MEANS ONLY LINKS PROCESS
 
 #-------------------------------------------------
 
-if(! $opt_f || ! $opt_s){
+if(! $opt_f || ! $opt_b){
    print "Usage: $0 $version\n";
    print "-f  sequences to scaffold (Multi-FASTA format, required)\n"; 
-   print "-s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)\n";
-   print "-m  MPET reads (default -m 1 = yes, default = no, optional)\n";
-   print "\t! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s\n";
-   print "\t! Paired MPET reads in their original outward orientation <- -> must be separated by \":\"\n"; 
-   print "\t  >template_name\n\t  ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC\n";	
-   print "-d  distance between k-mer pairs (ie. target distances to re-scaffold on. default -d $distances, optional)\n";
-   print "\tMultiple distances are separated by comma. eg. -d 500,1000,2000,3000\n";
-   print "-k  k-mer value (default -k $k, optional)\n";
-   print "-t  step of sliding window when extracting k-mer pairs from long reads (default -t $step, optional)\n";
-   print "\tMultiple steps are separated by comma. eg. -t 10,5\n";
-   print "-o  offset position for extracting k-mer pairs (default -o $offset, optional)\n";
-   print "-e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10% (default -e $insert_stdev, optional)\n";
+   #print "-s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)\n";
+   #print "-m  MPET reads (default -m 1 = yes, default = no, optional)\n";
+   #print "\t! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s\n";
+   #print "\t! Paired MPET reads in their original outward orientation <- -> must be separated by \":\"\n"; 
+   #print "\t  >template_name\n\t  ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC\n";	
+   #print "-d  distance between k-mer pairs (ie. target distances to re-scaffold on. default -d $distances, optional)\n";
+   #print "\tMultiple distances are separated by comma. eg. -d 500,1000,2000,3000\n";
+   #print "-k  k-mer value (default -k $k, optional)\n";
+   #print "-t  step of sliding window when extracting k-mer pairs from long reads (default -t $step, optional)\n";
+   #print "\tMultiple steps are separated by comma. eg. -t 10,5\n";
+   #print "-o  offset position for extracting k-mer pairs (default -o $offset, optional)\n";
+   #print "-e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10% (default -e $insert_stdev, optional)\n";
    print "-l  minimum number of links (k-mer pairs) to compute scaffold (default -l $min_links, optional)\n";
    print "-a  maximum link ratio between two best contig pairs (default -a $max_link_ratio, optional)\n";
    print "\t *higher values lead to least accurate scaffolding*\n";
    print "-z  minimum contig length to consider for scaffolding (default -z $min_size, optional)\n";
    print "-b  base name for your output files (optional)\n";
-   print "-r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)\n";
-   print "\t NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE\n";
-   print "\t IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)\n";
+   #print "-r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)\n";
+   #print "\t NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE\n";
+   #print "\t IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)\n";
    print "-p  Bloom filter false positive rate (default -p $fpr, optional; increase to prevent memory allocation errors)\n";
-   print "-x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)\n";
+   #print "-x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)\n";
    print "-v  Runs in verbose mode (-v 1 = yes, default = no, optional)\n"; 
-   die "\nError: Missing mandatory options -f and -s.\n\n";
+   die "\nError: Missing mandatory options -f and -b.\n\n";
 }
 
 my $assemblyfile = $opt_f;
-my $longfile = $opt_s;
-$distances = $opt_d if($opt_d);
-$k = $opt_k if($opt_k);
+#my $longfile = $opt_s;
+#$distances = $opt_d if($opt_d);
+#$k = $opt_k if($opt_k);
 $verbose = $opt_v if($opt_v);
 $min_links = $opt_l if($opt_l);
 $min_size = $opt_z if($opt_z);
 $max_link_ratio = $opt_a if($opt_a);
-$step = $opt_t if($opt_t);
+#$step = $opt_t if($opt_t);
 ###ADDED FOR MPET
-my $readlength = $opt_m if($opt_m);###MPET
+#my $readlength = $opt_m if($opt_m);###MPET
 $insert_stdev = 0.5 if($opt_m);    ###MPET (Need to adjust to a wider-range of distances when dealing with MPET)
 $insert_stdev = $opt_e if($opt_e); ###When set, this will override the MPET-induced changes on -e
 $base_name = $opt_b if($opt_b);
-$offset = $opt_o if($opt_o);
+#$offset = $opt_o if($opt_o);
 $bf_file = $opt_r if($opt_r);
 $fpr = $opt_p if($opt_p);
-$bfoff = $opt_x if($opt_x);
+#$bfoff = $opt_x if($opt_x);
 
 my $assemblyruninfo="";
 
@@ -94,13 +94,13 @@ if(! -e $assemblyfile){
 
 
 ### Naming output files
-if ($base_name eq ""){
-
-   $base_name = $assemblyfile . ".scaff_s-" . $longfile . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
-
-   my $pid_num = getpgrp(0);
-   $base_name .= "_pid" . $pid_num;
-}
+#if ($base_name eq ""){
+#
+#   $base_name = $assemblyfile . ".scaff_s-" . $longfile . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
+#
+#   my $pid_num = getpgrp(0);
+#   $base_name .= "_pid" . $pid_num;
+#}
 
 my $log = $base_name . ".log";
 my $scaffold = $base_name . ".scaffolds";
@@ -116,7 +116,7 @@ open (LOG, ">>$log") || die "Can't write to $log -- fatal\n";
 
 #-------------------------------------------------
 #
-my $init_message = "\nRunning: $0 $version\n-f $assemblyfile\n-s $longfile\n-m $readlength\n";
+my $init_message = "\nRunning: $0 $version\n-f $assemblyfile\n-m $readlength\n";
 $init_message .= "-d $distances\n-k $k\n-e $insert_stdev\n-l $min_links\n-a $max_link_ratio\n-t $step\n-o $offset\n-z $min_size\n-b $base_name\n-r $bf_file\n-p $fpr\n-x $bfoff\n\n----------------- Verifying files -----------------\n\n";
 
 print $init_message;
@@ -127,38 +127,39 @@ $assemblyruninfo=$init_message;
 my $file_message = "";
 my $ct_fof_line = 0;
 
-if(! -e $longfile){
-   $file_message = "Invalid file of filenames: $longfile -- fatal\n";
-   print $file_message;
-   print LOG $file_message;
-   exit;
-}else{
-   open(FOF,$longfile) || die "Can't open file of filenames $longfile for reading -- fatal.\n";
-   while(<FOF>){
-      chomp;
-      $ct_fof_line++;
-      $file_message = "Checking $_...";
-      print $file_message;
-      print LOG $file_message;
-      if(! -e $_){
-         $file_message = "na\n*** File does not exist -- fatal (check the path/file and try again)\n";
-         if(/^\>/){
-           $file_message .= "It appears that the file you supplied in -s is in fasta format where it should be a file of filenames, listing the fullpath/fasta,fastq files to consider (1 per line).\n";
-         }elsif(/^\@/){
-           $file_message .= "It appears that the file you supplied in -s is in fastq format where it should be a file of filenames, listing the fullpath/fasta, fastq files to consider (1 per line).\n";
-         }
-         print $file_message;
-         print LOG $file_message;
-         exit;
-      }else{
-         $file_message = "ok\n";
-         print $file_message;
-         print LOG $file_message;
-      }
-   }
-   close FOF;
-   $ARCKS_RUN = 1 if(-z $longfile);###file is empty (empty.fof), this is likely from ARCS/ARKS
-}
+### No need for lonflie in v2.0
+# if(! -e $longfile){
+#    $file_message = "Invalid file of filenames: $longfile -- fatal\n";
+#    print $file_message;
+#    print LOG $file_message;
+#    exit;
+# }else{
+#    open(FOF,$longfile) || die "Can't open file of filenames $longfile for reading -- fatal.\n";
+#    while(<FOF>){
+#       chomp;
+#       $ct_fof_line++;
+#       $file_message = "Checking $_...";
+#       print $file_message;
+#       print LOG $file_message;
+#       if(! -e $_){
+#          $file_message = "na\n*** File does not exist -- fatal (check the path/file and try again)\n";
+#          if(/^\>/){
+#            $file_message .= "It appears that the file you supplied in -s is in fasta format where it should be a file of filenames, listing the fullpath/fasta,fastq files to consider (1 per line).\n";
+#          }elsif(/^\@/){
+#            $file_message .= "It appears that the file you supplied in -s is in fastq format where it should be a file of filenames, listing the fullpath/fasta, fastq files to consider (1 per line).\n";
+#          }
+#          print $file_message;
+#          print LOG $file_message;
+#          exit;
+#       }else{
+#          $file_message = "ok\n";
+#          print $file_message;
+#          print LOG $file_message;
+#       }
+#    }
+#    close FOF;
+#    $ARCKS_RUN = 1 if(-z $longfile);###file is empty (empty.fof), this is likely from ARCS/ARKS
+# }
 
 if(! -e $assemblyfile){
    $file_message = "\nInvalid file: $assemblyfile -- fatal\n";
