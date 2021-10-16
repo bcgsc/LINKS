@@ -8,6 +8,7 @@ int main(int argc, char** argv){
     if(!linksArgParser->arguments_satisfied){return -1;}
     std::cout << "fasta file: " << linksArgParser->assemblyFile << std::endl;
     LINKS* links = new LINKS(linksArgParser);
+    std::cout << "back from LINKS create bf\n";
 
     auto start = std::chrono::high_resolution_clock::now();
     links->init_bloom_filter();
