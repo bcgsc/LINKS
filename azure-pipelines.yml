@@ -32,5 +32,6 @@ jobs:
       echo K12_full2dONT_longread.fa > K12_F2D.fof
       ../LINKS-make LINKS draft=ecoliK12_abyss_illumina_contig_baseline.fa readsFof=K12_F2D.fof b=CI_TEST
       cd ../
+      ls
       pwd
     displayName: Run basic test
