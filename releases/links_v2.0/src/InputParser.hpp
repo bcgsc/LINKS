@@ -152,6 +152,7 @@ class InputParser {
     InputParser() = default;
 
     InputParser (int &argc, char **argv) {
+            std::cout << "Here at IP 1\n";
             this->argc = argc;
             static const struct option longopts[] = { { "help", no_argument, &help, 1 },
 		                                      { nullptr, 0, nullptr, 0 } };
@@ -227,6 +228,7 @@ class InputParser {
                     exit(EXIT_FAILURE);
                 }
             }
+            std::cout << "Here at IP 1\n";
             if(distances.size() > step_sizes.size()){
                 uint last_step = step_sizes.back();
                 for(int i = step_sizes.size(); i < distances.size(); i++){
