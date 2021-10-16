@@ -1,0 +1,3 @@
+[submodule "releases/links_v2.0/btllib"]
+	path = releases/links_v2.0/btllib
+	url = https://github.com/bcgsc/btllib.git
