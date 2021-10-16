@@ -31,7 +31,7 @@ jobs:
       wget http://www.bcgsc.ca/downloads/supplementary/LINKS/K12_full2dONT_longread.fa
       wget http://www.bcgsc.ca/downloads/supplementary/LINKS/ecoliK12_abyss_illumina_contig_baseline.fa
       echo K12_full2dONT_longread.fa > K12_F2D.fof
-      ../LINKS-make LINKS draft=ecoliK12_abyss_illumina_contig_baseline.fa readsFof=K12_F2D.fof b=CI_TEST
+      ../LINKS-make LINKS draft=ecoliK12_abyss_illumina_contig_baseline.fa readsFof=K12_F2D.fof b=CI_TEST v=1
       cd ../
       ls
       pwd
