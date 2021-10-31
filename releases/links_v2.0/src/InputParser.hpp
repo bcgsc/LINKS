@@ -23,7 +23,7 @@ class InputParser {
 	int help = 0;
     char* end = nullptr;
 
-    std::vector<uint32_t> splitDistanceInput(std::string input){
+    std::vector<uint32_t> split_distance_input(std::string input){
         std::vector<uint32_t> distances; 
 
         std::stringstream ss(input);
@@ -37,7 +37,7 @@ class InputParser {
         return distances;
     }
 
-    std::vector<uint16_t> splitStepSizesInput(std::string input){
+    std::vector<uint16_t> split_step_sizes_input(std::string input){
         std::vector<uint16_t> step_sizes; 
 
         std::stringstream ss(input);
@@ -51,24 +51,24 @@ class InputParser {
         return step_sizes;
     }
 
-    std::queue<std::string> parseFofInput(std::string fofFile){
-        std::queue<std::string> longReads; 
+    std::queue<std::string> parse_fof_input(std::string fof_file){
+        std::queue<std::string> long_reads; 
 
-        std::ifstream infile(fofFile);
-        std::string readFile;
-        while(infile >> readFile){
-            longReads.push(readFile);
-            std::cout << longReads.back() << std::endl;
+        std::ifstream infile(fof_file);
+        std::string read_file;
+        while(infile >> read_file){
+            long_reads.push(read_file);
+            std::cout << long_reads.back() << std::endl;
         }
 
-        return longReads;
+        return long_reads;
     }
 
     public:
-    std::string assemblyFile = "";
-    std::string fofFile = "";
+    std::string assembly_file = "";
+    std::string fof_file = "";
     bool arguments_satisfied = true;
-    std::queue<std::string> longReads;
+    std::queue<std::string> long_reads;
     std::string distances_text = "";
     std::vector<uint32_t> distances = {4000};
     std::string step_sizes_text = "";
@@ -76,22 +76,22 @@ class InputParser {
     //uint64_t distances = 4000;
     uint64_t k = 15;
     bool verbose = false;
-    uint64_t minLinks = 5;
-    uint64_t minSize = 500;
-    float maxLinkRatio = 0.3;
+    uint64_t min_links = 5;
+    uint64_t min_size = 500;
+    float max_link_ratio = 0.3;
     //uint64_t step = 2;
     // Added for MPET
-    uint64_t readLength;         // MPET
-    float insertStdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
-    std::string baseName = "";   // When set, this will override the MPET-induced changes on -e
+    uint64_t read_length;         // MPET
+    float insert_stdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
+    std::string base_name = "";   // When set, this will override the MPET-induced changes on -e
     uint64_t offset = 0;
-    std::string bfFile = "";
+    std::string bf_file = "";
     float fpr = 0.001;
-    bool bfOff = false;
+    bool bf_off = false;
     uint thread = 4;
 
     static void
-    printUsage() {
+    print_usage() {
         std::cout << "Usage:  " << progname << " " << version << "\n"
                 << "  -f  sequences to scaffold (Multi-FASTA format, required)\n"
                     "  -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)\n"
@@ -121,25 +121,26 @@ class InputParser {
                     //  nError: Missing mandatory options -f and -s.\n\n";
     }
     void
-    printOpts() {
+    print_opts() {
         // Command to test all input parsing
         // -f inputFasta.fa -s fofLongReads.txt -m 10 -d 20 -k 30 -t 40 -o 50 -e 60.45 -l 70 -a 1.345 -z 80 -b mybase -r myBloomFilter -p 0.003 -x 34 -v
 
-        std::cout   << "  -f " << assemblyFile << "\n" 
-                    << "  -s " << fofFile << "\n" 
-                    << "  -m " << readLength << "\n" 
+        std::cout   << "  -f " << assembly_file << "\n" 
+                    << "  -s " << fof_file << "\n" 
+                    << "  -m " << read_length << "\n" 
                     //<< "  -d " << distances.str() << "\n" TODO: print distances
                     << "  -k " << k << "\n"
+                    << "  -j " << thread << "\n"
                     //<< "  -t " << step << "\n"
                     << "  -o " << offset << "\n"
-                    << "  -e " << insertStdev << "\n"
-                    << "  -l " << minLinks << "\n"
-                    << "  -a " << maxLinkRatio << "\n"
-                    << "  -z " << minSize << "\n"
-                    << "  -b " << baseName << "\n"
-                    << "  -r " << bfFile << "\n"
+                    << "  -e " << insert_stdev << "\n"
+                    << "  -l " << min_links << "\n"
+                    << "  -a " << max_link_ratio << "\n"
+                    << "  -z " << min_size << "\n"
+                    << "  -b " << base_name << "\n"
+                    << "  -r " << bf_file << "\n"
                     << "  -p " << fpr << "\n"
-                    << "  -x " << bfOff << "\n"
+                    << "  -x " << bf_off << "\n"
                     << "  -v " << verbose << "\n";
     }
 
@@ -147,7 +148,7 @@ class InputParser {
 
 
     // std::string bfout = $base_name . ".bloom";
-    // $base_name = $assemblyfile . ".scaff_s-" . $fofFile . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
+    // $base_name = $assemblyfile . ".scaff_s-" . $fof_file . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
 
     InputParser() = default;
 
@@ -160,21 +161,21 @@ class InputParser {
                 case 0:
                     break;
                 case 'f':
-                    assemblyFile.assign(optarg);
+                    assembly_file.assign(optarg);
                     break;
                 case 's':
                     // full path for fof
-                    fofFile.assign(optarg);
-                    longReads = parseFofInput(fofFile);
+                    fof_file.assign(optarg);
+                    long_reads = parse_fof_input(fof_file);
                     break;
                 case 'm':
-                    readLength = strtoul(optarg, &end, BASE_TEN);
-                    insertStdev = 0.5;
+                    read_length = strtoul(optarg, &end, BASE_TEN);
+                    insert_stdev = 0.5;
                     break;
                 case 'd':
                     //distances.clear();
                     distances_text.assign(optarg); 
-                    distances = splitDistanceInput(distances_text);
+                    distances = split_distance_input(distances_text);
                     //distances = strtoul(optarg, &end, BASE_TEN);
                     //std::cout << optarg << "\n";
                     break;
@@ -183,7 +184,7 @@ class InputParser {
                     break;
                 case 't':
                     step_sizes_text.assign(optarg);
-                    step_sizes = splitStepSizesInput(step_sizes_text);
+                    step_sizes = split_step_sizes_input(step_sizes_text);
                     //step = strtoul(optarg, &end, BASE_TEN);
                     break;
                 case 'j':
@@ -193,29 +194,29 @@ class InputParser {
                     offset = strtoul(optarg, &end, BASE_TEN);
                     break;
                 case 'e':
-                    insertStdev = strtof(optarg, &end);
+                    insert_stdev = strtof(optarg, &end);
                     break;
                 case 'l':
-                    minLinks = strtoul(optarg, &end, BASE_TEN);
+                    min_links = strtoul(optarg, &end, BASE_TEN);
                     break;
                 case 'a':
-                    maxLinkRatio = strtof(optarg, &end);
+                    max_link_ratio = strtof(optarg, &end);
                     break;
                 case 'z':
-                    minSize = strtoul(optarg, &end, BASE_TEN);
+                    min_size = strtoul(optarg, &end, BASE_TEN);
                     break;
                 case 'b':
-                    baseName.assign(optarg);
+                    base_name.assign(optarg);
                     break;
                 case 'r':
-                    bfFile.assign(optarg);
+                    bf_file.assign(optarg);
                     break;
                 case 'p':
                     fpr = strtof(optarg, &end);
                     break;
                 case 'x':
                     if(strtoul(optarg, &end, BASE_TEN) == 1){
-                        bfOff = true;
+                        bf_off = true;
                     }
                     break;
                 case 'v':
@@ -236,12 +237,12 @@ class InputParser {
             if(distances.size() < step_sizes.size()){
                 std::cerr << "\n Number of provided distances can't be lower than number of step sizes provided.\n";
             }
-            if(baseName == ""){
+            if(base_name == ""){
                 // copied from v1.8.7 -- add pid to basename
-                baseName = assemblyFile + "scaff_s-" + fofFile + "_d" + distances_text + "_k" + std::to_string(k) + "_e" + std::to_string(insertStdev) + "_l" + std::to_string(minLinks) + "_a" + std::to_string(maxLinkRatio) + "_z" + std::to_string(minSize) + "_t" + step_sizes_text + "_o" + std::to_string(offset) + "_r-" + (bfOff ? "-" : bfFile) + "_p" + std::to_string(fpr) + "_x" + std::to_string(bfOff) + "_m" + std::to_string(readLength);
+                base_name = assembly_file + "scaff_s-" + fof_file + "_d" + distances_text + "_k" + std::to_string(k) + "_e" + std::to_string(insert_stdev) + "_l" + std::to_string(min_links) + "_a" + std::to_string(max_link_ratio) + "_z" + std::to_string(min_size) + "_t" + step_sizes_text + "_o" + std::to_string(offset) + "_r-" + (bf_off ? "-" : bf_file) + "_p" + std::to_string(fpr) + "_x" + std::to_string(bf_off) + "_m" + std::to_string(read_length);
             }
-            if(assemblyFile == "" || fofFile == ""){
-                printUsage();
+            if(assembly_file == "" || fof_file == ""){
+                print_usage();
                 arguments_satisfied = false;
             }
         }
