@@ -6,7 +6,8 @@
 int main(int argc, char** argv){
     InputParser* linksArgParser = new InputParser(argc, argv);
     if(!linksArgParser->arguments_satisfied){return -1;}
-    std::cout << "fasta file: " << linksArgParser->assemblyFile << std::endl;
+    linksArgParser->print_opts();
+    std::cout << "fasta file: " << linksArgParser->assembly_file << std::endl;
     LINKS* links = new LINKS(linksArgParser);
     std::cout << "back from LINKS create bf\n";
 

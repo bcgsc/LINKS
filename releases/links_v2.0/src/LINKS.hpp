@@ -27,41 +27,41 @@
 //#include <shared_mutex>
 #include <chrono>
 
-//#include <boost/functional/hash.hpp>
+#include <boost/functional/hash.hpp>
 
 
 class LINKS
 {
   public:
 
-    LINKS(InputParser* inputParser);
+    LINKS(InputParser* input_parser);
     void init_bloom_filter();
     void start_read_fasta();
     void start_read_contig();
     void pair_contigs();
     ~LINKS();
 
-    InputParser* inputParser;
+    InputParser* input_parser;
 
-    std::string assemblyFile;
-    std::string fofFile;
+    std::string assembly_file;
+    std::string fof_file;
     std::vector<uint32_t> distances = {2000,4000};
     std::vector<uint16_t> step_sizes = {2};
-    //uint64_t distances = 4000;
     uint64_t k = 15;
     bool verbose = false;
-    uint64_t minLinks = 5;
-    uint64_t minSize = 500;
-    float maxLinkRatio = 0.3;
+    uint64_t min_links = 5;
+    uint64_t min_size = 500;
+    float max_link_ratio = 0.3;
     //uint64_t step = 2;
     // Added for MPET
-    uint64_t readLength;         // MPET
-    float insertStdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
-    std::string baseName;   // When set, this will override the MPET-induced changes on -e
+    uint64_t read_length;         // MPET
+    float insert_stdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
+    std::string base_name;   // When set, this will override the MPET-induced changes on -e
     uint64_t offset = 0;
-    std::string bfFile;
+    std::string bf_file;
     float fpr = 0.001;
-    bool bfOff = false;
+    bool bf_off = false;
+    unsigned threads = 3;
 
     static const size_t MAX_SIMULTANEOUS_INDEXLRS = 128;
 
@@ -128,12 +128,7 @@ class LINKS
     struct MatePairInfo
     {
       MatePairInfo() = default;
-      /*
-      MatePairInfo(MatePairInfo& copy)
-        : seen(copy.seen)
-        , insert_size(copy.insert_size)
-      {}
-*/
+
       MatePairInfo(   bool seen,
                       int64_t insert_size)
         : seen(seen)
@@ -184,25 +179,20 @@ class LINKS
       bool orient = 0;
     };
 
+
     struct pair_hash {
     template <class T1, class T2>
     std::size_t operator () (const std::pair<T1,T2> &p) const {
       //return p.first ^ p.second;
       
       /// commented for ease of CI testing
-      //std::size_t seed = 0;
-      //boost::hash_combine(seed, p.first);
-      //boost::hash_combine(seed, p.second);
-      //return seed;
-      return p.first ^ p.second; 
       
-      }
-    };
-
-    struct single_hash {
-    template <class T1>
-    std::size_t operator () (const T1 &p) const {
-      return p;
+      std::size_t seed = 0;
+      boost::hash_combine(seed, p.first);
+      boost::hash_combine(seed, p.second);
+      return seed;
+      
+      //return p.first ^ p.second; 
       }
     };
 
@@ -301,32 +291,30 @@ private:
         void work() override;
     };
 
-    static const size_t BUFFER_SIZE = 4;
-    static const size_t BLOCK_SIZE = 1;
 
-    std::string seqfile;
-    std::queue<std::string> longReads;
-    unsigned threads;
-    long id;
-    size_t buffer_size = 16;
-    size_t block_size = 4;
+    std::string seq_file;
+    std::queue<std::string> long_reads;
+    //long id;
+
+    size_t read_buffer_size = 16;
+    size_t read_block_size = 4;
 
     size_t mate_pair_buffer_size = 6;
     size_t mate_pair_block_size = 1000000;
 
-    btllib::KmerBloomFilter* make_bf(uint64_t bfElements, InputParser* linksArgParser);
+    btllib::KmerBloomFilter* make_bf(uint64_t bf_elements, InputParser* links_arg_parser);
     void extract_mate_pair( const std::string& seq,
                             btllib::OrderQueueSPMC<BufferMatePairData>::Block& mate_pair_block);
     void populate_mate_info(const std::string& seq,
                             const std::string contig_rank,
                             btllib::OrderQueueSPMC<BufferMateData>::Block& mate_block);
     
-    int getDistanceBin(int distance);
-    int getDistance(uint64_t insert_size, 
+    int get_distance_bin(int distance);
+    int get_distance(uint64_t insert_size, 
       uint64_t length_i, 
       uint64_t start_i, 
       uint64_t start_j);
-    void addToPairMap(
+    void add_to_pair_map(
       int isz,
       std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>& pair,
       int distance,
@@ -339,40 +327,27 @@ private:
     void write_from_block_to_map();
     void write_from_block_to_set();
     // helper functions
-    uint64_t get_file_size(std::string filename);
-    bool does_file_exist(std::string fileName);
+    uint64_t get_file_size(std::string file_name);
+    bool does_file_exist(std::string file_name);
     std::atomic<bool> fasta{ false };
 
-    //btllib::KmerBloomFilter * bloom;
     std::shared_ptr<btllib::KmerBloomFilter> bloom;
-    //btllib::SeqReader* reader;
     std::shared_ptr<btllib::SeqReader> reader;
     std::shared_ptr<btllib::OrderQueueSPMC<Read>> input_queue;
     
     btllib::OrderQueueSPMC<BufferMatePairData> mate_pair_input_queue;
     btllib::OrderQueueSPMC<BufferMateData> mate_input_queue;
-    //InputWorker* input_worker;
     std::shared_ptr<InputWorker> input_worker;
     std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
     std::vector<PopulateMateInfoWorker> populate_mate_info_workers;
 
-    // commented out muro debug
-    //std::shared_mutex mate_pair_mutex;
-    //std::mutex mates_mutex;
-    //std::mutex mate_pair_mutex;
-    //std::mutex contig_rank_mutex;
     std::mutex tig_length_mutex;
-    //std::mutex track_all_mutex;
-    //std::shared_mutex track_all_mutex;
     
-
-    mate_pair_type new_mate_pair;
+    //mate_pair_type new_mate_pair;
     mate_pair_type test_mate_pair;
 
-    //std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>> matePair;
-    //std::unordered_map<uint64_t, KmerInfo> trackAll;
     std::unordered_map<uint64_t, KmerInfo> track_all_test;
-    std::unordered_map<std::string, uint64_t> tigLength;
+    std::unordered_map<std::string, uint64_t> tig_length;
     // store second mates in a set
     std::unordered_set<uint64_t> mates;
 
@@ -383,79 +358,76 @@ private:
 };
 
 inline btllib::KmerBloomFilter*
-LINKS::make_bf(uint64_t bfElements, InputParser* linksArgParser){
-  btllib::KmerBloomFilter * assemblyBF;
-    if(linksArgParser->bfFile != "") {
-        std::cout << "A Bloom filter was supplied (" << linksArgParser->bfFile << ") and will be used instead of building a new one from -f " << linksArgParser->assemblyFile << "\n";
-        if(!does_file_exist(linksArgParser->bfFile)) {
-            std::cout << "\nInvalid file: " << linksArgParser->bfFile <<  " -- fatal\n";
+LINKS::make_bf(uint64_t bf_elements, InputParser* links_arg_parser){
+  btllib::KmerBloomFilter * assembly_BF;
+    if(links_arg_parser->bf_file != "") {
+        std::cout << "A Bloom filter was supplied (" << links_arg_parser->bf_file << ") and will be used instead of building a new one from -f " << links_arg_parser->assembly_file << "\n";
+        if(!does_file_exist(links_arg_parser->bf_file)) {
+            std::cout << "\nInvalid file: " << links_arg_parser->bf_file <<  " -- fatal\n";
             exit(1);
         } else {
-            std::cout << "Checking Bloom filter file " << linksArgParser->bfFile <<"...ok\n";
+            std::cout << "Checking Bloom filter file " << links_arg_parser->bf_file <<"...ok\n";
         }
         // std::cout << "Loading bloom filter of size " << getFileSize(linksArgParser->bfFile) << " from " << linksArgParser->bfFile << "\n";
-        assemblyBF = new btllib::KmerBloomFilter(linksArgParser->bfFile);
+        assembly_BF = new btllib::KmerBloomFilter(links_arg_parser->bf_file);
     } else {
-        uint64_t m = ceil((-1 * (double)bfElements * log(linksArgParser->fpr)) / (log(2) * log(2)));
+        uint64_t m = ceil((-1 * (double)bf_elements * log(links_arg_parser->fpr)) / (log(2) * log(2)));
         //uint64_t rem = 64 - (m % 64);
         m = ((uint64_t)(m / 8) + 1) * 8;
-        std::cout << "HASHES CALC: " << std::to_string(((double)m / bfElements)) << " second: " << std::to_string(((double)m / bfElements) * log(2)) << "\n";
-        unsigned hashFct = floor(((double)m / bfElements) * log(2));
-        std::cout << "- Number of bfElements: " << bfElements << "\n"
-                    << "- Input file path: " << linksArgParser->bfFile << "\n"
-                    << "- Input file: " << linksArgParser->assemblyFile << "\n"
-                    << "- kmersize: " << linksArgParser->k << "\n"
+        std::cout << "HASHES CALC: " << std::to_string(((double)m / bf_elements)) << " second: " << std::to_string(((double)m / bf_elements) * log(2)) << "\n";
+        unsigned hash_fct = floor(((double)m / bf_elements) * log(2));
+        std::cout << "- Number of bfElements: " << bf_elements << "\n"
+                    << "- Input file path: " << links_arg_parser->bf_file << "\n"
+                    << "- Input file: " << links_arg_parser->assembly_file << "\n"
+                    << "- kmersize: " << links_arg_parser->k << "\n"
                     << "- m: " << m << "\n"
-                    << "- fpr: " << linksArgParser->fpr << "\n"
-                    << "- hashFct: " << hashFct << "\n";
+                    << "- fpr: " << links_arg_parser->fpr << "\n"
+                    << "- hashFct: " << hash_fct << "\n";
 
         std::string reading_tigbloom_message = "\n\n=>Reading contig/sequence assembly file : " + std::to_string(time(0)) + "\n";
         // assemblyruninfo += reading_tigbloom_message;
         // std::cout << "- Filter output file : " << outFileBf << "\n";
-        std::cout << "- Filter output file : " << linksArgParser->k << "\n";
-        assemblyBF = new btllib::KmerBloomFilter(m/8, hashFct, linksArgParser->k);
-        btllib::SeqReader assemblyReader(linksArgParser->assemblyFile, 8, 1);
+        std::cout << "- Filter output file : " << links_arg_parser->k << "\n";
+        assembly_BF = new btllib::KmerBloomFilter(m/8, hash_fct, links_arg_parser->k);
+        btllib::SeqReader assembly_reader(links_arg_parser->assembly_file, 8, 1);
         size_t builder = 0;
-        for (btllib::SeqReader::Record record; (record = assemblyReader.read());) {
+        for (btllib::SeqReader::Record record; (record = assembly_reader.read());) {
           if(builder % 10 == 0) {
                 //std::cout << "reading... builder: " << builder << "\n";
           }
           builder++;
           //std::cout << "here 1\n";
-          assemblyBF->insert(record.seq);
+          assembly_BF->insert(record.seq);
           //std::cout << "here 2\n";
         }
-        std::string bfmsg = "\n\nWriting Bloom filter to disk (" + linksArgParser->bfFile + ") : " + std::to_string(time(0)) + "\n";
+        std::string bfmsg = "\n\nWriting Bloom filter to disk (" + links_arg_parser->bf_file + ") : " + std::to_string(time(0)) + "\n";
         // assemblyruninfo += bfmsg;
         std::cout << bfmsg;
-        assemblyBF->save(".bloom");
+        assembly_BF->save(".bloom");
         // std::cout << "Done mybf, printing stats...\n";
         //printBloomStats(*assemblyBF, std::cout);
         
     }
-    return assemblyBF;
+    return assembly_BF;
 }
 
-inline LINKS::LINKS(InputParser* inputParser)
-        : inputParser(inputParser)
-        , assemblyFile(inputParser->assemblyFile)
-        , longReads(inputParser->longReads)
-        //, seqfile(longReads.front())
-        //, fofFile(inputParser->fofFile)
-        , distances(inputParser->distances)
-        , k(inputParser->k)
-        , verbose(inputParser->verbose)
-        , minSize(inputParser->minSize)
-        , step_sizes(inputParser->step_sizes)
-        //, step(inputParser->step)
-        , insertStdev(inputParser->insertStdev)
-        , baseName(inputParser->baseName)
-        , offset(inputParser->offset)
-        , fpr(inputParser->fpr)
-        , bfFile(inputParser->bfFile)
-        , bfOff(inputParser->bfOff)
-        , threads(inputParser->thread)
-        , input_queue(std::shared_ptr<btllib::OrderQueueSPMC<Read>>(new btllib::OrderQueueSPMC<Read>(buffer_size, block_size)))
+inline LINKS::LINKS(InputParser* input_parser)
+        : input_parser(input_parser)
+        , assembly_file(input_parser->assembly_file)
+        , long_reads(input_parser->long_reads)
+        , distances(input_parser->distances)
+        , k(input_parser->k)
+        , verbose(input_parser->verbose)
+        , min_size(input_parser->min_size)
+        , step_sizes(input_parser->step_sizes)
+        , insert_stdev(input_parser->insert_stdev)
+        , base_name(input_parser->base_name)
+        , offset(input_parser->offset)
+        , fpr(input_parser->fpr)
+        , bf_file(input_parser->bf_file)
+        , bf_off(input_parser->bf_off)
+        , threads(input_parser->thread)
+        , input_queue(std::shared_ptr<btllib::OrderQueueSPMC<Read>>(new btllib::OrderQueueSPMC<Read>(read_buffer_size, read_block_size)))
         , mate_pair_input_queue(mate_pair_buffer_size, mate_pair_block_size)
         , mate_input_queue(mate_pair_buffer_size, mate_pair_block_size)
         , input_worker(std::shared_ptr<InputWorker>(new InputWorker(*this)))
@@ -463,8 +435,8 @@ inline LINKS::LINKS(InputParser* inputParser)
 
 inline void
 LINKS::init_bloom_filter(){
-  int64_t bf_elements = get_file_size(inputParser->assemblyFile);
-  bloom = std::shared_ptr<btllib::KmerBloomFilter>(make_bf(bf_elements,inputParser));
+  int64_t bf_elements = get_file_size(input_parser->assembly_file);
+  bloom = std::shared_ptr<btllib::KmerBloomFilter>(make_bf(bf_elements,input_parser));
 }
 
 inline void
@@ -549,7 +521,7 @@ LINKS::InputWorker::work()
   } else {
     links.fasta = false;
   }
-  btllib::OrderQueueSPMC<Read>::Block block(links.block_size); 
+  btllib::OrderQueueSPMC<Read>::Block block(links.read_block_size); 
 
   size_t current_block_num = 0;
   size_t read_c = 0;
@@ -569,7 +541,7 @@ LINKS::InputWorker::work()
                                     std::move(record.id),
                                     std::move(record.comment),
                                     std::move(record.seq));
-    if (block.count == links.block_size) {
+    if (block.count == links.read_block_size) {
       block.num = current_block_num++;
       links.input_queue->write(block);
       block.count = 0;
@@ -591,8 +563,8 @@ LINKS::InputWorker::work()
 inline void 
 LINKS::start_read_fasta(){
 
-  reader = std::shared_ptr<btllib::SeqReader>(new btllib::SeqReader(std::move(longReads.front()), btllib::SeqReader::Flag::LONG_MODE));
-  longReads.pop();
+  reader = std::shared_ptr<btllib::SeqReader>(new btllib::SeqReader(std::move(long_reads.front()), btllib::SeqReader::Flag::LONG_MODE));
+  long_reads.pop();
   
   extract_mate_pair_workers = std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
 
@@ -613,13 +585,13 @@ inline void
 LINKS::start_read_contig(){
   //trackAll.reserve(mates.size());
   reader.reset();
-  reader = std::shared_ptr<btllib::SeqReader>(new btllib::SeqReader(assemblyFile, btllib::SeqReader::Flag::LONG_MODE));
+  reader = std::shared_ptr<btllib::SeqReader>(new btllib::SeqReader(assembly_file, btllib::SeqReader::Flag::LONG_MODE));
   
   input_worker.reset();
   input_worker = std::shared_ptr<InputWorker>(new InputWorker(*this));
 
   input_queue.reset();
-  input_queue = std::shared_ptr<btllib::OrderQueueSPMC<Read>>(new btllib::OrderQueueSPMC<Read>(buffer_size, block_size));
+  input_queue = std::shared_ptr<btllib::OrderQueueSPMC<Read>>(new btllib::OrderQueueSPMC<Read>(read_buffer_size, read_block_size));
 
   input_worker->start();
 
@@ -653,35 +625,35 @@ LINKS::extract_mate_pair(const std::string& seq,
     step_index++;
     //std::cout << "distance: " << distance << " step size: " << cur_step_size << std::endl;
     uint64_t delta = distance - k;
-    int breakFlag = 0;
-    bool reverseExists = false;
-    btllib::NtHash nthash(seq, bloom->get_hash_num(), k, offset);
-    btllib::NtHash nthashLead(seq, bloom->get_hash_num(), k, delta + offset);
+    int break_flag = 0;
+    bool reverse_exists = false;
+    btllib::NtHash ntHash(seq, bloom->get_hash_num(), k, offset);
+    btllib::NtHash ntHash_lead(seq, bloom->get_hash_num(), k, delta + offset);
 
     uint64_t hash_a, hash_b;    
 
-    for (size_t i = 0; nthash.roll() && nthashLead.roll(); i+=cur_step_size) {
+    for (size_t i = 0; ntHash.roll() && ntHash_lead.roll(); i+=cur_step_size) {
         // roll for the number of steps
-        breakFlag = 0;
-        reverseExists = false;
+        break_flag = 0;
+        reverse_exists = false;
         // for step ----
         for(uint j = 1; j < cur_step_size; j++) {
-            if(!nthashLead.roll() || !nthash.roll()) {
-                breakFlag = 1;
+            if(!ntHash_lead.roll() || !ntHash.roll()) {
+                break_flag = 1;
             }
         }  
-        if(breakFlag){break;}
+        if(break_flag){break;}
         // for step ----
 
-        if(nthash.get_forward_hash() < nthashLead.get_reverse_hash()){
-          hash_a = nthashLead.get_reverse_hash();
-          hash_b = nthash.get_reverse_hash();
+        if(ntHash.get_forward_hash() < ntHash_lead.get_reverse_hash()){
+          hash_a = ntHash_lead.get_reverse_hash();
+          hash_b = ntHash.get_reverse_hash();
         }else{
-          hash_a = nthash.get_forward_hash();
-          hash_b = nthashLead.get_forward_hash();
+          hash_a = ntHash.get_forward_hash();
+          hash_b = ntHash_lead.get_forward_hash();
         }
 
-        if(bloom->contains(nthash.hashes()) && bloom->contains(nthashLead.hashes())) { // May need to change with forward reverse hashes
+        if(bloom->contains(ntHash.hashes()) && bloom->contains(ntHash_lead.hashes())) { // May need to change with forward reverse hashes
           mate_pair_block.data[mate_pair_block.count++] = BufferMatePairData(hash_a,
                                   hash_b,
                                   distance);
@@ -701,7 +673,7 @@ LINKS::populate_mate_info(const std::string& seq,
                           const std::string contig_rank,
                           btllib::OrderQueueSPMC<BufferMateData>::Block& mate_info_block){
   
-  btllib::NtHash ntHashContig(seq, bloom->get_hash_num(), k); // hashFunc can be 1 after first step
+  btllib::NtHash ntHash_contig(seq, bloom->get_hash_num(), k); // hashFunc can be 1 after first step
 
   int breakFlag = 0;
   for (size_t i = 0; ntHashContig.roll(); i+=1) {
@@ -709,7 +681,7 @@ LINKS::populate_mate_info(const std::string& seq,
       i = ntHashContig.get_pos();
       if(mates.find(ntHashContig.get_forward_hash()) != mates.end()){
           mate_info_block.data[mate_info_block.count++] = BufferMateData(
-                      ntHashContig.get_forward_hash(),
+                      ntHash_contig.get_forward_hash(),
                       contig_rank, 
                       i, 
                       i + k, 
@@ -720,12 +692,22 @@ LINKS::populate_mate_info(const std::string& seq,
             mate_input_queue.write(mate_info_block);
             mate_info_block.count = 0;
           }
+<<<<<<< HEAD
+=======
+          /*
+            if(own_track_all.find(ntHash_contig.get_forward_hash()) == own_track_all.end()) {
+              own_track_all[ntHash_contig.get_forward_hash()] = KmerInfo(contig_rank, i, i + k, 1, false);
+            } else {
+              own_track_all[ntHash_contig.get_forward_hash()].multiple +=1;
+            }
+            */
+>>>>>>> 9a08a8a4cc7d0d1390182b6fba5acd1624b0c721
         }
 
         // Reverse part
-        if(mates.find(ntHashContig.get_reverse_hash()) != mates.end()){
+        if(mates.find(ntHash_contig.get_reverse_hash()) != mates.end()){
           mate_info_block.data[mate_info_block.count++] = BufferMateData(
-              ntHashContig.get_reverse_hash(),
+              ntHash_contig.get_reverse_hash(),
               contig_rank, 
               i, 
               i + k, 
@@ -784,7 +766,7 @@ LINKS::ExtractMatePairWorker::work()
 inline void
 LINKS::PopulateMateInfoWorker::work()
 {
-  btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size);
+  btllib::OrderQueueSPMC<Read>::Block input_block(links.read_block_size);
   btllib::OrderQueueSPMC<BufferMateData>::Block mate_block(links.mate_pair_block_size); 
   std::unordered_map<uint64_t, KmerInfo> own_track_all;
 
@@ -800,7 +782,7 @@ LINKS::PopulateMateInfoWorker::work()
 
     if (links.k <= read.seq.size()) {
         links.tig_length_mutex.lock(); 
-        links.tigLength[std::to_string(read.num+1)] = read.seq.size();
+        links.tig_length[std::to_string(read.num+1)] = read.seq.size();
         links.tig_length_mutex.unlock();
         links.populate_mate_info(read.seq,std::to_string(read.num+1), mate_block);
         continue;
@@ -832,25 +814,25 @@ inline LINKS::~LINKS()
 }
 
 inline uint64_t 
-LINKS::get_file_size(std::string filename)
+LINKS::get_file_size(std::string file_name)
 {
     // This buffer is a stat struct that the information is placed concerning the file.
     struct stat stat_buf;
     // Stat method returns true if successfully completed
-    int rc = stat(filename.c_str(), &stat_buf);
+    int rc = stat(file_name.c_str(), &stat_buf);
     // st_size holds the total size of the file in bytes
     return rc == 0 ? stat_buf.st_size : -1;
 }
 
 inline bool 
-LINKS::does_file_exist(std::string fileName)
+LINKS::does_file_exist(std::string file_name)
 {
-    std::ifstream infile(fileName);
+    std::ifstream infile(file_name);
     return infile.good();
 }
 
 inline void 
-LINKS::addToPairMap(
+LINKS::add_to_pair_map(
     int isz,
     std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo>>>& pair,
     int distance,
@@ -911,13 +893,13 @@ LINKS::addToPairMap(
 }
 
 inline int 
-LINKS::getDistanceBin(int distance)
+LINKS::get_distance_bin(int distance)
 {
     return distance < 0 ? -1 : distance == 10 ? 10 : distance < 500 ? 500 : distance < 5000 ? 5000 : 10000;
 }
 
 inline int 
-LINKS::getDistance(uint64_t insert_size, uint64_t length_i, uint64_t start_i, uint64_t start_j) {
+LINKS::get_distance(uint64_t insert_size, uint64_t length_i, uint64_t start_i, uint64_t start_j) {
 
    int insert_span = (length_i - start_i) + start_j;
    int gap_or_overlap = insert_size - insert_span;
@@ -928,22 +910,22 @@ inline void
 LINKS::pair_contigs()
 {
   std::cout << "in real pair contigs\n";
-  std::string issues = inputParser->baseName + ".pairing_issues";
-  std::string distribution = inputParser->baseName + ".pairing_distribution.csv";
-  std::string tigpair_checkpoint = inputParser->baseName + ".tigpair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
-  std::string simplepair_checkpoint = inputParser->baseName + ".simplepair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if cras
+  std::string issues = input_parser->base_name + ".pairing_issues";
+  std::string distribution = input_parser->base_name + ".pairing_distribution.csv";
+  std::string tigpair_checkpoint = input_parser->base_name + ".tigpair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
+  std::string simplepair_checkpoint = input_parser->base_name + ".simplepair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if cras
   uint64_t totalPairs = 0;
-  uint64_t ct_illogical = 0, ct_ok_contig = 0, ct_ok_pairs = 0, ct_problem_pairs = 0, ct_iz_issues = 0, ct_single = 0, ct_multiple = 0, ct_both = 0, trackInsert = 0;
+  uint64_t ct_illogical = 0, ct_ok_contig = 0, ct_ok_pairs = 0, ct_problem_pairs = 0, ct_iz_issues = 0, ct_single = 0, ct_multiple = 0, ct_both = 0, track_insert = 0;
   std::unordered_map<uint64_t, uint64_t> ct_single_hash, ct_both_hash, ct_illogical_hash, ct_ok_contig_hash, ct_ok_pairs_hash, ct_problem_pairs_hash, ct_iz_issues_hash;
   // Mapping of tiga_head -> insertSize -> tigb_head -> links & gaps
   std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> > > pair;
-  std::unordered_map<std::string, std::unordered_map<std::string, PairLinkInfo> >simplePair;
+  //std::unordered_map<std::string, std::unordered_map<std::string, PairLinkInfo> >simplePair;
   std::unordered_map<std::string, PairLinkInfo> err;
-  std::string order1;
-  std::string order2;
+  //std::string order1;
+  //std::string order2;
   if(verbose) std::cout << "Pairing contigs...\n";
-  std::ofstream issuesFile;
-  issuesFile.open (issues);
+  std::ofstream issues_file;
+  issues_file.open (issues);
   int64_t insert_size = 0;
   int min_allowed = 0;
   uint low_iz = 0;
@@ -979,7 +961,7 @@ LINKS::pair_contigs()
 
       insert_size = test_mate_pair[std::make_pair(mate_pair_iterator->first.first, mate_pair_iterator->first.second)].insert_size;
 
-      min_allowed = -1 * (insertStdev * insert_size); // check int
+      min_allowed = -1 * (insert_stdev * insert_size); // check int
       low_iz = insert_size + min_allowed;             // check int
       up_iz = insert_size - min_allowed;              // check int
 
@@ -1010,21 +992,21 @@ LINKS::pair_contigs()
             if (!kmer2.orient)
             { // if kmer2 is forward
               //++counter_4;
-              distance = getDistance(insert_size, tigLength[kmer1.tig], kmer1.start, kmer2.start);
+              distance = get_distance(insert_size, tig_length[kmer1.tig], kmer1.start, kmer2.start);
               if (distance > min_allowed && distance < insert_size)
               {
-                isz = getDistanceBin(distance);
-                addToPairMap(isz, pair, distance, kmer1.tig, kmer2.tig, 0);
+                isz = get_distance_bin(distance);
+                add_to_pair_map(isz, pair, distance, kmer1.tig, kmer2.tig, 0);
               }
             }
             else
             {
               //++counter_5;
-              distance = getDistance(insert_size, tigLength[kmer1.tig], kmer1.start, tigLength[kmer2.tig] - kmer2.end);
+              distance = get_distance(insert_size, tig_length[kmer1.tig], kmer1.start, tig_length[kmer2.tig] - kmer2.end);
               if (distance > min_allowed && distance < insert_size)
               {
-                isz = getDistanceBin(distance);
-                addToPairMap(isz, pair, distance, kmer1.tig, kmer2.tig, 1);
+                isz = get_distance_bin(distance);
+                add_to_pair_map(isz, pair, distance, kmer1.tig, kmer2.tig, 1);
               }
             }
           }
@@ -1033,21 +1015,21 @@ LINKS::pair_contigs()
             if (!kmer2.orient)
             {
               //++counter_6;
-              distance = getDistance(insert_size, tigLength[kmer1.tig], tigLength[kmer1.tig] - kmer1.end, kmer2.start);
+              distance = get_distance(insert_size, tig_length[kmer1.tig], tig_length[kmer1.tig] - kmer1.end, kmer2.start);
               if (distance > min_allowed && distance < insert_size)
               {
-                isz = getDistanceBin(distance);
-                addToPairMap(isz, pair, distance, kmer1.tig, kmer2.tig, 2);
+                isz = get_distance_bin(distance);
+                add_to_pair_map(isz, pair, distance, kmer1.tig, kmer2.tig, 2);
               }
             }
             else
             { // if kmer2 is reverse
               //++counter_7;
-              distance = getDistance(insert_size, tigLength[kmer2.tig], kmer2.end, kmer1.end);
+              distance = get_distance(insert_size, tig_length[kmer2.tig], kmer2.end, kmer1.end);
               if (distance > min_allowed && distance < insert_size)
               {
-                isz = getDistanceBin(distance);
-                addToPairMap(isz, pair, distance, kmer1.tig, kmer2.tig, 3);
+                isz = get_distance_bin(distance);
+                add_to_pair_map(isz, pair, distance, kmer1.tig, kmer2.tig, 3);
               }
             }
           }
@@ -1061,7 +1043,7 @@ LINKS::pair_contigs()
           if (A_start > B_start && (B_start < B_end) && (A_start > A_end))
           { // B --> <-- A
             pet_size = A_start - B_start;
-            trackInsert += pet_size;
+            track_insert += pet_size;
             if (pet_size >= low_iz && pet_size <= up_iz)
             {
               ct_ok_contig++;
@@ -1076,8 +1058,8 @@ LINKS::pair_contigs()
             }
             else
             {
-              issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << mate_pair_iterator->first.first << " and " << mate_pair_iterator->first.second << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
-              //issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
+              issues_file << "Pairs unsatisfied in distance within a contig.  Pair (" << mate_pair_iterator->first.first << " and " << mate_pair_iterator->first.second << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
+              //issues_file << "Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size << "\n";
               ct_iz_issues++;
               if (ct_iz_issues_hash.find(insert_size) == ct_iz_issues_hash.end())
               {
@@ -1092,7 +1074,7 @@ LINKS::pair_contigs()
           else if (B_start > A_start && (B_start > B_end) && (A_start < A_end))
           { // A --> <-- B
             pet_size = B_start - A_start;
-            trackInsert += pet_size;
+            track_insert += pet_size;
             if (pet_size >= low_iz && pet_size <= up_iz)
             {
               ct_ok_contig++;
@@ -1107,8 +1089,8 @@ LINKS::pair_contigs()
             }
             else
             {
-              issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << mate_pair_iterator->first.first << " and " << mate_pair_iterator->first.second << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
-              //issuesFile << "Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+              issues_file << "Pairs unsatisfied in distance within a contig.  Pair (" << mate_pair_iterator->first.first << " and " << mate_pair_iterator->first.second << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+              //issues_file << "Pairs unsatisfied in distance within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig " << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
               ct_iz_issues++;
               if (ct_iz_issues_hash.find(insert_size) == ct_iz_issues_hash.end())
               {
@@ -1132,7 +1114,7 @@ LINKS::pair_contigs()
               ct_illogical_hash[insert_size] = ct_illogical_hash[insert_size] + 1;
             }
             // FOLLOWING IS NOT A DEBUGGING PRINT
-            //issuesFile << "Pairs unsatisfied in pairing logic within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig" << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
+            //issues_file << "Pairs unsatisfied in pairing logic within a contig.  Pair (" << matePairItr->first << " - " << mateListItr->first << ") on contig" << tig_a << " (" << A_length << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" << B_start << " Bend:" << B_end << "\n";
           }
         }
       }
@@ -1165,13 +1147,13 @@ LINKS::pair_contigs()
     //std::cout << "err map size: " << err.size() << "\n"; 
     
     //sortErr(err); TODO: uncomment
-    std::unordered_map<std::string, PairLinkInfo>::iterator errItr;
-    for(errItr = err.begin(); errItr != err.end(); errItr++) {
+    std::unordered_map<std::string, PairLinkInfo>::iterator err_itr;
+    for(err_itr = err.begin(); err_itr != err.end(); err_itr++) {
         double mean_iz = 0;
-        if(errItr->second.links) {
-            mean_iz = errItr->second.gaps / errItr->second.links;
+        if(err_itr->second.links) {
+            mean_iz = err_itr->second.gaps / err_itr->second.links;
         }
-        // std::cout << "Pair " << errItr->first << " has " << errItr->second.getLinks() << " Links and mean distance of = " << mean_iz << "\n";
+        // std::cout << "Pair " << err_itr->first << " has " << err_itr->second.getLinks() << " Links and mean distance of = " << mean_iz << "\n";
     }
 
     uint64_t satisfied = ct_ok_pairs + ct_ok_contig;
@@ -1182,7 +1164,7 @@ LINKS::pair_contigs()
     //std::cout << "THESE ARE THE FILTERINGS:\n"<< "filter 1: "<< std::to_string(filter1) << "\n" << "filter 2: "<< std::to_string(filter2) << "\n" << "filter 3: "<< std::to_string(filter3) << "\n" << "filter 4: "<< std::to_string(filter4) << "\n";
     //std::cout << "THESE ARE THE COUNTERS:\n" << std::to_string(CheckCounterBase) << "\n0 " << std::to_string(Check0Counter) << "\n1 " <<  std::to_string(Check1Counter) << "\n2 " <<  std::to_string(Check2Counter) << "\n3 " <<  std::to_string(Check3Counter) << "\n4 " <<  std::to_string(Check4Counter) << "\n5 " <<  std::to_string(Check5Counter) << "\n6 " <<  std::to_string(Check6Counter) << "\n7 " <<  std::to_string(Check7Counter) << "\n8 " <<  std::to_string(Check8Counter) << "\n9 " <<  std::to_string(Check9Counter) << "\n10 " << std::to_string(Check10Counter) << "\n11 " << std::to_string(Check11Counter) << "\n12 " << std::to_string(Check12Counter) << "\n13 " << std::to_string(Check13Counter) << "\n14 " << std::to_string(Check14Counter) << "\n15 " << std::to_string(Check15Counter) << "\n16 " << std::to_string(Check16Counter) << "\n17 " << std::to_string(Check17Counter) << "\n18 " << std::to_string(Check18Counter) << "\n19" << std::to_string(Check19Counter) << "\n20 " << std::to_string(Check20Counter) << "\n21 " << std::to_string(Check21Counter) << "\n22 " << std::to_string(Check22Counter) << "\n23 " << std::to_string(Check23Counter) << "\n24 " << std::to_string(Check24Counter) << "\n25 " << std::to_string(Check25Counter) << "\n26 " << std::to_string(Check26Counter) << "\n";
     std::cout << "\n===========PAIRED K-MER STATS===========\n";
-    //std::cout << "Total number of pairs extracted from -s " << longReadsFile << " " << totalPairs << "\n";
+    //std::cout << "Total number of pairs extracted from -s " << long_readsFile << " " << totalPairs << "\n";
     std::cout << "At least one sequence/pair missing from contigs: " << ct_single << "\n";
     std::cout << "Ambiguous kmer pairs (both kmers are ambiguous): " << ct_multiple << "\n";
     std::cout << "Assembled pairs: " << ct_both << " (" << ct_both_reads << " sequences)\n";
@@ -1197,53 +1179,53 @@ LINKS::pair_contigs()
     
     std::cout << "ct_both: " << ct_both << std::endl;
     //sortInsertSize(ct_both_hash); TODO: uncomment
-    std::unordered_map<uint64_t, uint64_t>::iterator itrIS;
+    std::unordered_map<uint64_t, uint64_t>::iterator itr_IS;
     std::cout << "ct_both_hash map size: " << err.size() << "\n"; 
-    for(itrIS = ct_both_hash.begin(); itrIS != ct_both_hash.end(); itrIS++) {
-        std::cout <<  "--------k-mers separated by "<< itrIS->first << " bp (outer distance)--------\n";
-        //int64_t maopt = -1 * (insertStdev * itrIS->first);
-        //int64_t low_izopt = itrIS->first + maopt;
-        //int64_t up_izopt = itrIS->first - maopt;
+    for(itr_IS = ct_both_hash.begin(); itr_IS != ct_both_hash.end(); itr_IS++) {
+        std::cout <<  "--------k-mers separated by "<< itr_IS->first << " bp (outer distance)--------\n";
+        //int64_t maopt = -1 * (insert_stdev * itr_IS->first);
+        //int64_t low_izopt = itr_IS->first + maopt;
+        //int64_t up_izopt = itr_IS->first - maopt;
         /*
-        std::cout <<  "MIN: " << low_izopt << " MAX: " << up_izopt << "  as defined by  " << itrIS->first << "  *  " << insertStdev << " \n";
-        std::cout <<  "At least one sequence/pair missing:  " << ct_single_hash[itrIS->first] << " \n";
-        std::cout <<  "Assembled pairs:  " << itrIS->second << " \n";
-        std::cout <<  "\tSatisfied in distance/logic within contigs (i.e. -> <-, distance on target:  " << ct_ok_contig_hash[itrIS->first] << " \n";
-        std::cout <<  "\tUnsatisfied in distance within contigs (i.e. distance out-of-bounds):  " << ct_iz_issues_hash[itrIS->first] << " \n";
-        std::cout <<  "\tUnsatisfied pairing logic within contigs (i.e. illogical pairing ->->, <-<- or <-->):  " << ct_illogical_hash[itrIS->first] << " \n";
+        std::cout <<  "MIN: " << low_izopt << " MAX: " << up_izopt << "  as defined by  " << itr_IS->first << "  *  " << insert_stdev << " \n";
+        std::cout <<  "At least one sequence/pair missing:  " << ct_single_hash[itr_IS->first] << " \n";
+        std::cout <<  "Assembled pairs:  " << itr_IS->second << " \n";
+        std::cout <<  "\tSatisfied in distance/logic within contigs (i.e. -> <-, distance on target:  " << ct_ok_contig_hash[itr_IS->first] << " \n";
+        std::cout <<  "\tUnsatisfied in distance within contigs (i.e. distance out-of-bounds):  " << ct_iz_issues_hash[itr_IS->first] << " \n";
+        std::cout <<  "\tUnsatisfied pairing logic within contigs (i.e. illogical pairing ->->, <-<- or <-->):  " << ct_illogical_hash[itr_IS->first] << " \n";
         std::cout <<  "\t---\n";
-        std::cout <<  "\tSatisfied in distance/logic within a given contig pair (pre-scaffold):  " << ct_ok_pairs_hash[itrIS->first] << " \n";
-        std::cout <<  "\tUnsatisfied in distance within a given contig pair (i.e. calculated distances out-of-bounds):  " << ct_problem_pairs_hash[itrIS->first] << " \n";
+        std::cout <<  "\tSatisfied in distance/logic within a given contig pair (pre-scaffold):  " << ct_ok_pairs_hash[itr_IS->first] << " \n";
+        std::cout <<  "\tUnsatisfied in distance within a given contig pair (i.e. calculated distances out-of-bounds):  " << ct_problem_pairs_hash[itr_IS->first] << " \n";
         */
     }
     std::cout << "============================================\n";
-    std::ofstream distFile;
-    distFile.open ("distfile.txt");
-    // if (distFile.is_open()) {} else {}
+    std::ofstream dist_file;
+    dist_file.open ("distfile.txt");
+    // if (dist_file.is_open()) {} else {}
     // foreach my $is (sort {$a<=>$b} keys %$track_insert){
     //     print CSV "$is,$track_insert->{$is}\n";
     // }
-    distFile.close();
+    dist_file.close();
 
     // TIGPAIR CHECKPOINT
-    std::ofstream tigpairCheckpointFile;
-    tigpairCheckpointFile.open (tigpair_checkpoint);
-    std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> > >::iterator pairItr;
+    std::ofstream tigpair_checkpoint_file;
+    tigpair_checkpoint_file.open (tigpair_checkpoint);
+    std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> > >::iterator pair_itr;
     std::cout << "size of TIGPAIR: " << pair.size() << "\n";
-    for(pairItr = pair.begin(); pairItr != pair.end(); pairItr++) {
-        std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> >::iterator insertSizes;
-        for(insertSizes = pairItr->second.begin(); insertSizes != pairItr->second.end(); insertSizes++) {
-            std::unordered_map<std::string, PairLinkInfo>::iterator secPairItr;
-            for(secPairItr = insertSizes->second.begin(); secPairItr != insertSizes->second.end(); secPairItr++) {
-                tigpairCheckpointFile << insertSizes->first /*distance*/ << "\t" << pairItr->first << "\t" << secPairItr->first  << "\t" << secPairItr->second.links  << "\t" << secPairItr->second.gaps << "\n";
+    for(pair_itr = pair.begin(); pair_itr != pair.end(); pair_itr++) {
+        std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> >::iterator insert_sizes;
+        for(insert_sizes = pair_itr->second.begin(); insert_sizes != pair_itr->second.end(); insert_sizes++) {
+            std::unordered_map<std::string, PairLinkInfo>::iterator sec_pair_itr;
+            for(sec_pair_itr = insert_sizes->second.begin(); sec_pair_itr != insert_sizes->second.end(); sec_pair_itr++) {
+                tigpair_checkpoint_file << insert_sizes->first /*distance*/ << "\t" << pair_itr->first << "\t" << sec_pair_itr->first  << "\t" << sec_pair_itr->second.links  << "\t" << sec_pair_itr->second.gaps << "\n";
             }
         }
     }
-    // if (distFile.is_open()) {} else {}
+    // if (dist_file.is_open()) {} else {}
     // foreach my $is (sort {$a<=>$b} keys %$track_insert){
     //     print CSV "$is,$track_insert->{$is}\n";
     // }
-    tigpairCheckpointFile.close();
+    tigpair_checkpoint_file.close();
 
 }
 
