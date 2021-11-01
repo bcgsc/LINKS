@@ -228,7 +228,6 @@ class InputParser {
                     exit(EXIT_FAILURE);
                 }
             }
-            std::cout << "Here at IP 1\n";
             if(distances.size() > step_sizes.size()){
                 uint last_step = step_sizes.back();
                 for(int i = step_sizes.size(); i < distances.size(); i++){

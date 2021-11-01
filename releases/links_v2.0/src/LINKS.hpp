@@ -376,12 +376,6 @@ private:
     // store second mates in a set
     std::unordered_set<uint64_t> mates;
 
-    // hash collision debug
-    std::mutex mates_string_mutex;
-    std::unordered_set<std::string> mates_string;
-    uint64_t insert_counter = 0;
-    // hash collision debug
-
     std::atomic<std::size_t> mate_pair_current_block_num = { 0 };
     std::atomic<std::size_t> mate_pair_threads_done_writing = { 0 };
     std::atomic<std::size_t> mate_current_block_num = { 0 };
@@ -509,10 +503,6 @@ LINKS::write_from_block_to_map(){
   std::cout << "test_mate_pair.size() " << test_mate_pair.size() << std::endl;
   std::cout << "mates.size() " << mates.size() << std::endl;
 
-  // hash collision debug
-  std::cout << "mates_string.size() " << mates_string.size() << std::endl; 
-  std::cout << "insert_counter " << insert_counter << std::endl;
-  // hash collision debug
 }
 inline void
 LINKS::write_from_block_to_set(){
@@ -695,19 +685,9 @@ LINKS::extract_mate_pair(const std::string& seq,
           mate_pair_block.data[mate_pair_block.count++] = BufferMatePairData(hash_a,
                                   hash_b,
                                   distance);
-          
-          // hash collision debug
-          mates_string_mutex.lock();
-          mates_string.insert(seq.substr(nthash.get_pos(),k));
-          mates_string.insert(seq.substr(nthashLead.get_pos(),k));
-          ++insert_counter;
-          mates_string_mutex.unlock();
-          // hash collision debug
-
 
           if (mate_pair_block.count == mate_pair_block_size) {
             mate_pair_block.num = mate_pair_current_block_num++;
-            //std::cout << "block num after write: " << mate_pair_block.num  << std::endl;
             mate_pair_input_queue.write(mate_pair_block);
             mate_pair_block.count = 0;
           } 
@@ -725,16 +705,7 @@ LINKS::populate_mate_info(const std::string& seq,
 
   int breakFlag = 0;
   for (size_t i = 0; ntHashContig.roll(); i+=1) {
-      // for rolling step
-      /*
-      for(uint j = 1; j < step; j++) {
-          if(!ntHashContig.roll()) {
-              breakFlag = 1;
-          }
-      }
-      if(breakFlag) {break;}
-        // for rolling step
-      */
+
       i = ntHashContig.get_pos();
       if(mates.find(ntHashContig.get_forward_hash()) != mates.end()){
           mate_info_block.data[mate_info_block.count++] = BufferMateData(
@@ -749,13 +720,6 @@ LINKS::populate_mate_info(const std::string& seq,
             mate_input_queue.write(mate_info_block);
             mate_info_block.count = 0;
           }
-          /*
-            if(own_track_all.find(ntHashContig.get_forward_hash()) == own_track_all.end()) {
-              own_track_all[ntHashContig.get_forward_hash()] = KmerInfo(contig_rank, i, i + k, 1, false);
-            } else {
-              own_track_all[ntHashContig.get_forward_hash()].multiple +=1;
-            }
-            */
         }
 
         // Reverse part
@@ -769,31 +733,21 @@ LINKS::populate_mate_info(const std::string& seq,
               true);
           if (mate_info_block.count == mate_pair_block_size) {
             mate_info_block.num = mate_current_block_num++;
-            //std::cout << "block num after write: " << mate_info_block.num << std::endl;
             mate_input_queue.write(mate_info_block);
             mate_info_block.count = 0;
           }
-          /*
-            if(own_track_all.find(ntHashContig.get_reverse_hash()) == own_track_all.end()) {
-              own_track_all[ntHashContig.get_reverse_hash()] = KmerInfo(contig_rank, i, i + k, 1, true);
-            } else {
-              own_track_all[ntHashContig.get_reverse_hash()].multiple +=1;
-            }
-            */
         }
     }
 }
 inline void
 LINKS::ExtractMatePairWorker::work()
 {
-  //std::cout << "y test 1\n";
-  //decltype(*(links.input_queue))::Block input_block(links.block_size);
-  //(std::remove_reference<decltype(*(links.input_queue))>)::Block input_block(links.block_size);
   btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size);
 
   btllib::OrderQueueSPMC<BufferMatePairData>::Block mate_pair_block(links.mate_pair_block_size); 
 
-  for (;;) {
+  //for (;;) {
+  for (int ll=0; ll<1000000; ll++) {
     if (input_block.current == input_block.count) {
       links.input_queue->read(input_block);
     }
@@ -817,11 +771,6 @@ LINKS::ExtractMatePairWorker::work()
   }
   links.mate_pair_threads_done_writing++;
   if(links.mate_pair_threads_done_writing == links.threads){
-    // mate_pair_block.num = links.mate_pair_current_block_num++;
-    // mate_pair_block.current = 0;
-    // mate_pair_block.count = 0;
-    // links.mate_pair_input_queue.write(mate_pair_block);
-    
     for (size_t i = 0; i < links.threads; i++)
     {
       mate_pair_block.num = links.mate_pair_current_block_num++;
@@ -829,7 +778,6 @@ LINKS::ExtractMatePairWorker::work()
       mate_pair_block.count = 0;
       links.mate_pair_input_queue.write(mate_pair_block);
     }
-    
   }
 }
 
@@ -862,15 +810,10 @@ LINKS::PopulateMateInfoWorker::work()
   }
   if (mate_block.count > 0) {
     mate_block.num = links.mate_current_block_num++;
-    //std::cout << "block num after write2: " << mate_block.num  << std::endl;
     links.mate_input_queue.write(mate_block);
   }
   links.mate_threads_done_writing++;
   if(links.mate_threads_done_writing == links.threads){
-    // mate_block.num = links.mate_current_block_num++;
-    // mate_block.current = 0;
-    // mate_block.count = 0;
-    // links.mate_input_queue.write(mate_block);
   
   for (size_t i = 0; i < links.threads; i++)
   {
@@ -924,8 +867,6 @@ LINKS::addToPairMap(
         std::string rtig_a = "r" + kmer1_name;
         std::string rtig_b = "r" + kmer2_name;
 
-        //std::cout << "orient enum: " << orient_enum << std::endl;
-
         switch (orient_enum)
         {
         case 0:                 // A B or rB rA
@@ -947,9 +888,6 @@ LINKS::addToPairMap(
         default:
             break;
         }
-        //std::cout << "!!!!!!!" << std::endl;
-        //std::cout << std::get<0>(first_pair) << " " << std::get<1>(first_pair) << std::endl;
-        //std::cout << std::get<0>(second_pair) << " " << std::get<1>(second_pair) << std::endl;
 
         if(pair.find(std::get<0>(first_pair)) == pair.end() 
             || pair[std::get<0>(first_pair)].find(isz) == pair[std::get<0>(first_pair)].end() 
@@ -1017,10 +955,6 @@ LINKS::pair_contigs()
   uint64_t A_length = 0, A_start = 0, A_end = 0, B_length = 0, B_start = 0, B_end = 0;
 
   KmerInfo kmer1, kmer2;
-  //std::unordered_map<uint64_t, MatePairInfo>::iterator mateListItr;
-  //std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo>>::iterator matePairItr;
-
-  //size_t counter_1 = 0, counter_2 = 0, counter_3 = 0, counter_4 = 0, counter_5 = 0, counter_6 = 0, counter_7 = 0;
 
   size_t counter = 0;
   size_t percent_size = test_mate_pair.size() / 100;
