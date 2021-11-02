@@ -49,7 +49,6 @@ class LINKS
     uint64_t min_links = 5;
     uint64_t min_size = 500;
     float max_link_ratio = 0.3;
-    //uint64_t step = 2;
     // Added for MPET
     uint64_t read_length;         // MPET
     float insert_stdev = 0.1;      // MPET (Need to adjust to a wider-range of distances when dealing with MPET) 
@@ -331,8 +330,7 @@ private:
 
     std::mutex tig_length_mutex;
     
-    //mate_pair_type new_mate_pair;
-    mate_pair_type test_mate_pair;
+    mate_pair_type mate_pair;
 
     std::unordered_map<uint64_t, KmerInfo> track_all_test;
     std::unordered_map<std::string, uint64_t> tig_length;
@@ -431,19 +429,12 @@ inline void
 LINKS::write_from_block_to_map(){
   btllib::OrderQueueSPMC<BufferMatePairData>::Block mate_pair_block(mate_pair_block_size);
 
-  //test_mate_pair.reserve(1000000000);
+  //mate_pair.reserve(1000000000);
   //mates.reserve(1000000000); 
 
   for (;;) {
     if (mate_pair_block.current == mate_pair_block.count) {
       mate_pair_input_queue.read(mate_pair_block);
-      /*
-      if (mate_pair_block.count != 0) {
-        std::cout << "block num after read: " << mate_pair_block.num << std::endl;
-      }else{
-        std::cout << "block num after read2: " << mate_pair_block.num << std::endl;
-      }
-      */
     }
     
     if (mate_pair_block.count == 0) {
@@ -453,14 +444,14 @@ LINKS::write_from_block_to_map(){
     BufferMatePairData& mate_data = mate_pair_block.data[mate_pair_block.current++];
     
 
-    if(test_mate_pair.find(std::make_pair(mate_data.kmer_1_hash,mate_data.kmer_2_hash)) == test_mate_pair.end()){
-      test_mate_pair[std::make_pair(mate_data.kmer_1_hash,mate_data.kmer_2_hash)] = MatePairInfo(false, mate_data.distance);
+    if(mate_pair.find(std::make_pair(mate_data.kmer_1_hash,mate_data.kmer_2_hash)) == mate_pair.end()){
+      mate_pair[std::make_pair(mate_data.kmer_1_hash,mate_data.kmer_2_hash)] = MatePairInfo(false, mate_data.distance);
       mates.insert(mate_data.kmer_1_hash); // with new data structure have to insert both
       mates.insert(mate_data.kmer_2_hash);
     }
   }
   //std::cout << "writer leaves\n";
-  std::cout << "test_mate_pair.size() " << test_mate_pair.size() << std::endl;
+  std::cout << "mate_pair.size() " << mate_pair.size() << std::endl;
   std::cout << "mates.size() " << mates.size() << std::endl;
 
 }
@@ -474,13 +465,6 @@ LINKS::write_from_block_to_set(){
   for (;;) {
     if (mate_block.current == mate_block.count) {
       mate_input_queue.read(mate_block);
-      /*
-      if (mate_block.count != 0) {
-        std::cout << "block num after read: " << mate_block.num << std::endl;
-      }else{
-        std::cout << "block num after read2: " << mate_block.num << std::endl;
-      }
-      */
     }
     
     if (mate_block.count == 0) {
@@ -496,7 +480,7 @@ LINKS::write_from_block_to_set(){
     }
   }
   std::cout << "writer leaves\n";
-  std::cout << "test_mate_pair.size() " << test_mate_pair.size() << std::endl;
+  std::cout << "mate_pair.size() " << mate_pair.size() << std::endl;
   std::cout << "mates.size() " << mates.size() << std::endl;
 }
 
@@ -504,7 +488,6 @@ LINKS::write_from_block_to_set(){
 inline void
 LINKS::InputWorker::work()
 {
-  //std::cout << "test 0\n";
   if (links.reader->get_format() == btllib::SeqReader::Format::FASTA) {
     links.fasta = true;
   } else {
@@ -574,7 +557,6 @@ LINKS::start_read_fasta(){
 }
 inline void 
 LINKS::start_read_contig(){
-  //trackAll.reserve(mates.size());
   reader.reset();
   reader = std::shared_ptr<btllib::SeqReader>(new btllib::SeqReader(assembly_file, btllib::SeqReader::Flag::LONG_MODE));
   
@@ -614,7 +596,6 @@ LINKS::extract_mate_pair(const std::string& seq,
   for(auto distance : distances){
     uint cur_step_size = step_sizes[step_index];
     step_index++;
-    //std::cout << "distance: " << distance << " step size: " << cur_step_size << std::endl;
     uint64_t delta = distance - k;
     int break_flag = 0;
     bool reverse_exists = false;
@@ -709,7 +690,6 @@ LINKS::ExtractMatePairWorker::work()
   btllib::OrderQueueSPMC<BufferMatePairData>::Block mate_pair_block(links.mate_pair_block_size); 
 
   for (;;) {
-  //for (int ll=0; ll<100000; ll++) {
     if (input_block.current == input_block.count) {
       links.input_queue->read(input_block);
     }
@@ -728,7 +708,6 @@ LINKS::ExtractMatePairWorker::work()
   }
   if (mate_pair_block.count > 0) {
     mate_pair_block.num = links.mate_pair_current_block_num++;
-    //std::cout << "block num after write2: " << mate_pair_block.num << std::endl;
     links.mate_pair_input_queue.write(mate_pair_block);
   }
   links.mate_pair_threads_done_writing++;
@@ -919,15 +898,14 @@ LINKS::pair_contigs()
   KmerInfo kmer1, kmer2;
 
   size_t counter = 0;
-  size_t percent_size = test_mate_pair.size() / 100;
+  size_t percent_size = mate_pair.size() / 100;
   mate_pair_type::iterator mate_pair_iterator;
-  for (mate_pair_iterator = test_mate_pair.begin(); mate_pair_iterator != test_mate_pair.end(); mate_pair_iterator++)
+  for (mate_pair_iterator = mate_pair.begin(); mate_pair_iterator != mate_pair.end(); mate_pair_iterator++)
   {
     if(counter % percent_size == 0){
       std::cout << "Done: %" << uint(counter / percent_size) << std::endl;
     }
     ++counter;
-    //++counter_1;
     if (mate_pair_iterator->second.seen == false &&                                      //matepair is not seen
         track_all_test.find(mate_pair_iterator->first.first) != track_all_test.end() &&  //first mate is tracked
         track_all_test[mate_pair_iterator->first.first].multiple == 1 &&                 //first mate seen once
@@ -935,11 +913,9 @@ LINKS::pair_contigs()
         track_all_test[mate_pair_iterator->first.second].multiple == 1)
     {
 
-      //++counter_2;
-
       mate_pair_iterator->second.seen = true;
 
-      insert_size = test_mate_pair[std::make_pair(mate_pair_iterator->first.first, mate_pair_iterator->first.second)].insert_size;
+      insert_size = mate_pair[std::make_pair(mate_pair_iterator->first.first, mate_pair_iterator->first.second)].insert_size;
 
       min_allowed = -1 * (insert_stdev * insert_size); // check int
       low_iz = insert_size + min_allowed;             // check int
@@ -949,7 +925,6 @@ LINKS::pair_contigs()
 
       if (track_all_test[mate_pair_iterator->first.first].tig != "" && track_all_test[mate_pair_iterator->first.second].tig != "")
       { //double check if tig names not null
-        //++counter_3;
         ct_both++;
         if (ct_both_hash.find(insert_size) == ct_both_hash.end())
         {
@@ -971,7 +946,6 @@ LINKS::pair_contigs()
           { // if kmer1 is forward
             if (!kmer2.orient)
             { // if kmer2 is forward
-              //++counter_4;
               distance = get_distance(insert_size, tig_length[kmer1.tig], kmer1.start, kmer2.start);
               if (distance > min_allowed && distance < insert_size)
               {
@@ -981,7 +955,6 @@ LINKS::pair_contigs()
             }
             else
             {
-              //++counter_5;
               distance = get_distance(insert_size, tig_length[kmer1.tig], kmer1.start, tig_length[kmer2.tig] - kmer2.end);
               if (distance > min_allowed && distance < insert_size)
               {
@@ -994,7 +967,6 @@ LINKS::pair_contigs()
           { // if kmer1 is reverse
             if (!kmer2.orient)
             {
-              //++counter_6;
               distance = get_distance(insert_size, tig_length[kmer1.tig], tig_length[kmer1.tig] - kmer1.end, kmer2.start);
               if (distance > min_allowed && distance < insert_size)
               {
@@ -1004,7 +976,6 @@ LINKS::pair_contigs()
             }
             else
             { // if kmer2 is reverse
-              //++counter_7;
               distance = get_distance(insert_size, tig_length[kmer2.tig], kmer2.end, kmer1.end);
               if (distance > min_allowed && distance < insert_size)
               {
@@ -1114,7 +1085,7 @@ LINKS::pair_contigs()
     else
     { // if unseen
       // std::cout << "UNSEEN\n";
-      if (test_mate_pair[std::make_pair(mate_pair_iterator->first.first, mate_pair_iterator->first.second)].seen == false)
+      if (mate_pair[std::make_pair(mate_pair_iterator->first.first, mate_pair_iterator->first.second)].seen == false)
       {
         ct_multiple++;
       }
