@@ -9,7 +9,7 @@ Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg
 # LINKS
 
 ## Long Interval Nucleotide K-mer Scaffolder
-## LINKS v1.8.7 Rene L. Warren, 2014-2021
+## LINKS v2.0 Rene L. Warren, 2014-2021
 ## email: rwarren [at] bcgsc [dot] ca
 
 
@@ -21,6 +21,11 @@ reads, such as those produced by Oxford Nanopore Technologies Ltd.
 It can be used to scaffold high-quality draft genome assemblies with any long
 sequences (eg. ONT reads, PacBio reads, other draft genomes, etc).
 It is also used to scaffold contig pairs linked by ARCS/ARKS.
+
+### What's new in v2.0 ?
+---------------------
+
+~5x memory opitimization and ~3x computational optimization. This version is C++ implementation of v 1.8.7.
 
 ### What's new in v1.8.7 ?
 ---------------------
@@ -145,106 +150,41 @@ Fixed bug that prevented reading traditional FASTA sequences (where a sequence i
 Included offset option (-o option) - Enables LINKS to explore a wider k-mer space range when running iteratively
 Minor fixes: IUPAC codes are now preserved
 
-
-### Implementation and requirements
+### Dependencies
 -------------------------------
 
-LINKS is implemented in PERL and runs on any OS where PERL is installed.
-In v1.6, there is a single dependency to the BloomFilter.pm (included) - BC Genome Sciences Centre's common Bloom filter
-In v1.5, there is a single dependency to Bloom::Faster - an extension for the c library libbloom.
+- GCC (tested on v7.2.0)
+- Perl (tested on v5.32.1)
+- Autotools (if cloning directly from repository)
 
+### Compilation:
+-------------------------------
+If cloning directly from the repository run:
 
-### Install
--------
-
-Download the tar ball, gunzip and extract the files on your system using:
-<pre>
-tar -zxvf links_v1-8-7.tar
-</pre>
-In v1.6 and higher, the use of the Bloom::Faster PERL library is deprecated
-
-### Instructions for building the BloomFilter PERL module
--------
-
-1. DOWNLOAD the BC Genome Sciences Centre's BloomFilter: The BTL C/C++ Common
-Bloom filters for bioinformatics projects, as well as any APIs created for
-other programming languages.
-<pre>
-cd ./links_v1.8.7/lib
-git clone git://github.com/bcgsc/bloomfilter.git
-cd swig
-</pre>
-
-2. BUILD a PERL5 module
-
-Make sure you have swig installed and included in your path.
-
-http://www.swig.org/
-
-
-TO BUILD a Perl5 module (run in swig/):
 ```
-a) /home/<user>/<path to swig>/preinst-swig -Wall -c++ -perl5 BloomFilter.i
-b) g++ -c BloomFilter_wrap.cxx -I/usr/lib64/perl5/CORE -fPIC -Dbool=char -O3
-c) g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so -O3
+./autogen.sh
+```
+To compile ARCS run:
+
+```
+./configure && make
+```
+To install ARCS in a specified directory:
+
+```
+./configure --prefix=/LINKS/PATH && make install
 ```
 
-TO COMPILE, swig needs the following Perl5 headers:
-```C++
-#include "EXTERN.h"
-#include "perl.h"
-#include "XSUB.h"
+#### Running LINKS v2.0
+-------------------------------
+LINKS v2.0 is implemented in C++ and perl. To run the full LINKS pipeline smoothly we suggest running `LINKS-make`
+
+To run LINKS with default parameters with `LINKS-make`:
 ```
-If they are not located in /usr/lib64/perl5, you can run "perl -e 'use Config; print $Config{archlib};" to locate them.
-
-
-3. VERIFY your install
-
-[swig]$ ./test.pl
-
-
-4. CHANGE the path to BloomFilter.pm in LINKS/writeBloom.pl/testBloom.pl
-
-You only need to change if you have re-built in a relative directory different
-from:
-<pre>
-use lib "$FindBin::Bin/./lib/bloomfilter/swig"; (for LINKS)
-use lib "$FindBin::Bin/../lib/bloomfilter/swig"; (for writeBloom.pl/testBloom.pl)
-</pre>
-
-
-Summary of steps
-<pre>
-wget https://github.com/bcgsc/LINKS/releases/download/v1.8.7/links_v1-8-7.tar.gz
-tar -xvf links_v1-8-7.tar.gz
-cd links_v1.8.7/lib
-rm -rf bloomfilter/
-git clone git://github.com/bcgsc/bloomfilter.git
-cd bloomfilter/swig
-swig -Wall -c++ -perl5 BloomFilter.i
-g++ -c BloomFilter_wrap.cxx -I/usr/lib64/perl5/CORE -fPIC -Dbool=char -O3
-g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so -O3
+./LINKS-make LINKS draft=NA1281_draft.fa readsFof=NA1281_reads.fof
+```
 
 *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz:
-
-[rwarren@hpce705 swig]$ brew list perl | grep EXTERN.h
-/gsc/btl/linuxbrew/Cellar/perl/5.28.0/lib/perl5/5.28.0/x86_64-linux-thread-multi/CORE/EXTERN.h
-[rwarren@hpce705 swig]$ swig -version
-
-SWIG Version 3.0.12
-
-Compiled with g++-5 [x86_64-pc-linux-gnu]
-
-Configured options: +pcre
-
-Please see http://www.swig.org for reporting bugs and further information
-[rwarren@hpce705 swig]$ swig -Wall -c++ -perl5 BloomFilter.i
-[rwarren@hpce705 swig]$ g++ -c BloomFilter_wrap.cxx -I/gsc/btl/linuxbrew/Cellar/perl/5.28.0/lib/perl5/5.28.0/x86_64-linux-thread-multi/CORE -fPIC -Dbool=char -O3
-[rwarren@hpce705 swig]$ g++ -Wall -shared BloomFilter_wrap.o -o BloomFilter.so -O3
-[rwarren@hpce705 swig]$
-
-
-</pre>
 
 
 
