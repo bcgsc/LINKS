@@ -27,7 +27,7 @@
 //#include <shared_mutex>
 #include <chrono>
 
-#include <boost/functional/hash.hpp>
+//#include <boost/functional/hash.hpp>
 
 
 class LINKS
@@ -183,14 +183,14 @@ class LINKS
     struct pair_hash {
     template <class T1, class T2>
     std::size_t operator () (const std::pair<T1,T2> &p) const {
-      //return p.first ^ p.second;
+      return p.first ^ p.second;
       
       /// commented for ease of CI testing
       
-      std::size_t seed = 0;
-      boost::hash_combine(seed, p.first);
-      boost::hash_combine(seed, p.second);
-      return seed;
+      //std::size_t seed = 0;
+      //boost::hash_combine(seed, p.first);
+      //boost::hash_combine(seed, p.second);
+      //return seed;
       
       //return p.first ^ p.second; 
       }
@@ -480,7 +480,8 @@ inline void
 LINKS::write_from_block_to_set(){
   btllib::OrderQueueSPMC<BufferMateData>::Block mate_block(mate_pair_block_size);
 
-  track_all_test.reserve(10000000);
+  // for fast testing
+  // track_all_test.reserve(10000000);
 
   for (;;) {
     if (mate_block.current == mate_block.count) {
@@ -533,7 +534,7 @@ LINKS::InputWorker::work()
     if(read_c % 10000 == 0){
       std::cout << "read_counter: " << read_c << std::endl;
     }
-    //if(read_c == 1000000){
+    //if(read_c == 5000000){
     //  break;
     //}
 
@@ -572,14 +573,19 @@ LINKS::start_read_fasta(){
   std::thread writer_thread(&LINKS::write_from_block_to_map, this);
 
   for (auto& worker : extract_mate_pair_workers) {
+    std::cout << "Here1\n";
     worker.start();
   }
   // wait
   for (auto& worker : extract_mate_pair_workers) {
+    std::cout << "Here2\n";
     worker.join();
   }
+  std::cout << "Here3\n";
   writer_thread.join();
+  std::cout << "Here4\n";
   input_worker->join();
+  std::cout << "Here5\n";
 }
 inline void 
 LINKS::start_read_contig(){
@@ -657,7 +663,6 @@ LINKS::extract_mate_pair(const std::string& seq,
           mate_pair_block.data[mate_pair_block.count++] = BufferMatePairData(hash_a,
                                   hash_b,
                                   distance);
-
           if (mate_pair_block.count == mate_pair_block_size) {
             mate_pair_block.num = mate_pair_current_block_num++;
             mate_pair_input_queue.write(mate_pair_block);
@@ -676,10 +681,10 @@ LINKS::populate_mate_info(const std::string& seq,
   btllib::NtHash ntHash_contig(seq, bloom->get_hash_num(), k); // hashFunc can be 1 after first step
 
   int breakFlag = 0;
-  for (size_t i = 0; ntHashContig.roll(); i+=1) {
+  for (size_t i = 0; ntHash_contig.roll(); i+=1) {
 
-      i = ntHashContig.get_pos();
-      if(mates.find(ntHashContig.get_forward_hash()) != mates.end()){
+      i = ntHash_contig.get_pos();
+      if(mates.find(ntHash_contig.get_forward_hash()) != mates.end()){
           mate_info_block.data[mate_info_block.count++] = BufferMateData(
                       ntHash_contig.get_forward_hash(),
                       contig_rank, 
@@ -692,16 +697,6 @@ LINKS::populate_mate_info(const std::string& seq,
             mate_input_queue.write(mate_info_block);
             mate_info_block.count = 0;
           }
-<<<<<<< HEAD
-=======
-          /*
-            if(own_track_all.find(ntHash_contig.get_forward_hash()) == own_track_all.end()) {
-              own_track_all[ntHash_contig.get_forward_hash()] = KmerInfo(contig_rank, i, i + k, 1, false);
-            } else {
-              own_track_all[ntHash_contig.get_forward_hash()].multiple +=1;
-            }
-            */
->>>>>>> 9a08a8a4cc7d0d1390182b6fba5acd1624b0c721
         }
 
         // Reverse part
@@ -724,12 +719,12 @@ LINKS::populate_mate_info(const std::string& seq,
 inline void
 LINKS::ExtractMatePairWorker::work()
 {
-  btllib::OrderQueueSPMC<Read>::Block input_block(links.block_size);
+  btllib::OrderQueueSPMC<Read>::Block input_block(links.read_block_size);
 
   btllib::OrderQueueSPMC<BufferMatePairData>::Block mate_pair_block(links.mate_pair_block_size); 
 
-  //for (;;) {
-  for (int ll=0; ll<1000000; ll++) {
+  for (;;) {
+  //for (int ll=0; ll<100000; ll++) {
     if (input_block.current == input_block.count) {
       links.input_queue->read(input_block);
     }

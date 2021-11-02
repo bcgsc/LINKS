@@ -153,7 +153,6 @@ class InputParser {
     InputParser() = default;
 
     InputParser (int &argc, char **argv) {
-            std::cout << "Here at IP 1\n";
             this->argc = argc;
             static const struct option longopts[] = { { "help", no_argument, &help, 1 },
 		                                      { nullptr, 0, nullptr, 0 } };
