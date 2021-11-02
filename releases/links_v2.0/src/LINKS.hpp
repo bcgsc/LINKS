@@ -387,8 +387,7 @@ LINKS::make_bf(uint64_t bf_elements, InputParser* links_arg_parser){
         std::cout << bfmsg;
         assembly_BF->save(".bloom");
         std::cout << "Done mybf, printing stats...\n";
-        printBloomStats(*assembly_BF, std::cout);
-        
+        //printBloomStats(*assembly_BF, std::cout); 
     }
     return assembly_BF;
 }
