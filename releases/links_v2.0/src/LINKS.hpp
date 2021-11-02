@@ -24,7 +24,6 @@
 #include <thread>
 #include <vector>
 #include <mutex>
-//#include <shared_mutex>
 #include <chrono>
 
 class LINKS
@@ -184,7 +183,6 @@ class LINKS
     };
 
     typedef std::unordered_map<std::pair<uint64_t,uint64_t>, MatePairInfo, pair_hash> mate_pair_type;
-    //typedef std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > mate_pair;
 private:
   class Worker
     {
@@ -382,16 +380,14 @@ LINKS::make_bf(uint64_t bf_elements, InputParser* links_arg_parser){
                 //std::cout << "reading... builder: " << builder << "\n";
           }
           builder++;
-          //std::cout << "here 1\n";
           assembly_BF->insert(record.seq);
-          //std::cout << "here 2\n";
         }
         std::string bfmsg = "\n\nWriting Bloom filter to disk (" + links_arg_parser->bf_file + ") : " + std::to_string(time(0)) + "\n";
         // assemblyruninfo += bfmsg;
         std::cout << bfmsg;
         assembly_BF->save(".bloom");
-        // std::cout << "Done mybf, printing stats...\n";
-        //printBloomStats(*assemblyBF, std::cout);
+        std::cout << "Done mybf, printing stats...\n";
+        printBloomStats(*assembly_BF, std::cout);
         
     }
     return assembly_BF;
@@ -451,8 +447,8 @@ LINKS::write_from_block_to_map(){
     }
   }
   //std::cout << "writer leaves\n";
-  std::cout << "mate_pair.size() " << mate_pair.size() << std::endl;
-  std::cout << "mates.size() " << mates.size() << std::endl;
+  //std::cout << "mate_pair.size() " << mate_pair.size() << std::endl;
+  //std::cout << "mates.size() " << mates.size() << std::endl;
 
 }
 inline void
@@ -479,9 +475,9 @@ LINKS::write_from_block_to_set(){
       track_all_test[mate_data.hash].multiple +=1;
     }
   }
-  std::cout << "writer leaves\n";
-  std::cout << "mate_pair.size() " << mate_pair.size() << std::endl;
-  std::cout << "mates.size() " << mates.size() << std::endl;
+  //std::cout << "writer leaves\n";
+  //std::cout << "mate_pair.size() " << mate_pair.size() << std::endl;
+  //std::cout << "mates.size() " << mates.size() << std::endl;
 }
 
 
@@ -502,8 +498,8 @@ LINKS::InputWorker::work()
   size_t counterx = 0;
   for(auto record : (*(links.reader))){
     read_c++;
-    if(read_c % 10000 == 0){
-      std::cout << "read_counter: " << read_c << std::endl;
+    if(read_c % 100000 == 0){
+      std::cout << read_c << " reads processed" << std::endl;
     }
 
     block.data[block.count++] = Read(record.num, //read_c instead of record.num
@@ -541,19 +537,14 @@ LINKS::start_read_fasta(){
   std::thread writer_thread(&LINKS::write_from_block_to_map, this);
 
   for (auto& worker : extract_mate_pair_workers) {
-    std::cout << "Here1\n";
     worker.start();
   }
   // wait
   for (auto& worker : extract_mate_pair_workers) {
-    std::cout << "Here2\n";
     worker.join();
   }
-  std::cout << "Here3\n";
   writer_thread.join();
-  std::cout << "Here4\n";
   input_worker->join();
-  std::cout << "Here5\n";
 }
 inline void 
 LINKS::start_read_contig(){
@@ -578,14 +569,9 @@ LINKS::start_read_contig(){
   for (auto& worker : populate_mate_info_workers) {
     worker.join();
   }
-  std::cout << "all workers joined" << std::endl;
   writer_thread.join();
-  std::cout << "writer joined" << std::endl;
   input_worker->join();
-  std::cout << "input worker joined" << std::endl;
   input_queue.reset();
-  
-  std::cout << "track_all_test.size() " << track_all_test.size() << std::endl;
 }
 
 inline void
@@ -729,7 +715,6 @@ LINKS::PopulateMateInfoWorker::work()
   btllib::OrderQueueSPMC<BufferMateData>::Block mate_block(links.mate_pair_block_size); 
   std::unordered_map<uint64_t, KmerInfo> own_track_all;
 
-  std::cout << "t test 10\n";
   for (;;) {
     if (input_block.current == input_block.count) {
       links.input_queue->read(input_block);
@@ -765,7 +750,6 @@ LINKS::PopulateMateInfoWorker::work()
   }
   
   }
-  std::cout << "populate mate info thread done\n";
 }
 
 inline LINKS::~LINKS()
@@ -1162,7 +1146,7 @@ LINKS::pair_contigs()
     std::ofstream tigpair_checkpoint_file;
     tigpair_checkpoint_file.open (tigpair_checkpoint);
     std::unordered_map<std::string, std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> > >::iterator pair_itr;
-    std::cout << "size of TIGPAIR: " << pair.size() << "\n";
+    //std::cout << "size of TIGPAIR: " << pair.size() << "\n";
     for(pair_itr = pair.begin(); pair_itr != pair.end(); pair_itr++) {
         std::unordered_map<int64_t, std::unordered_map<std::string, PairLinkInfo> >::iterator insert_sizes;
         for(insert_sizes = pair_itr->second.begin(); insert_sizes != pair_itr->second.end(); insert_sizes++) {
