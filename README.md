@@ -162,6 +162,7 @@ Minor fixes: IUPAC codes are now preserved
 If cloning directly from the repository run:
 
 ```
+cd releases/links_v2.0/
 git submodule init
 git submodule update
 ```
