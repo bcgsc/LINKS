@@ -88,7 +88,7 @@ class InputParser {
     std::string bf_file = "";
     float fpr = 0.001;
     bool bf_off = false;
-    uint thread = 4;
+    uint thread = 3;
 
     static void
     print_usage() {
@@ -189,6 +189,7 @@ class InputParser {
                     break;
                 case 'j':
                     thread = strtoul(optarg, &end, BASE_TEN);
+                    thread = thread > 1 ? thread - 1 : thread; // thread variable is used as producer thread count, one will be 
                     break;
                 case 'o':
                     offset = strtoul(optarg, &end, BASE_TEN);
