@@ -71,7 +71,7 @@ class InputParser {
     std::queue<std::string> long_reads;
     std::string distances_text = "";
     std::vector<uint32_t> distances = {4000};
-    std::string step_sizes_text = "";
+    std::string step_sizes_text = "2";
     std::vector<uint16_t> step_sizes = {2};
     //uint64_t distances = 4000;
     uint64_t k = 15;
@@ -128,10 +128,10 @@ class InputParser {
         std::cout   << "  -f " << assembly_file << "\n" 
                     << "  -s " << fof_file << "\n" 
                     << "  -m " << read_length << "\n" 
-                    //<< "  -d " << distances.str() << "\n" TODO: print distances
+                    << "  -d " << distances_text << "\n" //TODO: print distances
                     << "  -k " << k << "\n"
                     << "  -j " << thread << "\n"
-                    //<< "  -t " << step << "\n"
+                    << "  -t " << step_sizes_text << "\n"
                     << "  -o " << offset << "\n"
                     << "  -e " << insert_stdev << "\n"
                     << "  -l " << min_links << "\n"
@@ -173,11 +173,8 @@ class InputParser {
                     insert_stdev = 0.5;
                     break;
                 case 'd':
-                    //distances.clear();
                     distances_text.assign(optarg); 
                     distances = split_distance_input(distances_text);
-                    //distances = strtoul(optarg, &end, BASE_TEN);
-                    //std::cout << optarg << "\n";
                     break;
                 case 'k':
                     k = strtoul(optarg, &end, BASE_TEN);
