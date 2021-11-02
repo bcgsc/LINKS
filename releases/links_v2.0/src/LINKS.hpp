@@ -27,9 +27,6 @@
 //#include <shared_mutex>
 #include <chrono>
 
-//#include <boost/functional/hash.hpp>
-
-
 class LINKS
 {
   public:
@@ -184,15 +181,6 @@ class LINKS
     template <class T1, class T2>
     std::size_t operator () (const std::pair<T1,T2> &p) const {
       return p.first ^ p.second;
-      
-      /// commented for ease of CI testing
-      
-      //std::size_t seed = 0;
-      //boost::hash_combine(seed, p.first);
-      //boost::hash_combine(seed, p.second);
-      //return seed;
-      
-      //return p.first ^ p.second; 
       }
     };
 
@@ -534,9 +522,6 @@ LINKS::InputWorker::work()
     if(read_c % 10000 == 0){
       std::cout << "read_counter: " << read_c << std::endl;
     }
-    //if(read_c == 5000000){
-    //  break;
-    //}
 
     block.data[block.count++] = Read(record.num, //read_c instead of record.num
                                     std::move(record.id),
