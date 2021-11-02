@@ -32,7 +32,7 @@ jobs:
       wget http://www.bcgsc.ca/downloads/supplementary/LINKS/ecoliK12_abyss_illumina_contig_baseline.fa
       wc -l K12_full2dONT_longread.fa
       wc -l ecoliK12_abyss_illumina_contig_baseline.fa
-      echo K12_full2dONT_longread.fa > K12_F2D.fof
+      echo K12_full2dONT_longread.fa >> K12_F2D.fof
       ../src/LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -d 4000 -k 15 -t 2 -o 0 -e 0.1 -z 500 -p 0.001 -b CI_TEST -v 1 -x 0
     # ../LINKS-make LINKS draft=ecoliK12_abyss_illumina_contig_baseline.fa readsFof=K12_F2D.fof b=CI_TEST v=1
     displayName: Run basic test
