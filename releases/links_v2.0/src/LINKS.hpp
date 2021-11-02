@@ -581,7 +581,7 @@ LINKS::extract_mate_pair(const std::string& seq,
   for(auto distance : distances){
     uint cur_step_size = step_sizes[step_index];
     step_index++;
-    uint64_t delta = distance - k;
+    uint64_t delta = distance;
     int break_flag = 0;
     bool reverse_exists = false;
     btllib::NtHash ntHash(seq, bloom->get_hash_num(), k, offset);
@@ -613,7 +613,7 @@ LINKS::extract_mate_pair(const std::string& seq,
         if(bloom->contains(ntHash.hashes()) && bloom->contains(ntHash_lead.hashes())) { // May need to change with forward reverse hashes
           mate_pair_block.data[mate_pair_block.count++] = BufferMatePairData(hash_a,
                                   hash_b,
-                                  distance);
+                                  delta);
           if (mate_pair_block.count == mate_pair_block_size) {
             mate_pair_block.num = mate_pair_current_block_num++;
             mate_pair_input_queue.write(mate_pair_block);
@@ -851,7 +851,6 @@ LINKS::get_distance(uint64_t insert_size, uint64_t length_i, uint64_t start_i, u
 inline void
 LINKS::pair_contigs()
 {
-  std::cout << "in real pair contigs\n";
   std::string issues = input_parser->base_name + ".pairing_issues";
   std::string distribution = input_parser->base_name + ".pairing_distribution.csv";
   std::string tigpair_checkpoint = input_parser->base_name + ".tigpair_checkpoint.tsv"; // add a checkpoint file, prevent re-running LINKS from scratch if crash
@@ -928,7 +927,8 @@ LINKS::pair_contigs()
           if (!kmer1.orient)
           { // if kmer1 is forward
             if (!kmer2.orient)
-            { // if kmer2 is forward
+            { // if kmer1 is forward
+              // if kmer2 is forward
               distance = get_distance(insert_size, tig_length[kmer1.tig], kmer1.start, kmer2.start);
               if (distance > min_allowed && distance < insert_size)
               {
@@ -937,7 +937,8 @@ LINKS::pair_contigs()
               }
             }
             else
-            {
+            { // if kmer1 is forward
+              // if kmer2 is reverse
               distance = get_distance(insert_size, tig_length[kmer1.tig], kmer1.start, tig_length[kmer2.tig] - kmer2.end);
               if (distance > min_allowed && distance < insert_size)
               {
@@ -948,6 +949,7 @@ LINKS::pair_contigs()
           }
           else
           { // if kmer1 is reverse
+            // if kmer2 is forward
             if (!kmer2.orient)
             {
               distance = get_distance(insert_size, tig_length[kmer1.tig], tig_length[kmer1.tig] - kmer1.end, kmer2.start);
@@ -958,7 +960,8 @@ LINKS::pair_contigs()
               }
             }
             else
-            { // if kmer2 is reverse
+            { // if kmer1 is reverse
+              // if kmer2 is reverse
               distance = get_distance(insert_size, tig_length[kmer2.tig], kmer2.end, kmer1.end);
               if (distance > min_allowed && distance < insert_size)
               {
