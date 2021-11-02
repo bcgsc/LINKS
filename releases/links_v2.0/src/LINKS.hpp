@@ -431,8 +431,8 @@ inline void
 LINKS::write_from_block_to_map(){
   btllib::OrderQueueSPMC<BufferMatePairData>::Block mate_pair_block(mate_pair_block_size);
 
-  test_mate_pair.reserve(1000000000);
-  mates.reserve(1000000000); 
+  //test_mate_pair.reserve(1000000000);
+  //mates.reserve(1000000000); 
 
   for (;;) {
     if (mate_pair_block.current == mate_pair_block.count) {
