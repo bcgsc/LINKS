@@ -25,7 +25,7 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 ### What's new in v2.0 ?
 ---------------------
 
-~5x memory opitimization and ~3x computational optimization. This version is C++ implementation of v 1.8.7.
+~5x memory opitimization and ~3x computational optimization, no need for Bloom filter wrappers, drastic lower memory requirements which helps you to extract more information from reads by smaller step sizes(-t) and more distances(-d). 
 
 ### What's new in v1.8.7 ?
 ---------------------
