@@ -173,12 +173,12 @@ Generate autotools scripts:
 ./autogen.sh
 ```
 
-To compile ARCS run:
+To compile LINKS run:
 
 ```
 ./configure && make
 ```
-To install ARCS in a specified directory:
+To install LINKS in a specified directory:
 
 ```
 ./configure --prefix=/LINKS/PATH && make install
