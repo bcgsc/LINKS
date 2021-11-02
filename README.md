@@ -22,10 +22,56 @@ It can be used to scaffold high-quality draft genome assemblies with any long
 sequences (eg. ONT reads, PacBio reads, other draft genomes, etc).
 It is also used to scaffold contig pairs linked by ARCS/ARKS.
 
+### Dependencies
+-------------------------------
+
+- GCC (tested on v7.2.0)
+- Perl (tested on v5.32.1)
+- Autotools (if cloning directly from repository)
+
+### Compilation:
+-------------------------------
+If cloning directly from the repository run:
+
+```
+cd releases/links_v2.0/
+git submodule init
+git submodule update
+```
+
+Generate autotools scripts:
+
+```
+./autogen.sh
+```
+
+To compile LINKS run:
+
+```
+./configure && make
+```
+To install LINKS in a specified directory:
+
+```
+./configure --prefix=/LINKS/PATH && make install
+```
+
+### Running LINKS v2.0
+-------------------------------
+LINKS v2.0 is implemented in C++ and perl. To run the full LINKS pipeline smoothly we suggest running `LINKS-make`
+
+To run LINKS with default parameters with `LINKS-make`:
+```
+./releases/links_v2.0/LINKS-make LINKS draft=NA1281_draft.fa readsFof=NA1281_reads.fof
+```
+
+*These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz:
+
 ### What's new in v2.0 ?
 ---------------------
 
 ~5x memory opitimization and ~3x computational optimization, no need for Bloom filter wrappers, drastic lower memory requirements which helps you to extract more information from reads by smaller step sizes(-t) and more distances(-d). 
+
 
 ### What's new in v1.8.7 ?
 ---------------------
@@ -149,52 +195,6 @@ Fixed bug that prevented reading traditional FASTA sequences (where a sequence i
 
 Included offset option (-o option) - Enables LINKS to explore a wider k-mer space range when running iteratively
 Minor fixes: IUPAC codes are now preserved
-
-### Dependencies
--------------------------------
-
-- GCC (tested on v7.2.0)
-- Perl (tested on v5.32.1)
-- Autotools (if cloning directly from repository)
-
-### Compilation:
--------------------------------
-If cloning directly from the repository run:
-
-```
-cd releases/links_v2.0/
-git submodule init
-git submodule update
-```
-
-Generate autotools scripts:
-
-```
-./autogen.sh
-```
-
-To compile LINKS run:
-
-```
-./configure && make
-```
-To install LINKS in a specified directory:
-
-```
-./configure --prefix=/LINKS/PATH && make install
-```
-
-#### Running LINKS v2.0
--------------------------------
-LINKS v2.0 is implemented in C++ and perl. To run the full LINKS pipeline smoothly we suggest running `LINKS-make`
-
-To run LINKS with default parameters with `LINKS-make`:
-```
-./releases/links_v2.0/LINKS-make LINKS draft=NA1281_draft.fa readsFof=NA1281_reads.fof
-```
-
-*These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz:
-
 
 
 ### Documentation
