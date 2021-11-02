@@ -184,7 +184,7 @@ class LINKS
     };
 
     typedef std::unordered_map<std::pair<uint64_t,uint64_t>, MatePairInfo, pair_hash> mate_pair_type;
-    typedef std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > mate_pair;
+    //typedef std::unordered_map<uint64_t, std::unordered_map<uint64_t, MatePairInfo> > mate_pair;
 private:
   class Worker
     {
