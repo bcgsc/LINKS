@@ -181,7 +181,7 @@ LINKS v2.0 is implemented in C++ and perl. To run the full LINKS pipeline smooth
 
 To run LINKS with default parameters with `LINKS-make`:
 ```
-./LINKS-make LINKS draft=NA1281_draft.fa readsFof=NA1281_reads.fof
+./releases/links_v2.0/LINKS-make LINKS draft=NA1281_draft.fa readsFof=NA1281_reads.fof
 ```
 
 *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz:
@@ -241,6 +241,7 @@ Usage: ./LINKS [v1.8.7]
 -t  step of sliding window when extracting k-mer pairs from long reads
 (default -t 2, optional)
 	Multiple steps are separated by comma. eg. -t 10,5
+-j  thread count
 -o  offset position for extracting k-mer pairs (default -o 0, optional)
 -e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10%
 (default -e 0.1, optional)
