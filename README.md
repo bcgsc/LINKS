@@ -162,8 +162,16 @@ Minor fixes: IUPAC codes are now preserved
 If cloning directly from the repository run:
 
 ```
+git submodule init
+git submodule update
+```
+
+Generate autotools scripts:
+
+```
 ./autogen.sh
 ```
+
 To compile ARCS run:
 
 ```
