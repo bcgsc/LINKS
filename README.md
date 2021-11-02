@@ -9,7 +9,7 @@ Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg
 # LINKS
 
 ## Long Interval Nucleotide K-mer Scaffolder
-## LINKS v2.0 Rene L. Warren, 2014-2021
+## LINKS v2.0 Rene L. Warren, Yaman Malkoc, T. Murathan Goktas 2014-2021
 ## email: rwarren [at] bcgsc [dot] ca
 
 
@@ -70,7 +70,7 @@ To run LINKS with default parameters with `LINKS-make`:
 ### What's new in v2.0 ?
 ---------------------
 
-~5x memory opitimization and ~3x computational optimization, no need for Bloom filter wrappers, drastic lower memory requirements which helps you to extract more information from reads by smaller step sizes(-t) and more distances(-d). 
+~5x memory opitimization and ~3x computational optimization, no need for Bloom filter wrappers, drastically lower memory requirements which helps you to extract more information from reads by using smaller step sizes(-t) and more k-mer distances(-d) in a single LINKS run. 
 
 
 ### What's new in v1.8.7 ?
