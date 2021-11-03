@@ -58,11 +58,11 @@ To install LINKS in a specified directory:
 
 ### Running LINKS v2.0
 -------------------------------
-LINKS v2.0 is implemented in C++ and perl. To run the full LINKS pipeline smoothly we suggest running `LINKS-make`
+LINKS v2.0 is implemented in C++ and perl. To run the full LINKS pipeline smoothly we suggest running `LINKS.sh`
 
-To run LINKS with default parameters with `LINKS-make`:
+To run LINKS with default parameters with `LINKS.sh`:
 ```
-./releases/links_v2.0/LINKS-make LINKS draft=NA1281_draft.fa readsFof=NA1281_reads.fof
+./releases/links_v2.0/LINKS.sh -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
 *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz:
@@ -224,7 +224,7 @@ Gigascience. 2015 Aug 4;4:35. doi: 10.1186/s13742-015-0076-3. eCollection 2015.
 -------
 
 LINKS:
-Rene Warren
+Rene Warren, Yaman Malkoc, T. Murathan Goktas
 
 SWIG/BloomFilter.pm: Sarah Yeo, Justin Chu
 
@@ -236,7 +236,7 @@ https://github.com/bcgsc/bloomfilter: Justin Chu, Ben Vandervalk, Hamid Mohamadi
 <pre>
 e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
 
-Usage: ./LINKS [v1.8.7]
+Usage: ./LINKS [v2.0.0]
 -f  sequences to scaffold (Multi-FASTA format with each sequence on a single line, required)
 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
 -m  MPET reads (default -m 1 = yes, default = no, optional
@@ -250,7 +250,7 @@ Usage: ./LINKS [v1.8.7]
 -t  step of sliding window when extracting k-mer pairs from long reads
 (default -t 2, optional)
 	Multiple steps are separated by comma. eg. -t 10,5
--j  thread count
+-j  threads  (default -j 3, optional) 
 -o  offset position for extracting k-mer pairs (default -o 0, optional)
 -e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10%
 (default -e 0.1, optional)
