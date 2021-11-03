@@ -20,10 +20,9 @@
 #LINKS is released under the GNU General Public License v3
 
 use strict;
-use Data::Dumper;
 use POSIX;
 use FindBin;
-use lib "/gsc/btl/linuxbrew/Cellar/links-scaffolder/1.8.7_1/libexec/";
+use lib "$FindBin::Bin/./lib/bloomfilter/swig";
 use BloomFilter;
 use Time::HiRes;
 use Getopt::Std;
@@ -35,34 +34,7 @@ my $last_step  = $step; ### default for last_step set as step
 my $version = "[v1.8.6]";
 my $dev = "rwarren\@bcgsc.ca";
 my $ARCKS_RUN = 0;### MEANS ONLY LINKS PROCESS
-my $readFastAFastq_debug_counter_1 = 0;
-my $readFastAFastq_debug_counter_2 = 0;
-my $readFastAFastq_debug_counter_3 = 0;
-my $readFastAFastq_debug_counter_4 = 0;
-my $readFastAFastq_debug_counter_5 = 0;
 
-my $readContigs_debug_counter_1 = 0;
-my $readContigs_debug_counter_2 = 0;
-my $readContigs_debug_counter_3 = 0;
-my $readContigs_debug_counter_4 = 0;
-my $readContigs_debug_counter_5 = 0;
-my $readContigs_debug_counter_6 = 0;
-my $readContigs_debug_counter_7 = 0;
-
-my $pairContigs_debug_counter_1 = 0;
-my $pairContigs_debug_counter_2 = 0;
-my $pairContigs_debug_counter_3 = 0;
-my $pairContigs_debug_counter_4 = 0;
-my $pairContigs_debug_counter_5 = 0;
-my $pairContigs_debug_counter_6 = 0;
-my $pairContigs_debug_counter_7 = 0;
-my $pairContigs_debug_counter_8 = 0;
-my $pairContigs_debug_counter_9 = 0;
-my $pairContigs_debug_counter_10 = 0;
-my $pairContigs_debug_counter_11 = 0;
-my $pairContigs_debug_counter_12 = 0;
-my $pairContigs_debug_counter_13 = 0;
-my $pairContigs_debug_counter_14 = 0;
 #-------------------------------------------------
 
 if(! $opt_f || ! $opt_s){
@@ -119,6 +91,7 @@ my $assemblyruninfo="";
 if(! -e $assemblyfile){
    die "Invalid file: $assemblyfile -- fatal\n";
 }
+
 
 ### Naming output files
 if ($base_name eq ""){
@@ -249,7 +222,6 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
       print LOG $writing_tigbloom_message;
       $assemblyruninfo.=$writing_tigbloom_message;
       $bloom->storeFilter($bfout);
-      # exit; # MUST REMOVE, PLACED ONLY FOR BENCHMARKING
     }else{
       my $bffile_message="";
       my $bfreusemessage = "A Bloom filter was supplied ($bf_file) and will be used instead of building a new one from -f $assemblyfile\n";
@@ -302,7 +274,7 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
       my $delta = $frag_dist - ( 2 * $k);
       my $file_ct = 0;
       my $distpairs = 0;
-      my $matePairCounter = 0;
+
       if(defined $step_array[$array_element]){
          $last_step = $step_array[$array_element];### records the last usable t params, even if array doesn't match with d
       }
@@ -326,30 +298,11 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
          #   ($set,$bin,$sumall,$ctall) = &readBAM($sumall,$ctall,$set,$bin,$_,$encoded,$seedsplit,$r_clip,$q_clip,$c_clip,$e_ascii,$file_ct,$ct_fof_line,$targetwordlen);
          #}else{
          #($set,$bin,$sumall,$ctall) = &readFastaFastq($sumall,$ctall,$set,$bin,$_,$encoded,$seedsplit,$r_clip,$q_clip,$c_clip,$e_ascii,$file_ct,$ct_fof_line,$targetwordlen);
-         # my $readone = "ATCGATCGATCGATC";
-         # my $readtwo = "ATCGATCGATCGATC";
-         # print "TESTING\n";
-         # $matepair->{$readone}{$readtwo}{'is'} = $frag_dist;
-         # #$matepair->{$rd1}{$rd2}{'rd'}{$head}++;  ### this will be used to track uniqueness in pairing (should expect 1 pair per [long]read and one [long]read with that specific pair. HAS LITTLE TO NO EFFECT BUT REQ MORE MEM
-         # $matepair->{$readone}{$readtwo}{'bt'} = 1;
-         # foreach my $rd (keys %$matepair){ 
-         #    $matePairCounter++;
-         # }
-         print "MATEPAIR COUNT IS $matePairCounter BEFORE readFastaFastq\n";
          if(! -e $_){ die "WARNING: Your file $_ does not exist -- fatal.\n";    }
          if($bfoff){
             ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
          }else{
-            # print "Time before starting readFastAFastq: ";
-            # $datestring = localtime();
-            # print "$datestring\n";
             ($matepair,$pairct,$ctrd) = &readFastaFastq($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$bloom,$readlength);
-            # exit; # MUST REMOVE, PLACED ONLY FOR BENCHMARKING
-            print "PAIRCT for FILLING MATEPAIR is : $pairct\n";
-            foreach my $rd (keys %$matepair){ 
-               $matePairCounter++;
-            }
-            print "MATEPAIR COUNT IS $matePairCounter after readFastaFastq\n";
          }
 	 $distpairs+=$pairct;
          #}
@@ -357,36 +310,14 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
       }### FOF ends
       close FOF;
 
-      my $kmerpairmessage = "\nExtracteddd $distpairs $k-mer pairs at -d $frag_dist, from all $ctrd sequences provided in $longfile\n\n";
+      my $kmerpairmessage = "\nExtracted $distpairs $k-mer pairs at -d $frag_dist, from all $ctrd sequences provided in $longfile\n\n";
       print $kmerpairmessage;
       print LOG $kmerpairmessage;
       $totalpairs+=$distpairs;
       $array_element++;
    }### iterate through distances
 
-   ## MURATHAN DEBUG 3.4.21
-   print "$readFastAFastq_debug_counter_1 total kmers iterated in read\n";
-   print "$readFastAFastq_debug_counter_2 rd1 rd2 found in bloom\n";
-   print "$readFastAFastq_debug_counter_3 rd1 rd2not found in bloom\n";
-   print "$readFastAFastq_debug_counter_4 total kmers iterated in read\n";
-
-   print "$readFastAFastq_debug_counter_1  readFastAFastq_debug_counter_1\n";
-   print "$readFastAFastq_debug_counter_2  readFastAFastq_debug_counter_2\n";
-   print "$readFastAFastq_debug_counter_3  readFastAFastq_debug_counter_3\n";
-
-   foreach my $rd (keys %$matepair){ 
-      $readFastAFastq_debug_counter_4++;
-      my $datam = $matepair->{$rd};
-      foreach my $rd2 (keys %$datam){
-         $readFastAFastq_debug_counter_5++;
-      }
-   }
-   print "$readFastAFastq_debug_counter_4  readFastAFastq_debug_counter_4\n";
-   #$readFastAFastq_debug_counter_5 = $matepair.size();
-   print "$readFastAFastq_debug_counter_5 readFastAFastq_debug_counter_5\n";
-   ## MURATHAN DEBUG 3.4.21
-
-   my $totalkmerpairmessage = "\nExtractedx $totalpairs $k-mer pairs overall. This is the set that will be used for scaffolding\n";
+   my $totalkmerpairmessage = "\nExtracted $totalpairs $k-mer pairs overall. This is the set that will be used for scaffolding\n";
    print $totalkmerpairmessage;
    print LOG $totalkmerpairmessage;
 
@@ -401,31 +332,6 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    my ($track_all);
    ($track_all,$tig_length) = &readContigs($assemblyfile,$matepair,$k,$min_size);
 
-   ## MURATHAN DEBUG 4.4.21 
-   
-   ## trackall debug
-   foreach my $rd (keys %$track_all){ 
-      $readContigs_debug_counter_6++;
-      my $datam = $track_all->{$rd};
-      if($datam->{start} > $datam->{end}){
-         $readContigs_debug_counter_7++;
-      }
-   }
-
-   print "readContigs_debug_counter_1: total kmer from contigs\n";
-   print "readContigs_debug_counter_2: total kmers found in contigs\n";
-   print "readContigs_debug_counter_3: total reverse kmera found in contigs\n";
-   print "readContigs_debug_counter_6: all kmers in trackall\n";
-   print "readContigs_debug_counter_7: all reverse kmers in trackall\n";
-   print "\n";
-
-   print "$readContigs_debug_counter_1  readContigs_debug_counter_1\n";
-   print "$readContigs_debug_counter_2  readContigs_debug_counter_2\n";
-   print "$readContigs_debug_counter_3  readContigs_debug_counter_3\n";
-   print "$readContigs_debug_counter_4  readContigs_debug_counter_4\n";
-   print "$readContigs_debug_counter_5  readContigs_debug_counter_5\n";
-   print "$readContigs_debug_counter_6  readContigs_debug_counter_6\n";
-   print "$readContigs_debug_counter_7  readContigs_debug_counter_7\n";
    #-------------------------------------------------
    $date = `date`;
    chomp($date);
@@ -434,23 +340,9 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    print $sc_start_message;
    print LOG $sc_start_message;
    $assemblyruninfo.= $sc_start_message . "\n";
+
    ($contigpairs,$simplepair) = &pairContigs($longfile,$matepair,$track_all,$tig_length,$issues,$distribution,$totalpairs,$tigpair_checkpoint,$simplepair_checkpoint,$verbose);
    #-------------------------------------------------
-   
-   print "$pairContigs_debug_counter_1  pairContigs_debug_counter_1\n";
-   print "$pairContigs_debug_counter_2  pairContigs_debug_counter_2\n";
-   print "$pairContigs_debug_counter_3  pairContigs_debug_counter_3\n";
-   print "$pairContigs_debug_counter_4  pairContigs_debug_counter_4\n";
-   print "$pairContigs_debug_counter_5  pairContigs_debug_counter_5\n";
-   print "$pairContigs_debug_counter_6  pairContigs_debug_counter_6\n";
-   print "$pairContigs_debug_counter_7  pairContigs_debug_counter_7\n";
-   print "$pairContigs_debug_counter_8  pairContigs_debug_counter_8\n";
-   print "$pairContigs_debug_counter_9  pairContigs_debug_counter_9\n";
-   print "$pairContigs_debug_counter_10  pairContigs_debug_counter_10\n";
-   print "$pairContigs_debug_counter_11  pairContigs_debug_counter_11\n";
-   print "$pairContigs_debug_counter_12  pairContigs_debug_counter_12\n";
-   print "$pairContigs_debug_counter_13  pairContigs_debug_counter_13\n";
-   print "$pairContigs_debug_counter_14  pairContigs_debug_counter_14\n";
 
    ### Read contig names and sequences from the FASTA file.
    ($tighash, $tignames, $tig_length) = &readContigsMemory($assemblyfile);
@@ -638,8 +530,6 @@ sub readContigs{
    print $contigs_processed_message;
    print LOG $contigs_processed_message;
    ###
-   my $track_allCounter = 0;
-   my $sum = 0;
    while(<IN>){
       chomp;
       if(/^\>(.*)/){
@@ -652,14 +542,9 @@ sub readContigs{
 
             my $tiglen = length($seq);
             if($tiglen >= $min_size){
-               $readContigs_debug_counter_4++;
-               ($track_allCounter, $track_all) = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
-               #print "Is returned right? $track_allCounter\n";
-               $sum += $track_allCounter;
+               $track_all = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
                my $revcomp = &reverseComplement($seq);
-               ($track_allCounter, $track_all) = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
-               #print "Is returned right? $track_allCounter\n";
-               $sum += $track_allCounter;
+               $track_all = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
                $tig_length->{$cttig} = $tiglen;
             }
          }
@@ -668,7 +553,6 @@ sub readContigs{
       }else{
          $seq .= $_;
       }
-      #print "Trackall is: $sum \n";
    }
    $cttig++;
    print "\r$cttig";
@@ -676,29 +560,20 @@ sub readContigs{
    $|++;
 
    if(length($seq) >= $min_size){
-      $readContigs_debug_counter_5++;
-      ($track_allCounter, $track_all) = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
-      $sum += $track_allCounter;
-      #print "Is returned right? $track_allCounter\n";
+      $track_all = &kmerizeContig(uc($seq),$track_all,$matepair,$k,$cttig,0);
       my $revcomp = &reverseComplement($seq);
-      ($track_allCounter, $track_all) = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
-      #print "Is returned right? $track_allCounter\n";
-      $sum += $track_allCounter;
+      $track_all = &kmerizeContig($revcomp,$track_all,$matepair,$k,$cttig,1);
       $tig_length->{$cttig} = length($seq);
    }
    ###
-   print "$sum trackall sum\n";
-   #print "Trackall is: $sum \n";
    close IN;
 
    return $track_all,$tig_length;
 }
 
 #----------------
-sub time_fp { sprintf"%d.%06d\n",Time::HiRes::gettimeofday }
 sub readFastaFastq{
-   my $uniquePairct = 0;
-   my $kmerizeCounter = 0;
+
    my ($file_ct,$ct_fof_line,$ctrd,$file,$frag_dist,$k,$step,$matepair,$delta,$initpos,$bloom,$readlength) = @_;
    ###
    my $readinput_message = "\nReads processed from file $file_ct/$ct_fof_line, $file:\n";
@@ -724,12 +599,6 @@ sub readFastaFastq{
 
    LINE:
    while(<IN>){
-      $kmerizeCounter++;
-      # if($kmerizeCounter % 20000 == 0) {
-      #    print "Time before starting readFastAFastq: ";
-      #    $datestring = localtime();
-      #    print "$datestring\n";
-      # }
       chomp;
       $quad++;
       #if(/^([ATGC]+\:[ATGC]+)$/i && $quad<4){$quad=2;}###MPET SPECIFIC IGNORE Ns in SEQUENCE (don't have to)
@@ -753,8 +622,8 @@ sub readFastaFastq{
                $endposition = $readlength-$k;###MPET
                $buffer = $readlength+1;###MPET
             }
+
             ($matepair,$pairct) = &kmerize(uc($seq),$frag_dist,$k,$matepair,$step,$prevhead,$endposition,$initpos,$pairct,$bloom,$buffer,$readlength);
-            # print "\nPAIRCT in loop $pairct.\n";  
             $seq = "";
             $quad=1;
          }
@@ -779,8 +648,8 @@ sub readFastaFastq{
          $buffer = $readlength+1;###MPET
       }###MPET
 
-      
-      ($matepair,$pairct, $uniquePairct) = &kmerize(uc($seq),$frag_dist,$k,$matepair,$step,$prevhead,$endposition,$initpos,$pairct,$uniquePairct,$bloom,$buffer,$readlength);
+
+      ($matepair,$pairct) = &kmerize(uc($seq),$frag_dist,$k,$matepair,$step,$prevhead,$endposition,$initpos,$pairct,$bloom,$buffer,$readlength);
    }
 
    close IN;
@@ -788,9 +657,8 @@ sub readFastaFastq{
 
    #####
 
-   print "\nExtracted $pairct total $k-mer pairs.\n";  
-   print "\nExtracted unique $uniquePairct total $k-mer pairs.\n";  
-   print LOG "\nExtracted $pairct total $k-mer pairs.\n"; 
+   #print "\nExtracted $pairct total $k-mer pairs.\n";  
+   #print LOG "\nExtracted $pairct total $k-mer pairs.\n"; 
 
    return $matepair,$pairct,$ctrd;
 }
@@ -798,92 +666,27 @@ sub readFastaFastq{
 #----------------
 sub kmerize{
 
-   my ($seq,$frag_dist,$k,$matepair,$step,$head,$endposition,$initpos,$pairct,$uniquePairct,$bloom,$buffer,$readlength) = @_;
-   # my $tmpCounter1 = 0;
-   # my $tmpCounter2 = 0;
-   # my $tmpCounter3 = 0;
-   # my $tmpCounter4 = 0;
-   # my $tmpCounter5 = 0;
-   # my $tmpCounter6 = 0;
-   # my $tmpCounter0 = 0;
-   my $notDefCounter = 0;
+   my ($seq,$frag_dist,$k,$matepair,$step,$head,$endposition,$initpos,$pairct,$bloom,$buffer,$readlength) = @_;
+
    for(my $pos=$initpos;$pos<=$endposition;$pos+=$step){###MPET
-      $readFastAFastq_debug_counter_1++;
-      # $tmpCounter0 = 0;
-      # $tmpCounter1 = 0;
-      # $tmpCounter2 = 0;
-      # $tmpCounter3 = 0;
-      # $tmpCounter4 = 0;
-      # $tmpCounter5 = 0;
-      # $tmpCounter6 = 0;
+
       my $rd1 = substr($seq,$pos,$k);
       $rd1 = &reverseComplement($rd1) if($readlength);###MPET
       my $secondstart = $pos + $buffer;###MPET
       my $rd2ss = substr($seq,$secondstart,$k);
       my $rd2 = &reverseComplement($rd2ss);
-      # foreach my $rd (keys %$matepair){ 
-      #    $tmpCounter0++;
-      # }
-      # print "Before the if statement: $tmpCounter0\n";
-      # ---------  no autovivification;
-      if(defined $matepair->{$rd2}{$rd1}){
-            # foreach my $rd (keys %$matepair){ 
-            #    $tmpCounter5++;
-            # }
-            # print "Inside the if statement1: $tmpCounter5\n";
-            # my $matelist = $matepair->{$rd2};
-            # my $countermatelist = 0;
-            # foreach my $rd (keys %$matelist){ 
-            #    $countermatelist++;
-            # }
-            # print "MATELIST READ Size IS : $countermatelist\n";
-            my $trd1=$rd2;my $trd2=$rd1;$rd1=$trd1;$rd2=$trd2;
-            # foreach my $rd (keys %$matepair){ 
-            #    $tmpCounter6++;
-            # }
-            # print "Inside the if statement2: $tmpCounter6\n";
-         } else {
-            $notDefCounter++;
-         }
-      # foreach my $rd (keys %$matepair){ 
-      #    $tmpCounter1++;
-      # }
-      # print "Counter3: $tmpCounter1\n";
+
+      if(defined $matepair->{$rd2}{$rd1}){my $trd1=$rd2;my $trd2=$rd1;$rd1=$trd1;$rd2=$trd2;}
+
       if($bloom->contains($rd1) && $bloom->contains($rd2)){ ###Don't bother hashing k-mer pairs if assembly doesn't have these kmers
-         print "here babeeee";
-         $readFastAFastq_debug_counter_2++;
-         # if(not(defined $matepair->{$rd1})) {
-         #    $uniquePairct++;
-         # }
-         # foreach my $rd (keys %$matepair){ 
-         #    $tmpCounter2++;
-         # }
-         # print "Before all matepair size: $tmpCounter2\n";
          $matepair->{$rd1}{$rd2}{'is'} = $frag_dist;
-         # foreach my $rd (keys %$matepair){ 
-         #    $tmpCounter3++;
-         # }
-         # print "KEY SET SIZE AFTER IS: $tmpCounter3\n";
          #$matepair->{$rd1}{$rd2}{'rd'}{$head}++;  ### this will be used to track uniqueness in pairing (should expect 1 pair per [long]read and one [long]read with that specific pair. HAS LITTLE TO NO EFFECT BUT REQ MORE MEM
          $matepair->{$rd1}{$rd2}{'bt'} = 0;
-         # foreach my $rd (keys %$matepair){ 
-         #    $tmpCounter4++;
-         # }
-         # my $countermatelist = 0;
-         # print "KEY SET SIZE AFTER IS: $tmpCounter4\n";
-         # my $matelist = $matepair->{$rd1};
-         # foreach my $rd (keys %$matelist){ 
-         #    $countermatelist++;
-         # }
-         # print "MATELIST READ Size IS : $countermatelist\n";
          $pairct++;
+      }
 
-      }
-      else{
-         $readFastAFastq_debug_counter_3++;
-      }
    }
-   return $matepair,$pairct,$uniquePairct;
+   return $matepair,$pairct;
 }
 
 #----------------
@@ -968,8 +771,8 @@ sub readFastaFastqBFoff{
 
    #####
 
-   print "\nExtracted $pairct total $k-mer pairs\n";
-   print LOG "\nExtracted $pairct total $k-mer pairs\n";
+   #print "\nExtracted $pairct total $k-mer pairs\n";
+   #print LOG "\nExtracted $pairct total $k-mer pairs\n";
 
    return $matepair,$pairct,$ctrd;
 }
@@ -1020,30 +823,21 @@ sub kmerizeContigBloom{
 sub kmerizeContig{
 
    my ($seq,$track_all,$matepair,$k,$head,$rc) = @_;
-   my $counter = 0;
+
    for(my $pos=0;$pos<=(length($seq)-$k);$pos++){
       my $rd = substr($seq,$pos,$k);
-      $readContigs_debug_counter_1++;
-      # ---- no autovivification;
       if(defined $matepair->{$rd}){
-         # if(not(defined $track_all->{$rd})) {
-         #    # print "This is new, incrementing counter: $counter\n";
-         #    $counter++;
-         # }
-         $readContigs_debug_counter_2++;
          $track_all->{$rd}{'tig'}   = $head;
          $track_all->{$rd}{'start'} = $pos;
          $track_all->{$rd}{'end'}   = $pos + $k;
          if($rc==1){
-            $readContigs_debug_counter_3++;
             $track_all->{$rd}{'start'} = length($seq) - $pos;
             $track_all->{$rd}{'end'}   = length($seq) - ($pos + $k);
          }
          $track_all->{$rd}{'multiple'}++;
       }
    }
-   #print "Returning a counter value : $counter\n";
-   return ($counter, $track_all);
+   return $track_all;
 }
 
 #-----------------------
@@ -1270,82 +1064,19 @@ sub pairContigs{
    my $ct_multiple;
 
    my ($simplepair,$pair,$err,$track_insert);###simplepair is a simple pair to track node to node in a graph
-   my $counter1 = 0;
-   my $counter2 = 0;
-   my $counter3 = 0;
-   my $matePairCounter = 0;
-   my $CheckCounterBase = 0;
-   my $Check0Counter = 0;
-   my $Check1Counter = 0;
-   my $Check2Counter = 0;
-   my $Check3Counter = 0;
-   my $Check4Counter = 0;
-   my $Check5Counter = 0;
-   my $Check6Counter = 0;
-   my $Check7Counter = 0;
-   my $Check8Counter = 0;
-   my $Check9Counter = 0;
-   my $Check10Counter = 0;
-   my $Check11Counter = 0;
-   my $Check12Counter = 0;
-   my $Check13Counter = 0;
-   my $Check14Counter = 0;
-   my $Check15Counter = 0;
-   my $Check16Counter = 0;
-   my $Check17Counter = 0;
-   my $Check18Counter = 0;
-   my $Check19Counter = 0;
-   my $Check20Counter = 0;
-   my $Check21Counter = 0;
-   my $Check22Counter = 0;
-   my $Check23Counter = 0;
-   my $Check24Counter = 0;
-   my $Check25Counter = 0;
-   my $Check26Counter = 0;
-   my $readbCounter = 0;
-   my $filter1 = 0;
-   my $filter2 = 0;
-   my $filter3 = 0;
-   my $filter4 = 0;
-   foreach my $rd (keys %$matepair){ 
-      $counter1++;
-   }
-   foreach my $rd (keys %$track){ 
-      $counter2++;
-   }
-   foreach my $rd (keys %$tig_length){ 
-      $counter3++;
-   }
-   print "IN pairContigs\nLongfile:$longfile\nmatepair size: $counter1\ntrack_all Size: $counter2\ntig_length $counter3\n";
 
    print "Pairing contigs...\n" if ($verbose);
+
    open(PET, ">$issues") || die "Can't open $issues for writing -- fatal\n";
 
-   foreach my $read_a (keys %$matepair){
-      $matePairCounter++;
-      $readbCounter = 0;
+   foreach my $read_a (keys %$matepair){ 
+
       my $mateslist = $matepair->{$read_a};
-      foreach my $rd (keys %$mateslist){ 
-         $readbCounter++;
-      }
-      $pairContigs_debug_counter_1++;
-      #print "****read_b counter is : $readbCounter will I enter loop?\n";
+
       foreach my $read_b (keys %$mateslist){
-            $CheckCounterBase++;
-            $pairContigs_debug_counter_2++;
-            #print Dumper(\%$track);
-          if($matepair->{$read_a}{$read_b}{'bt'}==0) {
-             $filter1++; #matepair is not seen
-             $pairContigs_debug_counter_3++;
-             if($track->{$read_a}{'multiple'}==1) {
-                $filter2++; #first mate is singleton in assembly
-                $pairContigs_debug_counter_4++;
-                if($track->{$read_b}{'multiple'}==1){ ###This has little if no effect, but negative for some odd reason
-                $filter3++; # first and second mate are singleton in assembly
-                   $pairContigs_debug_counter_5++;
-                  if(1) {
-                     $filter4++;
-            $Check1Counter++;
+
+          if($matepair->{$read_a}{$read_b}{'bt'}==0 && $track->{$read_a}{'multiple'}==1 && $track->{$read_b}{'multiple'}==1){ ###This has little if no effect, but negative for some odd reason
+
             ##below indicates this specific pair has been seen
             $matepair->{$read_a}{$read_b}{'bt'}=1;
 
@@ -1356,9 +1087,7 @@ sub pairContigs{
             print "Pair read1=$read_a read2=$read_b\n" if ($verbose);
 
             if(defined $track->{$read_a}{'tig'} && defined $track->{$read_b}{'tig'}){### both pairs assembled
-               # print "PERL PAIRCONTIGS BOTH ARE DEFINEDDD\n";
-               $pairContigs_debug_counter_6++; ## both pairs are found in assembly
-               $Check0Counter++;
+
                $ct_both++;
                $ct_both_hash->{$insert_size}++;
 
@@ -1380,22 +1109,17 @@ sub pairContigs{
                my $B_end = $track->{$read_b}{'end'};
 
                if ($tig_a != $tig_b){####paired reads located on <> contigs
-                  $Check2Counter++;
-                  $pairContigs_debug_counter_8++; 
+
                   ####Determine most likely possibility
                   if ($track->{$read_a}{'start'} < $track->{$read_a}{'end'}){
-                     $Check3Counter++;
-                     $pairContigs_debug_counter_9++;
+
                      if ($track->{$read_b}{'end'} < $track->{$read_b}{'start'}){####-> <- :::  A-> <-B  /  rB -> <- rA
-                         $Check4Counter++;
-                         $pairContigs_debug_counter_10++;
                          my $d = &getDistance($insert_size, $A_length, $A_start, $B_start);
                          print "A-> <-B  WITH $tig_a -> <- $tig_b GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Alen, Astart,Bstart\n" if($verbose);
                          if($d >= $min_allowed){
-                           $Check5Counter++;
+
                             my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                             #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
-                            #print "CHECKPOINT 1 adding to PAIR\n";
                             $pair->{$ftig_a}{'layer'}{$isz}{$ftig_b}{'links'}++;
                             $pair->{$ftig_a}{'layer'}{$isz}{$ftig_b}{'gaps'} += $d;                  
                             $pair->{$rtig_b}{'layer'}{$isz}{$rtig_a}{'links'}++;
@@ -1406,7 +1130,6 @@ sub pairContigs{
                             $pair->{$rtig_b}{'all'}{0}{$rtig_a}{'gaps'} += $d;
 
                             my ($order1,$order2)=($tig_a<$tig_b) ? ($tig_a,$tig_b) : ($tig_b,$tig_a);
-                            #print "CHECKPOINT 2 adding to SIMPLEPAIR\n";
                             $simplepair->{$order1}{$order2}{'links'}++;
                             $simplepair->{$order1}{$order2}{'sumgaps'}+=$d;                            
                             $simplepair->{$order1}{$order2}{'type'}='11';
@@ -1414,7 +1137,6 @@ sub pairContigs{
                             $ct_ok_pairs++;
                             $ct_ok_pairs_hash->{$insert_size}++;
                          }else{
-                            $Check6Counter++;
                             my $err_pair = $ftig_a . "-". $ftig_b;
                             $err->{$err_pair}{'links'}++;
                             $err->{$err_pair}{'gaps'} += $d;
@@ -1423,16 +1145,13 @@ sub pairContigs{
                             print PET "Pairs unsatisfied in distance within a contig pair.  A-> <-B  WITH tig#$tig_a -> $d <- tig#$tig_b, A=$A_length nt (start:$A_start, end:$A_end) B=$B_length nt (start:$B_start, end:$B_end) CALCULATED DISTANCE APART: $d < $min_allowed\n";
                          }
                       }else{#### -> -> ::: A-> <-rB  / B-> <-rA 
-                         $Check7Counter++;
-                         $pairContigs_debug_counter_11++;
                          my $rB_start = $B_length - $B_start;
                          my $d = &getDistance($insert_size, $A_length, $A_start, $rB_start);
                          print "A-> <-rB  WITH $tig_a -> <- r.$tig_b GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Alen,Astart,rBstart\n" if($verbose);
                          if($d >= $min_allowed){
-                           $Check8Counter++;
+
                             my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                             #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
-                            #print "CHECKPOINT 3 adding to PAIR\n";
                             $pair->{$ftig_a}{'layer'}{$isz}{$rtig_b}{'links'}++;
                             $pair->{$ftig_a}{'layer'}{$isz}{$rtig_b}{'gaps'} += $d;
                             $pair->{$ftig_b}{'layer'}{$isz}{$rtig_a}{'links'}++;
@@ -1450,28 +1169,23 @@ sub pairContigs{
                             $ct_ok_pairs++;
                             $ct_ok_pairs_hash->{$insert_size}++;
                          }else{
-                            $Check9Counter++;
                             my $err_pair = $ftig_a . "-". $rtig_b;
                             $err->{$err_pair}{'links'}++;
                             $err->{$err_pair}{'gaps'} += $d;
                             $ct_problem_pairs++;
                             $ct_problem_pairs_hash->{$insert_size}++;
-                            print PET "Pairs unsatisfied in distance within a contig pair.  A-> <-rB  WITH tig#$tig_a -> $d <- tig#r.$tig_b, A=$A_length nt (start:$A_start, end:$A_end) B=$B_length nt (start:$B_start, end:$B_end) CALCULATED DISTANCE APART: $d < $min_allowed\n";
+                            print PET "Pairs unsatisfied in distance within a contig pair.  A-> <-rB  WITH tig#$tig_a -> $d <- tig#r.$tig_b, A=$A_length  nt (start:$A_start, end:$A_end) B=$B_length nt (start:$B_start, end:$B_end) CALCULATED DISTANCE APART: $d < $min_allowed\n";
                          }
                       }
                   }else{
-                     $pairContigs_debug_counter_12++;
-                     $Check10Counter++;
+
                      if ($track->{$read_b}{'end'} > $track->{$read_b}{'start'}){####<-  -> ::: B-> <-A / rA -> <- rB
-                        $Check11Counter++;
-                        $pairContigs_debug_counter_13++;
                         my $d = &getDistance($insert_size, $B_length, $B_start, $A_start);
                         print "B-> <-A  WITH $tig_b -> <- $tig_a GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Blen,Bstart,Astart\n" if($verbose);
                         if($d >= $min_allowed){
-                           $Check12Counter++;
+
                            my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                            #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
-                           print "CHECKPOINT 4 adding to PAIR\n";
                            $pair->{$ftig_b}{'layer'}{$isz}{$ftig_a}{'links'}++;
                            $pair->{$ftig_b}{'layer'}{$isz}{$ftig_a}{'gaps'} += $d;
                            $pair->{$rtig_a}{'layer'}{$isz}{$rtig_b}{'links'}++;
@@ -1489,7 +1203,6 @@ sub pairContigs{
                            $ct_ok_pairs++;
                            $ct_ok_pairs_hash->{$insert_size}++;
                         }else{
-                           $Check13Counter++;
                            my $err_pair = $ftig_b . "-". $ftig_a;
                            $err->{$err_pair}{'links'}++;
                            $err->{$err_pair}{'gaps'} += $d;
@@ -1498,16 +1211,14 @@ sub pairContigs{
                            print PET "Pairs unsatisfied in distance within a contig pair.  B-> <-A  WITH tig#$tig_b -> $d <- tig#$tig_a, B=$B_length nt (start:$B_start, end:$B_end) A=$A_length nt (start:$A_start, end:$A_end) CALCULATED DISTANCE APART: $d < $min_allowed\n";
                         }
                      }else{                          ####<- <-  :::  rB-> <-A / rA-> <-B
-                        $Check14Counter++;
-                        $pairContigs_debug_counter_14++;
                         my $rB_start = $B_length - $B_start;
                         my $d = &getDistance($insert_size, $B_length, $rB_start, $A_start);
                         print "rB-> <-A WITH r.$tig_b -> <- $tig_a GAP $d A=$A_length ($A_start-$A_end) B=$B_length ($B_start-$B_end) Blen,rBstart,Astart\n" if($verbose);
                         if($d >= $min_allowed){
-                           $Check15Counter++;
+
                            my $isz = $d < 0 ? -1 : $d == 10 ? 10 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 5000 ? 5000 : 10000;###distance categories
                            #my $isz = $d < 0 ? -1 : $d < 200 ? 200 : $d < 500 ? 500 : $d < 1000 ? 1000 : $d < 2500 ? 2500 : $d < 5000 ? 5000 : $d < 10000 ? 10000 : 20000;###distance categories
-                           print "CHECKPOINT 5 adding to PAIR\n";
+
                            $pair->{$rtig_b}{'layer'}{$isz}{$ftig_a}{'links'}++;
                            $pair->{$rtig_b}{'layer'}{$isz}{$ftig_a}{'gaps'} += $d;
                            $pair->{$rtig_a}{'layer'}{$isz}{$ftig_b}{'links'}++;
@@ -1525,7 +1236,6 @@ sub pairContigs{
                            $ct_ok_pairs++;
                            $ct_ok_pairs_hash->{$insert_size}++;
                         }else{
-                           $Check16Counter++;
                            my $err_pair = $rtig_b . "-". $ftig_a;
                            $err->{$err_pair}{'links'}++;
                            $err->{$err_pair}{'gaps'} += $d;
@@ -1536,55 +1246,46 @@ sub pairContigs{
                      }
                   }
                }else{###Clone, paired reads located on the same contig -- could be used to investigate misassemblies
-                  $Check17Counter++;
+           
                   print "Pair ($read_a and $read_b) located on same contig $tig_a ($A_length nt)\n" if ($verbose);
                   my $pet_size = 0;
 
                   if ($A_start > $B_start && ($B_start < $B_end) && ($A_start > $A_end)){    # B --> <-- A
-                     $Check18Counter++;
                      $pet_size = $A_start - $B_start;
                      $track_insert->{$pet_size}++;
                      if($pet_size >= $low_iz && $pet_size <= $up_iz){
-                        $Check19Counter++;
                         $ct_ok_contig++;
                         $ct_ok_contig_hash->{$insert_size}++;
                      }else{
-                        $Check20Counter++;
                         print PET "Pairs unsatisfied in distance within a contig.  Pair ($read_a - $read_b) on contig $tig_a ($A_length nt) Astart:$A_start Aend:$A_end Bstart:$B_start Bend:$B_end CALCULATED DISTANCE APART: $pet_size\n";
                         $ct_iz_issues++;
                         $ct_iz_issues_hash->{$insert_size}++;
                      }
                   }elsif($B_start > $A_start && ($B_start > $B_end) && ($A_start < $A_end)){ # A --> <-- B
-                     $Check21Counter++;
                      $pet_size = $B_start - $A_start;
                      $track_insert->{$pet_size}++;
                      if($pet_size >= $low_iz && $pet_size <= $up_iz){
-                        $Check22Counter++;
                         $ct_ok_contig++;
                         $ct_ok_contig_hash->{$insert_size}++;
                      }else{
-                        $Check23Counter++;
                         print PET "Pairs unsatisfied in distance within a contig.  Pair ($read_a - $read_b) on contig $tig_a ($A_length nt) Astart:$A_start Aend:$A_end Bstart:$B_start Bend:$B_end CALCULATED DISTANCE APART: $pet_size\n";
                         $ct_iz_issues++;
                         $ct_iz_issues_hash->{$insert_size}++;
                      }
                   }else{
-                     $Check24Counter++;
                      $ct_illogical++;
                      $ct_illogical_hash->{$insert_size}++;
                      print PET "Pairs unsatisfied in pairing logic within a contig.  Pair ($read_a - $read_b) on contig $tig_a ($A_length nt) Astart:$A_start Aend:$A_end Bstart:$B_start Bend:$B_end\n";
                   }
                }
             }else{###^both pairs assembled
-               $Check25Counter++;
                $ct_single++;
                $ct_single_hash->{$insert_size}++;
             }
-         }}}}else{#if unseen
-            $Check26Counter++;
+         }else{#if unseen
             $ct_multiple++ if( $matepair->{$read_a}{$read_b}{'bt'}==0 );
-	      }
-      }#pairing read b
+	 }
+     }#pairing read b
    }#read a
 
    ### summary of contig pair issues
@@ -1599,9 +1300,7 @@ sub pairContigs{
    my $satisfied = $ct_ok_pairs + $ct_ok_contig;
    my $unsatisfied = $ct_problem_pairs + $ct_iz_issues + $ct_illogical;
    my $ct_both_reads = $ct_both * 2;
-   print "MATEPAIR READ_A COUNTER $matePairCounter\n\n";
-   print "Filters: \n$filter1\n$filter2\n$filter3\n$filter4\n\n";
-   print "THESE ARE THE CHECKPOINT COUNTERS\n CheckCounterBase: $CheckCounterBase\n Check0Counter: $Check0Counter \n Check1Counter: $Check1Counter \n Check2Counter: $Check2Counter \n Check3Counter: $Check3Counter \n Check4Counter: $Check4Counter \n Check5Counter: $Check5Counter \n Check6Counter: $Check6Counter \n Check7Counter: $Check7Counter \n Check8Counter: $Check8Counter \n Check9Counter: $Check9Counter \n Check10Counter: $Check10Counter \n Check11Counter: $Check11Counter \n$Check12Counter \n$Check13Counter \n$Check14Counter \n$Check15Counter \n$Check16Counter \n$Check17Counter \n$Check18Counter \n$Check19Counter \n$Check20Counter \n$Check21Counter \n$Check22Counter \n$Check23Counter \n$Check24Counter \n$Check25Counter \n$Check26Counter\n";
+
    print LOG "\n===========PAIRED K-MER STATS===========\n";
    print LOG "Total number of pairs extracted from -s $longfile: $totalpairs\n";
    print LOG "At least one sequence/pair missing from contigs: $ct_single\n";
