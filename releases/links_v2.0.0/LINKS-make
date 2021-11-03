@@ -133,10 +133,10 @@ empty.fof:
 	touch $@
 
 $(b).tigpair_checkpoint.tsv : $(draft) $(readsFof)
-	$(gtime) $(bin)/src/LINKS_CPP -f $(draft) -s $(readsFof) $(r_conditional) $r -d $d -k $k -t $t -o $o -e $e -z $z -p $p -b $b -v $v -x $x
+	$(gtime) $(bin)/src/LINKS_CPP -f $(draft) -s $(readsFof) $(r_conditional) $r -d $d -k $k -t $t -j $j -l $l -o $o -m $m -e $e -z $z -p $p -b $b -v $v -x $x
 
 $(b).scaffold.fa : $(b).tigpair_checkpoint.tsv empty.fof
-	$(gtime) perl $(bin)/src/LINKS.pl -f $(draft) -s empty.fof -b $b -l $l -a $a -v $v
+	$(gtime) perl $(bin)/src/LINKS.pl -f $(draft) -s empty.fof -b $b -l $l -a $a -m $m -e $e -z $z -p $p -v $v
 
 # Run LINKS
 LINKS: $(b).scaffold.fa
