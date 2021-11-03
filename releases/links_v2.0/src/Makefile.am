@@ -1,4 +1,4 @@
-bin_PROGRAMS = LINKS
+bin_PROGRAMS = LINKS_CPP
 LINKS_CXXFLAGS = $(AM_CXXFLAGS) -pthread
 
 LINKS_CPPFLAGS = -I$(top_srcdir)/btllib/include/ 

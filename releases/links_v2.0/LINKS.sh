@@ -4,8 +4,6 @@
 # Whole pipeline can be run by LINKS-make script provided. However, Makefiles take arguments like 'd=4000' where LINKS always took arguments as '-d 4000'
 # We are providing this script to run makefile with LINKS inputs. So you can run whole LINKS pipeline with previuous argument nomenclature.
 
-#usage() { echo "Usage: $0 [-s <45|90>] [-p <string>]" 1>&2; exit 1; }
-
 usage() {
 	echo "
 		Usage:  LINKS v2.0.0 \n 

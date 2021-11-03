@@ -138,11 +138,10 @@ empty.fof:
 
 $(b).tigpair_checkpoint.tsv : $(draft) $(readsFof)
 	echo $(d)
-	$(gtime) $(bin)/src/LINKS -f $(draft) -s $(readsFof) $(r_conditional) $r -d $d -k $k -t $t -o $o -e $e -z $z -p $p -b $b -v $v -x $x
+	$(gtime) $(bin)/src/LINKS_CPP -f $(draft) -s $(readsFof) $(r_conditional) $r -d $d -k $k -t $t -o $o -e $e -z $z -p $p -b $b -v $v -x $x
 
 $(b).scaffold.fa : $(b).tigpair_checkpoint.tsv empty.fof
-	$(gtime) /gsc/btl/linuxbrew/bin/LINKS -f $(draft) -s empty.fof -b $b -l $l -a $a -v $v
-#$(gtime) perl $(bin)/src/LINKS.pl -f $(draft) -s empty.fof -b $b -l $l -a $a -v $v
+	$(gtime) perl $(bin)/src/LINKS.pl -f $(draft) -s empty.fof -b $b -l $l -a $a -v $v
 
 # Run LINKS
 LINKS: $(b).scaffold.fa
