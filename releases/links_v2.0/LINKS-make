@@ -4,11 +4,11 @@
 #Default Parameters
 
 ifndef draft
-$(error draft is not set)
+$(error draft genome (draft) parameter is not set)
 endif
 
 ifndef readsFof
-$(error readsFof is not set)
+$(error reads fof (readsFof) parameter is not set)
 endif
 
 
