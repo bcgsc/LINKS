@@ -9,7 +9,6 @@ AC_CONFIG_SRCDIR([src/main.cpp])
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
 
-#AC_SUBST(AM_CXXFLAGS, '-Wall -Wextra -Werror -std=c++11')
 AC_SUBST(AM_CXXFLAGS, '-std=c++11')
 
 AC_CONFIG_FILES([
