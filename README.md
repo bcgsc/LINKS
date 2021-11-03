@@ -72,7 +72,10 @@ To run LINKS with default parameters with `LINKS`:
 ### What's new in v2.0.0 ?
 ---------------------
 
-~5x memory opitimization and ~3x computational optimization, no need for Bloom filter wrappers, drastically lower memory requirements which helps you to extract more information from reads by using smaller step sizes(-t) and more k-mer distances(-d) in a single LINKS run. 
+* ~5x memory optimization
+* ~3x computational optimization
+* no need for compiling swig Bloom filter wrappers 
+* drastically lower memory requirements enables extracting more information from reads using smaller step sizes (`-t`) and more distances (`-d`). 
 
 
 ### What's new in v1.8.7 ?
