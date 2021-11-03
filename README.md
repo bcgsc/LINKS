@@ -58,11 +58,13 @@ To install LINKS in a specified directory:
 
 ### Running LINKS v2.0
 -------------------------------
-LINKS v2.0 is implemented in C++ and perl. To run the full LINKS pipeline smoothly we suggest running `LINKS.sh`
+LINKS v2.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and have different argument naming convention(such as d=xx t=yy instead of -d xx -t yy). 
 
-To run LINKS with default parameters with `LINKS.sh`:
+We suggest running `LINKS` (shell script) to run whole pipeline with smoothly with LINKS naming convention(such as -d xx -t yy).
+
+To run LINKS with default parameters with `LINKS`:
 ```
-./releases/links_v2.0/LINKS.sh -f NA1281_draft.fa -s NA1281_reads.fof
+./releases/links_v2.0/LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
 *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz:
