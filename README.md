@@ -34,7 +34,7 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 If cloning directly from the repository run:
 
 ```
-cd releases/links_v2.0/
+cd releases/links_v2.0.0/
 git submodule init
 git submodule update
 ```
@@ -56,20 +56,20 @@ To install LINKS in a specified directory:
 ./configure --prefix=/LINKS/PATH && make install
 ```
 
-### Running LINKS v2.0
+### Running LINKS v2.0.0
 -------------------------------
-LINKS v2.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and have different argument naming convention(such as d=xx t=yy instead of -d xx -t yy). 
+LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and have different argument naming convention(such as d=xx t=yy instead of -d xx -t yy). 
 
 We suggest running `LINKS` (shell script) to run whole pipeline with smoothly with LINKS naming convention(such as -d xx -t yy).
 
 To run LINKS with default parameters with `LINKS`:
 ```
-./releases/links_v2.0/LINKS -f NA1281_draft.fa -s NA1281_reads.fof
+./releases/links_v2.0.0/LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
 *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz:
 
-### What's new in v2.0 ?
+### What's new in v2.0.0 ?
 ---------------------
 
 ~5x memory opitimization and ~3x computational optimization, no need for Bloom filter wrappers, drastically lower memory requirements which helps you to extract more information from reads by using smaller step sizes(-t) and more k-mer distances(-d) in a single LINKS run. 
