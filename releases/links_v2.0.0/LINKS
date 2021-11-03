@@ -5,7 +5,7 @@
 # We are providing this script to run makefile with LINKS inputs. So you can run whole LINKS pipeline with previuous argument nomenclature.
 
 usage() {
-	echo "
+	echo -e "
 		Usage:  LINKS v2.0.0  
                 -f  sequences to scaffold (Multi-FASTA format, required)
                 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
