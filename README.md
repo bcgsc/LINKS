@@ -59,21 +59,21 @@ To install LINKS in a specified directory:
 
 ### Running LINKS v2.0.0
 -------------------------------
-Users can run `LINKS` (shell script) to run whole pipeline smoothly with LINKS naming convention(such as -d xx -t yy) as pre 2.0.0 versions.
+Users can run `LINKS` (shell script) to run whole pipeline smoothly with LINKS parameters (such as -d xx -t yy) as pre 2.0.0 versions.
 
 To run LINKS with default parameters with `LINKS`:
 ```
 ./releases/links_v2.0.0/LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
-* *LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and have different argument naming convention(such as d=xx t=yy instead of -d xx -t yy).
+* *LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and has different argument value assignment (such as d=xx t=yy instead of -d xx -t yy).
 
 ### What's new in v2.0.0 ?
 ---------------------
 
-* ~5x memory optimization
-* ~3x computational optimization
-* no need for compiling swig Bloom filter wrappers 
+* ~5x less memory usage
+* ~3x faster run time
+* no need for compiling SWIG Bloom filter wrappers 
 * drastically lower memory requirements enables extracting more information from reads using smaller step sizes (`-t`) and more distances (`-d`). 
 
 
