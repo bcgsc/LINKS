@@ -47,9 +47,8 @@ while getopts "f:s:m:d:k:t:j:o:e:l:a:z:b:r:p:x:v:" args; do
             s=${OPTARG}
 	        s="readsFof=${s}"
             ;;
-	    m)
+        m)
             m=${OPTARG}
-	        f="m=${m}"
             ;;
         d)
             d=${OPTARG}
@@ -63,6 +62,10 @@ while getopts "f:s:m:d:k:t:j:o:e:l:a:z:b:r:p:x:v:" args; do
             t=${OPTARG}
 	        t="t=${t}"
             ;;
+        j)
+            j=${OPTARG}
+	        j="j=${j}"
+            ;;
 	    o)
             o=${OPTARG}
 	        o="o=${o}"
@@ -74,10 +77,6 @@ while getopts "f:s:m:d:k:t:j:o:e:l:a:z:b:r:p:x:v:" args; do
         l)
             l=${OPTARG}
 	        l="l=${l}"
-            ;;
-	m)
-            m=${OPTARG}
-	        m="m=${m}"
             ;;
         a)
             a=${OPTARG}
@@ -120,7 +119,7 @@ if [ -z "${f}" ] || [ -z "${s}" ]; then
     exit 1
 fi
 
-echo Running Command: $SCRIPT_DIR/LINKS-make LINKS $f $s $m $d $k $t $o $e $l $a $z $b $r $p $x $v
+echo "Running Command: $SCRIPT_DIR/LINKS-make LINKS $f $s $m $d $k $t $o $e $l $a $z $b $r $p $x $v"
 # Running LINKS-make
-$SCRIPT_DIR/LINKS-make LINKS $f $s $m $d $k $t $o $e $l $a $z $b $r $p $x $v
+$SCRIPT_DIR/LINKS-make LINKS $f $s m=$m $d $k $t $o $e $l $a $z $b $r $p $x $v
 
