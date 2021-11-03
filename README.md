@@ -58,9 +58,9 @@ To install LINKS in a specified directory:
 
 ### Running LINKS v2.0
 -------------------------------
-LINKS v2.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run we suggest running `LINKS-make`. However `LINKS-make` is a Makefile and have different argument naming convention(such as d=x t=y). 
+LINKS v2.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and have different argument naming convention(such as d=xx t=yy instead of -d xx -t yy). 
 
-We suggest running `LINKS` (shell script) to run whole pipeline with smoothly with LINKS naming convention(such as -d x -t y).
+We suggest running `LINKS` (shell script) to run whole pipeline with smoothly with LINKS naming convention(such as -d xx -t yy).
 
 To run LINKS with default parameters with `LINKS`:
 ```
