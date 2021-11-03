@@ -22,8 +22,6 @@
 use strict;
 use POSIX;
 use FindBin;
-### use lib "$FindBin::Bin/./lib/bloomfilter/swig";
-### use BloomFilter;
 use Time::HiRes;
 use Getopt::Std;
 use Net::SMTP;
@@ -40,50 +38,27 @@ my $ARCKS_RUN = 0;### MEANS ONLY LINKS PROCESS
 if(! $opt_f || ! $opt_b){
    print "Usage: $0 $version\n";
    print "-f  sequences to scaffold (Multi-FASTA format, required)\n"; 
-   #print "-s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)\n";
-   #print "-m  MPET reads (default -m 1 = yes, default = no, optional)\n";
-   #print "\t! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s\n";
-   #print "\t! Paired MPET reads in their original outward orientation <- -> must be separated by \":\"\n"; 
-   #print "\t  >template_name\n\t  ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC\n";	
-   #print "-d  distance between k-mer pairs (ie. target distances to re-scaffold on. default -d $distances, optional)\n";
-   #print "\tMultiple distances are separated by comma. eg. -d 500,1000,2000,3000\n";
-   #print "-k  k-mer value (default -k $k, optional)\n";
-   #print "-t  step of sliding window when extracting k-mer pairs from long reads (default -t $step, optional)\n";
-   #print "\tMultiple steps are separated by comma. eg. -t 10,5\n";
-   #print "-o  offset position for extracting k-mer pairs (default -o $offset, optional)\n";
-   #print "-e  error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10% (default -e $insert_stdev, optional)\n";
+
    print "-l  minimum number of links (k-mer pairs) to compute scaffold (default -l $min_links, optional)\n";
    print "-a  maximum link ratio between two best contig pairs (default -a $max_link_ratio, optional)\n";
    print "\t *higher values lead to least accurate scaffolding*\n";
    print "-z  minimum contig length to consider for scaffolding (default -z $min_size, optional)\n";
    print "-b  base name for your output files (optional)\n";
-   #print "-r  Bloom filter input file for sequences supplied in -s (optional, if none provided will output to .bloom)\n";
-   #print "\t NOTE: BLOOM FILTER MUST BE DERIVED FROM THE SAME FILE SUPPLIED IN -f WITH SAME -k VALUE\n";
-   #print "\t IF YOU DO NOT SUPPLY A BLOOM FILTER, ONE WILL BE CREATED (.bloom)\n";
    print "-p  Bloom filter false positive rate (default -p $fpr, optional; increase to prevent memory allocation errors)\n";
-   #print "-x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)\n";
    print "-v  Runs in verbose mode (-v 1 = yes, default = no, optional)\n"; 
    die "\nError: Missing mandatory options -f and -b.\n\n";
 }
 
 my $assemblyfile = $opt_f;
-#my $longfile = $opt_s;
-#$distances = $opt_d if($opt_d);
-#$k = $opt_k if($opt_k);
 $verbose = $opt_v if($opt_v);
 $min_links = $opt_l if($opt_l);
 $min_size = $opt_z if($opt_z);
 $max_link_ratio = $opt_a if($opt_a);
-#$step = $opt_t if($opt_t);
-###ADDED FOR MPET
-#my $readlength = $opt_m if($opt_m);###MPET
 $insert_stdev = 0.5 if($opt_m);    ###MPET (Need to adjust to a wider-range of distances when dealing with MPET)
 $insert_stdev = $opt_e if($opt_e); ###When set, this will override the MPET-induced changes on -e
 $base_name = $opt_b if($opt_b);
-#$offset = $opt_o if($opt_o);
 $bf_file = $opt_r if($opt_r);
 $fpr = $opt_p if($opt_p);
-#$bfoff = $opt_x if($opt_x);
 
 my $assemblyruninfo="";
 
@@ -91,16 +66,6 @@ my $assemblyruninfo="";
 if(! -e $assemblyfile){
    die "Invalid file: $assemblyfile -- fatal\n";
 }
-
-
-### Naming output files
-#if ($base_name eq ""){
-#
-#   $base_name = $assemblyfile . ".scaff_s-" . $longfile . "_d" . $distances . "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" . $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-" . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
-#
-#   my $pid_num = getpgrp(0);
-#   $base_name .= "_pid" . $pid_num;
-#}
 
 my $log = $base_name . ".log";
 my $scaffold = $base_name . ".scaffolds";
@@ -126,40 +91,6 @@ $assemblyruninfo=$init_message;
 #-------------------------------------------------
 my $file_message = "";
 my $ct_fof_line = 0;
-
-### No need for lonflie in v2.0
-# if(! -e $longfile){
-#    $file_message = "Invalid file of filenames: $longfile -- fatal\n";
-#    print $file_message;
-#    print LOG $file_message;
-#    exit;
-# }else{
-#    open(FOF,$longfile) || die "Can't open file of filenames $longfile for reading -- fatal.\n";
-#    while(<FOF>){
-#       chomp;
-#       $ct_fof_line++;
-#       $file_message = "Checking $_...";
-#       print $file_message;
-#       print LOG $file_message;
-#       if(! -e $_){
-#          $file_message = "na\n*** File does not exist -- fatal (check the path/file and try again)\n";
-#          if(/^\>/){
-#            $file_message .= "It appears that the file you supplied in -s is in fasta format where it should be a file of filenames, listing the fullpath/fasta,fastq files to consider (1 per line).\n";
-#          }elsif(/^\@/){
-#            $file_message .= "It appears that the file you supplied in -s is in fastq format where it should be a file of filenames, listing the fullpath/fasta, fastq files to consider (1 per line).\n";
-#          }
-#          print $file_message;
-#          print LOG $file_message;
-#          exit;
-#       }else{
-#          $file_message = "ok\n";
-#          print $file_message;
-#          print LOG $file_message;
-#       }
-#    }
-#    close FOF;
-#    $ARCKS_RUN = 1 if(-z $longfile);###file is empty (empty.fof), this is likely from ARCS/ARKS
-# }
 
 if(! -e $assemblyfile){
    $file_message = "\nInvalid file: $assemblyfile -- fatal\n";
@@ -189,172 +120,6 @@ if(! -e $tigpair_checkpoint){###MAR2016 no assembly checkpoint file detected thi
    print 'No checkpoint provided';
    exit;
 }
-### give error and dont run this section
-   
-   # print 'I AM NOT HERE!'
-   # my $reading_tigbloom_message = "\n\n=>Reading contig/sequence assembly file : $date\n";
-   # print $reading_tigbloom_message;
-   # print LOG $reading_tigbloom_message;
-   # $assemblyruninfo.=$reading_tigbloom_message;
-   # if($bfoff==0){
-
-   #  my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,$atime,$mtime,$ctime,$blksize,$blocks) = stat($assemblyfile);
-   #  my $bfelements = int($size);
-   #  my $m = ceil((-1 * $bfelements * log($fpr)) / (log(2) * log(2))); #the number of bits
-   #  ### ensures $m is a multiple of 8 to avoid error in BloomFilter
-   #  my $rem = 64 - ($m % 64);
-   #  $m = $m + $rem;
-   #  #$m = (int($m/8) + 1) * 8;### ensures $m is a multiple of 8 to avoid error in BloomFilter
-   #  my $hashfct = floor(($m / $bfelements) * log(2));# the number of hash functions
-
-   #  if($bf_file eq ""){
-
-   #    my $bfmessage = "Building a Bloom filter using $k-mers derived from sequences in -f $assemblyfile...\n";
-   #    print LOG $bfmessage;
-   #    print $bfmessage;
-
-   #    $date = `date`;
-   #    chomp($date);
-
-   #    my $bfspecs = "*****\nBloom filter specs\nelements=$bfelements\nFPR=$fpr\nsize (bits)=$m\nhash functions=$hashfct\n*****\n";
-   #    print $bfspecs;
-   #    print LOG $bfspecs;
-   #    $bloom = new BloomFilter::BloomFilter($m, $hashfct, $k);
-   #    $bloom = &contigsToBloom($assemblyfile,$k,$bloom,$hashfct,$min_size);
-   #    $date = `date`;
-   #    chomp($date);
-   #    my $writing_tigbloom_message = "\n\n=>Writing Bloom filter to disk ($bfout) : $date\n";
-   #    print $writing_tigbloom_message;
-   #    print LOG $writing_tigbloom_message;
-   #    $assemblyruninfo.=$writing_tigbloom_message;
-   #    $bloom->storeFilter($bfout);
-   #  }else{
-   #    my $bffile_message="";
-   #    my $bfreusemessage = "A Bloom filter was supplied ($bf_file) and will be used instead of building a new one from -f $assemblyfile\n";
-   #    print LOG $bfreusemessage;
-   #    print $bfreusemessage;
-
-   #    if(! -e $bf_file){
-   #       $bffile_message = "\nInvalid file: $bf_file -- fatal\n";
-   #       print $bffile_message;
-   #       print LOG $bffile_message;
-   #       exit;
-   #    }else{
-   #       $bffile_message = "Checking Bloom filter file $bf_file...ok\n";
-   #       print $bffile_message;
-   #       print LOG $bffile_message;
-   #    }
-
-   #    $bffile_message="Loading bloom filter of size $m from $bf_file\n";
-   #    print $bffile_message;
-   #    print LOG $bffile_message;
-
-   #    $bloom = new BloomFilter::BloomFilter($bf_file);
-   #  }
-   # }else{###no BF functionality
-   #  my $nobfmessage = "The Bloom filter-building functionality is turned off (-x $bfoff), skipping...\n";
-   #  print LOG $nobfmessage;
-   #  print $nobfmessage;
-   # }
-
-   # #-------------------------------------------------
-   # $date = `date`;
-   # chomp($date);
-
-   # my $reading_reads_message = "\n\n=>Reading long reads, building hash table : $date\n";
-   # print $reading_reads_message;
-   # print LOG $reading_reads_message;
-   # $assemblyruninfo.=$reading_reads_message;
-
-   # my $matepair;
-   # my $pairct;
-   # my @distance_array = split(/,/,$distances);
-   # my @step_array = split(/,/,$step);
-   # my $totalpairs = 0;
-   # my $initpos = $offset;
-   # my $array_element = 0;
-
-   # foreach my $frag_dist (@distance_array){### v1.8 April 2016, Iterate through distances supplied. eg. -d 500,1000,2000 
-
-   #    my $ctrd = 0;
-   #    my $delta = $frag_dist - ( 2 * $k);
-   #    my $file_ct = 0;
-   #    my $distpairs = 0;
-
-   #    if(defined $step_array[$array_element]){
-   #       $last_step = $step_array[$array_element];### records the last usable t params, even if array doesn't match with d
-   #    }
-
-   #    my  $processed_reads_message = "Reads processed k=$k, dist=$frag_dist, offset=$initpos nt, sliding step=$last_step nt:\n";
-   #    print $processed_reads_message;
-   #    print LOG $processed_reads_message;
-
-   #    open(FOF,$longfile) || die "Can't open file of filenames $longfile for reading -- fatal\n";
-   #    while(<FOF>){
-   #       chomp;
-   #       $file_ct++;
-   #       #if(/\.bam/i){
-   #       #   if (! -e $SAMPATH){#only care if there are bam files to read
-   #       #      my $samtool_err_mess = "The executable $SAMPATH does not exist, please revise -- fatal.\n";
-   #       #      print LOG $samtool_err_mess;
-   #       #      print $samtool_err_mess;
-   #       #      close LOG;
-   #       #      exit;
-   #       #   }
-   #       #   ($set,$bin,$sumall,$ctall) = &readBAM($sumall,$ctall,$set,$bin,$_,$encoded,$seedsplit,$r_clip,$q_clip,$c_clip,$e_ascii,$file_ct,$ct_fof_line,$targetwordlen);
-   #       #}else{
-   #       #($set,$bin,$sumall,$ctall) = &readFastaFastq($sumall,$ctall,$set,$bin,$_,$encoded,$seedsplit,$r_clip,$q_clip,$c_clip,$e_ascii,$file_ct,$ct_fof_line,$targetwordlen);
-   #       if(! -e $_){ die "WARNING: Your file $_ does not exist -- fatal.\n";    }
-   #       if($bfoff){
-   #          ($matepair,$pairct,$ctrd) = &readFastaFastqBFoff($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$readlength);
-   #       }else{
-   #          ($matepair,$pairct,$ctrd) = &readFastaFastq($file_ct,$ct_fof_line,$ctrd,$_,$frag_dist,$k,$last_step,$matepair,$delta,$initpos,$bloom,$readlength);
-   #       }
-	#  $distpairs+=$pairct;
-   #       #}
-   #       $initpos += $offset;###ensures a larger kmer spectrum is explored, conflicting kmer pairs are minimized, when $offset <> 0
-   #    }### FOF ends
-   #    close FOF;
-
-   #    my $kmerpairmessage = "\nExtracted $distpairs $k-mer pairs at -d $frag_dist, from all $ctrd sequences provided in $longfile\n\n";
-   #    print $kmerpairmessage;
-   #    print LOG $kmerpairmessage;
-   #    $totalpairs+=$distpairs;
-   #    $array_element++;
-   # }### iterate through distances
-
-   # my $totalkmerpairmessage = "\nExtracted $totalpairs $k-mer pairs overall. This is the set that will be used for scaffolding\n";
-   # print $totalkmerpairmessage;
-   # print LOG $totalkmerpairmessage;
-
-   # #-------------------------------------------------
-   # $date = `date`;
-   # chomp($date);
-
-   # my $reading_seqs_message = "\n\n=>Reading sequence contigs (to scaffold), tracking k-mer positions : $date\n";
-   # print $reading_seqs_message;
-   # print LOG $reading_seqs_message;
-   # $assemblyruninfo.=$reading_seqs_message;
-   # my ($track_all);
-   # ($track_all,$tig_length) = &readContigs($assemblyfile,$matepair,$k,$min_size);
-
-   # #-------------------------------------------------
-   # $date = `date`;
-   # chomp($date);
-
-   # my $sc_start_message = "\n\n=>Scaffolding initiated : $date\n";
-   # print $sc_start_message;
-   # print LOG $sc_start_message;
-   # $assemblyruninfo.= $sc_start_message . "\n";
-
-   # ($contigpairs,$simplepair) = &pairContigs($longfile,$matepair,$track_all,$tig_length,$issues,$distribution,$totalpairs,$tigpair_checkpoint,$simplepair_checkpoint,$verbose);
-   # #-------------------------------------------------
-
-   # ### Read contig names and sequences from the FASTA file.
-   # ($tighash, $tignames, $tig_length) = &readContigsMemory($assemblyfile);
-
-   
-### }else{######MAR2016 check point file exists, skip above
 	### Start here v2.0
    $date = `date`;
    chomp($date);
