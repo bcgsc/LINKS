@@ -12,7 +12,7 @@
 //Globals
 #define BASE_TEN 10
 std::string progname = "LINKS";
-std::string version = "2.0";
+std::string version = "2.0.0";
 
 class InputParser {
     private:

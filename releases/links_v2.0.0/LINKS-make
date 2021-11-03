@@ -88,7 +88,7 @@ help:
 	@echo "	General Options:"
 	@echo ""
 	@echo "		draft           draft name. File must have .fasta or .fa extension"
-	@echo "		readsFof        file of files for reads [reads fof]. Files must have .fastq.gz or .fq.gz extension"
+	@echo "		readsFof        file of files for reads. Files must have .fastq.gz or .fq.gz extension"
 	@echo "		time		logs time and memory usage to file for main steps (Set to 1 to enable logging)"	
 	@echo ""
 	@echo "	LINKS Options:"
