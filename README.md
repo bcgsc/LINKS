@@ -9,7 +9,7 @@ Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg
 # LINKS
 
 ## Long Interval Nucleotide K-mer Scaffolder
-## LINKS v2.0 Rene L. Warren, Yaman Malkoc, T. Murathan Goktas 2014-2021
+## LINKS v2.0.0 Rene L. Warren, Yaman Malkoc, T. Murathan Goktas 2014-2021
 ## email: rwarren [at] bcgsc [dot] ca
 
 
@@ -55,24 +55,26 @@ To install LINKS in a specified directory:
 ```
 ./configure --prefix=/LINKS/PATH && make install
 ```
+* *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz
 
 ### Running LINKS v2.0.0
 -------------------------------
-LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and have different argument naming convention(such as d=xx t=yy instead of -d xx -t yy). 
-
-We suggest running `LINKS` (shell script) to run whole pipeline with smoothly with LINKS naming convention(such as -d xx -t yy).
+Users can run `LINKS` (shell script) to run whole pipeline smoothly with LINKS naming convention(such as -d xx -t yy) as pre 2.0.0 versions.
 
 To run LINKS with default parameters with `LINKS`:
 ```
 ./releases/links_v2.0.0/LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
-*These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz:
+* *LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and have different argument naming convention(such as d=xx t=yy instead of -d xx -t yy).
 
 ### What's new in v2.0.0 ?
 ---------------------
 
-~5x memory opitimization and ~3x computational optimization, no need for Bloom filter wrappers, drastically lower memory requirements which helps you to extract more information from reads by using smaller step sizes(-t) and more k-mer distances(-d) in a single LINKS run. 
+* ~5x memory optimization
+* ~3x computational optimization
+* no need for compiling swig Bloom filter wrappers 
+* drastically lower memory requirements enables extracting more information from reads using smaller step sizes (`-t`) and more distances (`-d`). 
 
 
 ### What's new in v1.8.7 ?
