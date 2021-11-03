@@ -55,19 +55,18 @@ To install LINKS in a specified directory:
 ```
 ./configure --prefix=/LINKS/PATH && make install
 ```
+* *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz
 
 ### Running LINKS v2.0.0
 -------------------------------
-LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and have different argument naming convention(such as d=xx t=yy instead of -d xx -t yy). 
-
-We suggest running `LINKS` (shell script) to run whole pipeline with smoothly with LINKS naming convention(such as -d xx -t yy).
+Users can run `LINKS` (shell script) to run whole pipeline smoothly with LINKS naming convention(such as -d xx -t yy) as pre 2.0.0 versions.
 
 To run LINKS with default parameters with `LINKS`:
 ```
 ./releases/links_v2.0.0/LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
-*These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz:
+* *LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and have different argument naming convention(such as d=xx t=yy instead of -d xx -t yy).
 
 ### What's new in v2.0.0 ?
 ---------------------
