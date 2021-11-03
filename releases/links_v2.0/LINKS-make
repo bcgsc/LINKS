@@ -3,19 +3,14 @@
 # Written by Murathan Goktas
 #Default Parameters
 
-# Input Names 
-draft=draft
-readsFof=readsFof
+ifndef draft
+$(error draft is not set)
+endif
 
-# Find the complete long read file name
-#fastq=$(shell test -f $(reads).fq.gz && echo "true")
-#fasta=$(shell test -f $(reads).fa.gz && echo "true")
-#ifeq ($(fastq), true)
-#long_reads=$(reads).fq.gz
-#endif
-#ifeq ($(fasta), true)
-#long_reads=$(reads).fa.gz
-#endif
+ifndef readsFof
+$(error readsFof is not set)
+endif
+
 
 # parameters
 d=4000
@@ -109,6 +104,7 @@ help:
 	@echo "	t	step of sliding window when extracting k-mer pairs from long reads"
 	@echo "			(default -t 2, optional)"
 	@echo "			Multiple steps are separated by comma. eg. -t 10,5"
+	@echo " j	threads  (default -j 3, optional)"
 	@echo "	o	offset position for extracting k-mer pairs (default -o 0, optional)"
 	@echo "	e	error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10%"
 	@echo "		(default -e 0.1, optional)"
@@ -137,7 +133,6 @@ empty.fof:
 	touch $@
 
 $(b).tigpair_checkpoint.tsv : $(draft) $(readsFof)
-	echo $(d)
 	$(gtime) $(bin)/src/LINKS_CPP -f $(draft) -s $(readsFof) $(r_conditional) $r -d $d -k $k -t $t -o $o -e $e -z $z -p $p -b $b -v $v -x $x
 
 $(b).scaffold.fa : $(b).tigpair_checkpoint.tsv empty.fof
