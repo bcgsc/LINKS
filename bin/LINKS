@@ -40,71 +40,72 @@ SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 while getopts "f:s:m:d:k:t:j:o:e:l:a:z:b:r:p:x:v:" args; do
     case $args in
         f)
-            f=${OPTARG}
-	        f="draft=${f}"
+            lf=${OPTARG}
+	        lf="draft=${lf}"
             ;;
         s)
-            s=${OPTARG}
-	        s="readsFof=${s}"
+            ls=${OPTARG}
+	        ls="readsFof=${ls}"
             ;;
         m)
-            m=${OPTARG}
+            lm=${OPTARG}
+            lm="m=${lm}"
             ;;
         d)
-            d=${OPTARG}
-	        d="d=${d}"
+            ld=${OPTARG}
+	        ld="d=${ld}"
             ;;
         k)
-            k=${OPTARG}
-	        k="k=${k}"
+            lk=${OPTARG}
+	        k="k=${lk}"
             ;;
         t)
-            t=${OPTARG}
-	        t="t=${t}"
+            lt=${OPTARG}
+	        lt="t=${lt}"
             ;;
         j)
-            j=${OPTARG}
-	        j="j=${j}"
+            lj=${OPTARG}
+	        lj="j=${lj}"
             ;;
 	    o)
-            o=${OPTARG}
-	        o="o=${o}"
+            lo=${OPTARG}
+	        lo="o=${lo}"
             ;;
         e)
-            e=${OPTARG}
-	        e="e=${e}"
+            le=${OPTARG}
+	        le="e=${le}"
             ;;
         l)
-            l=${OPTARG}
-	        l="l=${l}"
+            ll=${OPTARG}
+	        ll="l=${ll}"
             ;;
         a)
-            a=${OPTARG}
-	        a="a=${a}"
+            la=${OPTARG}
+	        la="a=${la}"
             ;;
 	    z)
-            z=${OPTARG}
-	        z="z=${z}"
+            lz=${OPTARG}
+	        lz="z=${lz}"
             ;;
         b)
-            b=${OPTARG}
-	        b="b=${b}"
+            lb=${OPTARG}
+	        lb="b=${lb}"
             ;;
         r)
-            r=${OPTARG}
-	        r="r=${r}"
+            lr=${OPTARG}
+	        lr="r=${lr}"
             ;;
         p)
-            p=${OPTARG}
-	        p="p=${p}"
+            lp=${OPTARG}
+	        lp="p=${lp}"
             ;;
 	    x)
-            x=${OPTARG}
-	        x="x=${x}"
+            lx=${OPTARG}
+	        lx="x=${lx}"
             ;;
         v)
-            v=${OPTARG}
-            v="v=${v}"
+            lv=${OPTARG}
+            lv="v=${lv}"
             ;;
         *)
             usage
@@ -114,12 +115,12 @@ done
 shift $((OPTIND-1))
 
 # Check if draft genome and long read fof is provided
-if [ -z "${f}" ] || [ -z "${s}" ]; then
+if [ -z "${lf}" ] || [ -z "${ls}" ]; then
     usage
     exit 1
 fi
 
-echo "Running Command: $SCRIPT_DIR/LINKS-make LINKS $f $s $m $d $k $t $o $e $l $a $z $b $r $p $x $v"
+echo "Running Command: $SCRIPT_DIR/LINKS-make LINKS $lf $ls $lm $ld $lk $lt $lo $le $ll $la $lz $lb $lr $lp $lx $lv"
 # Running LINKS-make
-$SCRIPT_DIR/LINKS-make LINKS $f $s m=$m $d $k $t $o $e $l $a $z $b $r $p $x $v
+$SCRIPT_DIR/LINKS-make LINKS $lf $ls $lm $ld $lk $lt $lo $le $ll $la $lz $lb $lr $lp $lx $lv
 
