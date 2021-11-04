@@ -220,7 +220,6 @@ private:
 
   std::string seq_file;
   std::queue<std::string> long_reads;
-  // long id;
 
   size_t read_buffer_size = 16;
   size_t read_block_size = 4;
@@ -298,14 +297,12 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
       std::cout << "Checking Bloom filter file " << links_arg_parser->bf_file
                 << "...ok\n";
     }
-    // std::cout << "Loading bloom filter of size " <<
-    // getFileSize(linksArgParser->bfFile) << " from " << linksArgParser->bfFile
-    // << "\n";
+
     assembly_BF = new btllib::KmerBloomFilter(links_arg_parser->bf_file);
   } else {
     uint64_t m = ceil((-1 * (double)bf_elements * log(links_arg_parser->fpr)) /
                       (log(2) * log(2)));
-    // uint64_t rem = 64 - (m % 64);
+
     m = ((uint64_t)(m / 8) + 1) * 8;
     std::cout << "HASHES CALC: " << std::to_string(((double)m / bf_elements))
               << " second: "
@@ -322,28 +319,23 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
     std::string reading_tigbloom_message =
         "\n\n=>Reading contig/sequence assembly file : " +
         std::to_string(time(0)) + "\n";
-    // assemblyruninfo += reading_tigbloom_message;
-    // std::cout << "- Filter output file : " << outFileBf << "\n";
+
     std::cout << "- Filter output file : " << links_arg_parser->k << "\n";
     assembly_BF =
         new btllib::KmerBloomFilter(m / 8, hash_fct, links_arg_parser->k);
     btllib::SeqReader assembly_reader(links_arg_parser->assembly_file, 8, 1);
     size_t builder = 0;
     for (btllib::SeqReader::Record record; (record = assembly_reader.read());) {
-      if (builder % 10 == 0) {
-        // std::cout << "reading... builder: " << builder << "\n";
-      }
+
       builder++;
       assembly_BF->insert(record.seq);
     }
     std::string bfmsg = "\n\nWriting Bloom filter to disk (" +
                         links_arg_parser->bf_file +
                         ") : " + std::to_string(time(0)) + "\n";
-    // assemblyruninfo += bfmsg;
     std::cout << bfmsg;
     assembly_BF->save(".bloom");
     std::cout << "Done mybf, printing stats...\n";
-    // printBloomStats(*assembly_BF, std::cout);
   }
   return assembly_BF;
 }
@@ -373,9 +365,6 @@ inline void LINKS::write_from_block_to_map() {
   btllib::OrderQueueSPMC<BufferMatePairData>::Block mate_pair_block(
       mate_pair_block_size);
 
-  // mate_pair.reserve(1000000000);
-  // mates.reserve(1000000000);
-
   for (;;) {
     if (mate_pair_block.current == mate_pair_block.count) {
       mate_pair_input_queue.read(mate_pair_block);
@@ -397,16 +386,10 @@ inline void LINKS::write_from_block_to_map() {
       mates.insert(mate_data.kmer_2_hash);
     }
   }
-  // std::cout << "writer leaves\n";
-  // std::cout << "mate_pair.size() " << mate_pair.size() << std::endl;
-  // std::cout << "mates.size() " << mates.size() << std::endl;
 }
 inline void LINKS::write_from_block_to_set() {
   btllib::OrderQueueSPMC<BufferMateData>::Block mate_block(
       mate_pair_block_size);
-
-  // for fast testing
-  // track_all_test.reserve(10000000);
 
   for (;;) {
     if (mate_block.current == mate_block.count) {
@@ -427,9 +410,6 @@ inline void LINKS::write_from_block_to_set() {
       track_all_test[mate_data.hash].multiple += 1;
     }
   }
-  // std::cout << "writer leaves\n";
-  // std::cout << "mate_pair.size() " << mate_pair.size() << std::endl;
-  // std::cout << "mates.size() " << mates.size() << std::endl;
 }
 
 inline void LINKS::InputWorker::work() {
@@ -816,11 +796,8 @@ inline void LINKS::pair_contigs() {
       std::string, std::unordered_map<
                        int64_t, std::unordered_map<std::string, PairLinkInfo>>>
       pair;
-  // std::unordered_map<std::string, std::unordered_map<std::string,
-  // PairLinkInfo> >simplePair;
   std::unordered_map<std::string, PairLinkInfo> err;
-  // std::string order1;
-  // std::string order2;
+
   if (verbose)
     std::cout << "Pairing contigs...\n";
   std::ofstream issues_file;
@@ -866,8 +843,6 @@ inline void LINKS::pair_contigs() {
       low_iz = insert_size + min_allowed;              // check int
       up_iz = insert_size - min_allowed;               // check int
 
-      // if(verbose) std::cout << "Pair read1Hash=" << matePairItr->first << "
-      // read2Hash=" << mateListItr->first << "\n";
 
       if (track_all_test[mate_pair_iterator->first.first].tig != "" &&
           track_all_test[mate_pair_iterator->first.second].tig !=
@@ -931,9 +906,7 @@ inline void LINKS::pair_contigs() {
                       << mate_pair_iterator->first.second
                       << ") located on same contig " << tig_a << " ("
                       << A_length << " nt)\n";
-          // std::cout << "Pair (" << matePairItr->first << " and " <<
-          // mateListItr->first << ") located on same contig " << tig_a << " ("
-          // << A_length << " nt)\n";
+
           uint64_t pet_size = 0;
           if (A_start > B_start && (B_start < B_end) &&
               (A_start > A_end)) { // B --> <-- A
@@ -957,12 +930,6 @@ inline void LINKS::pair_contigs() {
                   << " Aend:" << A_end << " Bstart:" << B_start
                   << " Bend:" << B_end
                   << " CALCULATED DISTANCE APART: " << pet_size << "\n";
-              // issues_file << "Pairs unsatisfied in distance within a contig.
-              // Pair (" << matePairItr->first << " - " << mateListItr->first <<
-              // ") on contig " << tig_a << " (" << A_length << " nt) Astart:" <<
-              // A_start << " Aend:" << A_end << " Bstart:" << B_start << "
-              // Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size <<
-              // "\n";
               ct_iz_issues++;
               if (ct_iz_issues_hash.find(insert_size) ==
                   ct_iz_issues_hash.end()) {
@@ -993,11 +960,6 @@ inline void LINKS::pair_contigs() {
                   << " (" << A_length << " nt) Astart:" << A_start
                   << " Aend:" << A_end << " Bstart:" << B_start
                   << " Bend:" << B_end << "\n";
-              // issues_file << "Pairs unsatisfied in distance within a contig.
-              // Pair (" << matePairItr->first << " - " << mateListItr->first <<
-              // ") on contig " << tig_a << " (" << A_length << " nt) Astart:" <<
-              // A_start << " Aend:" << A_end << " Bstart:" << B_start << "
-              // Bend:" << B_end << "\n";
               ct_iz_issues++;
               if (ct_iz_issues_hash.find(insert_size) ==
                   ct_iz_issues_hash.end()) {
@@ -1016,12 +978,6 @@ inline void LINKS::pair_contigs() {
               ct_illogical_hash[insert_size] =
                   ct_illogical_hash[insert_size] + 1;
             }
-            // FOLLOWING IS NOT A DEBUGGING PRINT
-            // issues_file << "Pairs unsatisfied in pairing logic within a
-            // contig.  Pair (" << matePairItr->first << " - " <<
-            // mateListItr->first << ") on contig" << tig_a << " (" << A_length
-            // << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" <<
-            // B_start << " Bend:" << B_end << "\n";
           }
         }
       } else { // both pairs assembled
@@ -1033,7 +989,6 @@ inline void LINKS::pair_contigs() {
         }
       }
     } else { // if unseen
-      // std::cout << "UNSEEN\n";
       if (mate_pair[std::make_pair(mate_pair_iterator->first.first,
                                    mate_pair_iterator->first.second)]
               .seen == false) {
@@ -1043,52 +998,20 @@ inline void LINKS::pair_contigs() {
   } // pairing read b
   // pairing read a
 
-  // Summary of the contig pair issues
-  // std::cout << "------------- Putative issues with contig pairing - Summary
-  // ----------------\n"; std::cout << "err map size: " << err.size() << "\n";
-
-  // sortErr(err); TODO: uncomment
   std::unordered_map<std::string, PairLinkInfo>::iterator err_itr;
   for (err_itr = err.begin(); err_itr != err.end(); err_itr++) {
     double mean_iz = 0;
     if (err_itr->second.links) {
       mean_iz = err_itr->second.gaps / err_itr->second.links;
     }
-    // std::cout << "Pair " << err_itr->first << " has " <<
-    // err_itr->second.getLinks() << " Links and mean distance of = " << mean_iz
-    // << "\n";
   }
 
   uint64_t satisfied = ct_ok_pairs + ct_ok_contig;
   uint64_t unsatisfied = ct_problem_pairs + ct_iz_issues + ct_illogical;
   uint64_t ct_both_reads = ct_both * 2;
 
-  // std::cout << "THESE ARE THE FILTERINGS:\n"<< "filter 1: "<<
-  // std::to_string(filter1) << "\n" << "filter 2: "<< std::to_string(filter2) <<
-  // "\n" << "filter 3: "<< std::to_string(filter3) << "\n" << "filter 4: "<<
-  // std::to_string(filter4) << "\n"; std::cout << "THESE ARE THE COUNTERS:\n" <<
-  // std::to_string(CheckCounterBase) << "\n0 " << std::to_string(Check0Counter)
-  // << "\n1 " <<  std::to_string(Check1Counter) << "\n2 " <<
-  // std::to_string(Check2Counter) << "\n3 " <<  std::to_string(Check3Counter) <<
-  // "\n4 " <<  std::to_string(Check4Counter) << "\n5 " <<
-  // std::to_string(Check5Counter) << "\n6 " <<  std::to_string(Check6Counter) <<
-  // "\n7 " <<  std::to_string(Check7Counter) << "\n8 " <<
-  // std::to_string(Check8Counter) << "\n9 " <<  std::to_string(Check9Counter) <<
-  // "\n10 " << std::to_string(Check10Counter) << "\n11 " <<
-  // std::to_string(Check11Counter) << "\n12 " << std::to_string(Check12Counter)
-  // << "\n13 " << std::to_string(Check13Counter) << "\n14 " <<
-  // std::to_string(Check14Counter) << "\n15 " << std::to_string(Check15Counter)
-  // << "\n16 " << std::to_string(Check16Counter) << "\n17 " <<
-  // std::to_string(Check17Counter) << "\n18 " << std::to_string(Check18Counter)
-  // << "\n19" << std::to_string(Check19Counter) << "\n20 " <<
-  // std::to_string(Check20Counter) << "\n21 " << std::to_string(Check21Counter)
-  // << "\n22 " << std::to_string(Check22Counter) << "\n23 " <<
-  // std::to_string(Check23Counter) << "\n24 " << std::to_string(Check24Counter)
-  // << "\n25 " << std::to_string(Check25Counter) << "\n26 " <<
-  // std::to_string(Check26Counter) << "\n";
+  
   std::cout << "\n===========PAIRED K-MER STATS===========\n";
-  // std::cout << "Total number of pairs extracted from -s " << long_readsFile
-  // << " " << totalPairs << "\n";
   std::cout << "At least one sequence/pair missing from contigs: " << ct_single
             << "\n";
   std::cout << "Ambiguous kmer pairs (both kmers are ambiguous): "
@@ -1117,41 +1040,15 @@ inline void LINKS::pair_contigs() {
             << "\n\nBreakdown by distances (-d):\n";
 
   std::cout << "ct_both: " << ct_both << std::endl;
-  // sortInsertSize(ct_both_hash); TODO: uncomment
   std::unordered_map<uint64_t, uint64_t>::iterator itr_IS;
   std::cout << "ct_both_hash map size: " << err.size() << "\n";
   for (itr_IS = ct_both_hash.begin(); itr_IS != ct_both_hash.end(); itr_IS++) {
     std::cout << "--------k-mers separated by " << itr_IS->first
               << " bp (outer distance)--------\n";
-    // int64_t maopt = -1 * (insert_stdev * itr_IS->first);
-    // int64_t low_izopt = itr_IS->first + maopt;
-    // int64_t up_izopt = itr_IS->first - maopt;
-    /*
-    std::cout <<  "MIN: " << low_izopt << " MAX: " << up_izopt << "  as defined
-    by  " << itr_IS->first << "  *  " << insert_stdev << " \n"; std::cout << "At
-    least one sequence/pair missing:  " << ct_single_hash[itr_IS->first] << "
-    \n"; std::cout <<  "Assembled pairs:  " << itr_IS->second << " \n";
-    std::cout <<  "\tSatisfied in distance/logic within contigs (i.e. -> <-,
-    distance on target:  " << ct_ok_contig_hash[itr_IS->first] << " \n";
-    std::cout <<  "\tUnsatisfied in distance within contigs (i.e. distance
-    out-of-bounds):  " << ct_iz_issues_hash[itr_IS->first] << " \n"; std::cout
-    <<  "\tUnsatisfied pairing logic within contigs (i.e. illogical pairing
-    ->->, <-<- or <-->):  " << ct_illogical_hash[itr_IS->first] << " \n";
-    std::cout <<  "\t---\n";
-    std::cout <<  "\tSatisfied in distance/logic within a given contig pair
-    (pre-scaffold):  " << ct_ok_pairs_hash[itr_IS->first] << " \n"; std::cout <<
-    "\tUnsatisfied in distance within a given contig pair (i.e. calculated
-    distances out-of-bounds):  " << ct_problem_pairs_hash[itr_IS->first] << "
-    \n";
-    */
   }
   std::cout << "============================================\n";
   std::ofstream dist_file;
   dist_file.open("distfile.txt");
-  // if (dist_file.is_open()) {} else {}
-  // foreach my $is (sort {$a<=>$b} keys %$track_insert){
-  //     print CSV "$is,$track_insert->{$is}\n";
-  // }
   dist_file.close();
 
   // TIGPAIR CHECKPOINT
@@ -1162,7 +1059,7 @@ inline void LINKS::pair_contigs() {
       std::unordered_map<
           int64_t, std::unordered_map<std::string, PairLinkInfo>>>::iterator
       pair_itr;
-  // std::cout << "size of TIGPAIR: " << pair.size() << "\n";
+
   for (pair_itr = pair.begin(); pair_itr != pair.end(); pair_itr++) {
     std::unordered_map<int64_t,
                        std::unordered_map<std::string, PairLinkInfo>>::iterator
@@ -1179,10 +1076,7 @@ inline void LINKS::pair_contigs() {
       }
     }
   }
-  // if (dist_file.is_open()) {} else {}
-  // foreach my $is (sort {$a<=>$b} keys %$track_insert){
-  //     print CSV "$is,$track_insert->{$is}\n";
-  // }
+
   tigpair_checkpoint_file.close();
 }
 
