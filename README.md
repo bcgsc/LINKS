@@ -34,7 +34,6 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 If cloning directly from the repository run:
 
 ```
-cd releases/links_v2.0.0/
 git submodule init
 git submodule update
 ```
@@ -59,11 +58,17 @@ To install LINKS in a specified directory:
 
 ### Running LINKS v2.0.0
 -------------------------------
-Users can run `LINKS` (shell script) to run whole pipeline smoothly with LINKS parameters (such as -d xx -t yy) as pre 2.0.0 versions.
+
+Add `bin` folder to your path
+```
+export PATH=$(pwd)/bin:$PATH
+```
+
+Users can run `LINKS` (shell script in bin folder) to run whole pipeline smoothly with LINKS parameters (such as -d xx -t yy) as pre 2.0.0 versions.
 
 To run LINKS with default parameters with `LINKS`:
 ```
-./releases/links_v2.0.0/LINKS -f NA1281_draft.fa -s NA1281_reads.fof
+LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
 * *LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and has different argument value assignment (such as d=xx t=yy instead of -d xx -t yy).
