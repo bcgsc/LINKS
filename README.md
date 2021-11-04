@@ -10,7 +10,7 @@ Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg
 # LINKS
 
 ## Long Interval Nucleotide K-mer Scaffolder
-## LINKS v2.0.0 Rene L. Warren, Yaman Malkoc, T. Murathan Goktas 2014-2021
+## LINKS v2.0.0 René L. Warren, Yaman Malkoc, T. Murathan Goktas 2014-2021
 ## email: rwarren [at] bcgsc [dot] ca
 
 
@@ -65,7 +65,7 @@ Add `bin` folder to your path
 export PATH=$(pwd)/bin:$PATH
 ```
 
-Users can run `LINKS` (shell script in bin folder) to run whole pipeline smoothly with LINKS parameters (such as -d xx -t yy) as pre 2.0.0 versions.
+Users can run `LINKS` (shell script in bin folder) to run the whole pipeline smoothly with LINKS parameters (such as -d xx -t yy) as pre 2.0.0 versions.
 
 To run LINKS with default parameters with `LINKS`:
 ```
