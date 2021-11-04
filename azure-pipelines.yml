@@ -16,7 +16,6 @@ jobs:
       sudo apt-get install -qq automake
     displayName: Install C++ modules
   - script: |
-      cd releases/links_v2.0.0/
       git submodule init
       git submodule update
       ./autogen.sh
@@ -24,7 +23,6 @@ jobs:
       make
     displayName: Compile LINKS
   - script: |
-      cd releases/links_v2.0.0/
       mkdir CI_TEST && cd CI_TEST
       sudo apt-get install -qq wget
       wget http://www.bcgsc.ca/downloads/supplementary/LINKS/K12_full2dONT_longread.fa
