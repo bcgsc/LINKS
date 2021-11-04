@@ -35,7 +35,7 @@ usage() {
 	";
 	}
 
-SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+SCRIPT_DIR=$(dirname $0)
 
 while getopts "f:s:m:d:k:t:j:o:e:l:a:z:b:r:p:x:v:" args; do
     case $args in
