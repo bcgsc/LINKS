@@ -106,6 +106,7 @@ public:
            "re-scaffold on. default -d 4000, optional)\n"
            "  \tMultiple distances are separated by comma. eg. -d "
            "500,1000,2000,3000\n"
+           "  -j  threads  (default -j 3, optional) "
            "  -k  k-mer value (default -k 15, optional)\n"
            "  -t  step of sliding window when extracting k-mer pairs from long "
            "reads (default -t 2, optional)\n"
