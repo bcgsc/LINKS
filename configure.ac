@@ -6,7 +6,6 @@ AC_PROG_CXX
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/main.cpp])
 
-SUBDIRS = src bin
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
