@@ -3,13 +3,7 @@
 # Written by Murathan Goktas
 #Default Parameters
 
-ifndef draft
-$(error draft genome (draft) parameter is not set)
-endif
 
-ifndef readsFof
-$(error reads fof (readsFof) parameter is not set)
-endif
 
 
 # parameters
@@ -105,7 +99,7 @@ help:
 	@echo "	t	step of sliding window when extracting k-mer pairs from long reads"
 	@echo "			(default -t 2, optional)"
 	@echo "			Multiple steps are separated by comma. eg. -t 10,5"
-	@echo " j	threads  (default -j 3, optional)"
+	@echo "	j	threads  (default -j 3, optional)"
 	@echo "	o	offset position for extracting k-mer pairs (default -o 0, optional)"
 	@echo "	e	error (%) allowed on -d distance   e.g. -e 0.1  == distance +/- 10%"
 	@echo "		(default -e 0.1, optional)"
@@ -141,3 +135,4 @@ $(b).scaffold.fa : $(b).tigpair_checkpoint.tsv empty.fof
 
 # Run LINKS
 LINKS: $(b).scaffold.fa
+	
