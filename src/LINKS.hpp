@@ -930,12 +930,6 @@ inline void LINKS::pair_contigs() {
                   << " Aend:" << A_end << " Bstart:" << B_start
                   << " Bend:" << B_end
                   << " CALCULATED DISTANCE APART: " << pet_size << "\n";
-              // issues_file << "Pairs unsatisfied in distance within a contig.
-              // Pair (" << matePairItr->first << " - " << mateListItr->first <<
-              // ") on contig " << tig_a << " (" << A_length << " nt) Astart:" <<
-              // A_start << " Aend:" << A_end << " Bstart:" << B_start << "
-              // Bend:" << B_end << " CALCULATED DISTANCE APART: " << pet_size <<
-              // "\n";
               ct_iz_issues++;
               if (ct_iz_issues_hash.find(insert_size) ==
                   ct_iz_issues_hash.end()) {
@@ -966,11 +960,6 @@ inline void LINKS::pair_contigs() {
                   << " (" << A_length << " nt) Astart:" << A_start
                   << " Aend:" << A_end << " Bstart:" << B_start
                   << " Bend:" << B_end << "\n";
-              // issues_file << "Pairs unsatisfied in distance within a contig.
-              // Pair (" << matePairItr->first << " - " << mateListItr->first <<
-              // ") on contig " << tig_a << " (" << A_length << " nt) Astart:" <<
-              // A_start << " Aend:" << A_end << " Bstart:" << B_start << "
-              // Bend:" << B_end << "\n";
               ct_iz_issues++;
               if (ct_iz_issues_hash.find(insert_size) ==
                   ct_iz_issues_hash.end()) {
@@ -989,12 +978,6 @@ inline void LINKS::pair_contigs() {
               ct_illogical_hash[insert_size] =
                   ct_illogical_hash[insert_size] + 1;
             }
-            // FOLLOWING IS NOT A DEBUGGING PRINT
-            // issues_file << "Pairs unsatisfied in pairing logic within a
-            // contig.  Pair (" << matePairItr->first << " - " <<
-            // mateListItr->first << ") on contig" << tig_a << " (" << A_length
-            // << " nt) Astart:" << A_start << " Aend:" << A_end << " Bstart:" <<
-            // B_start << " Bend:" << B_end << "\n";
           }
         }
       } else { // both pairs assembled
@@ -1006,7 +989,6 @@ inline void LINKS::pair_contigs() {
         }
       }
     } else { // if unseen
-      // std::cout << "UNSEEN\n";
       if (mate_pair[std::make_pair(mate_pair_iterator->first.first,
                                    mate_pair_iterator->first.second)]
               .seen == false) {
@@ -1016,7 +998,6 @@ inline void LINKS::pair_contigs() {
   } // pairing read b
   // pairing read a
 
-  // sortErr(err); TODO: uncomment
   std::unordered_map<std::string, PairLinkInfo>::iterator err_itr;
   for (err_itr = err.begin(); err_itr != err.end(); err_itr++) {
     double mean_iz = 0;
@@ -1059,7 +1040,6 @@ inline void LINKS::pair_contigs() {
             << "\n\nBreakdown by distances (-d):\n";
 
   std::cout << "ct_both: " << ct_both << std::endl;
-  // sortInsertSize(ct_both_hash); TODO: uncomment
   std::unordered_map<uint64_t, uint64_t>::iterator itr_IS;
   std::cout << "ct_both_hash map size: " << err.size() << "\n";
   for (itr_IS = ct_both_hash.begin(); itr_IS != ct_both_hash.end(); itr_IS++) {
