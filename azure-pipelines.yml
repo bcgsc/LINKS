@@ -28,6 +28,10 @@ jobs:
       wget http://www.bcgsc.ca/downloads/supplementary/LINKS/K12_full2dONT_longread.fa
       wget http://www.bcgsc.ca/downloads/supplementary/LINKS/ecoliK12_abyss_illumina_contig_baseline.fa
       echo K12_full2dONT_longread.fa >> K12_F2D.fof
+    displayName: Download test files
+  - script: |
       ../src/LINKS_CPP -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -d 4000 -k 15 -t 2 -o 0 -e 0.1 -z 500 -p 0.001 -b CI_TEST_1 -v 1 -x 0
+    displayName: Run test on C++ binary
+  - script: |
       ../bin/LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -d 4000 -k 15 -t 2 -o 0 -e 0.1 -z 500 -p 0.001 -b CI_TEST_2 -v 1 -x 0
-    displayName: Run basic test
+    displayName: Run test on Makefile wrapper shell script
