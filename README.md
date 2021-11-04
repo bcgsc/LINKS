@@ -80,7 +80,7 @@ LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 * ~5x less memory usage
 * ~3x faster run time
 * no need for compiling SWIG Bloom filter wrappers 
-* drastically lower memory requirements enables extracting more information from reads using smaller step sizes (`-t`) and more distances (`-d`). 
+* drastically lower memory requirements enables extracting more information from reads using smaller step sizes (`-t`) and more distances (`-d`) in a single LINKS run 
 
 
 ### What's new in v1.8.7 ?
