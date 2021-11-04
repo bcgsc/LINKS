@@ -71,13 +71,11 @@ public:
   std::vector<uint32_t> distances = {4000};
   std::string step_sizes_text = "2";
   std::vector<uint16_t> step_sizes = {2};
-  // uint64_t distances = 4000;
   uint64_t k = 15;
   bool verbose = false;
   uint64_t min_links = 5;
   uint64_t min_size = 500;
   float max_link_ratio = 0.3;
-  // uint64_t step = 2;
   // Added for MPET
   uint64_t read_length;     // MPET
   float insert_stdev = 0.1; // MPET (Need to adjust to a wider-range of
@@ -135,19 +133,12 @@ public:
            "  -x  Turn off Bloom filter functionality (-x 1 = yes, default = "
            "no, optional)\n"
            "  -v  Runs in verbose mode (-v 1 = yes, default = no, optional)\n";
-
-    //  nError: Missing mandatory options -f and -s.\n\n";
   }
   void print_opts() {
-    // Command to test all input parsing
-    // -f inputFasta.fa -s fofLongReads.txt -m 10 -d 20 -k 30 -t 40 -o 50
-    // -e 60.45 -l 70 -a 1.345 -z 80 -b mybase -r myBloomFilter -p 0.003 -x 34
-    // -v
-
     std::cout << "  -f " << assembly_file << "\n"
               << "  -s " << fof_file << "\n"
               << "  -m " << read_length << "\n"
-              << "  -d " << distances_text << "\n" // TODO: print distances
+              << "  -d " << distances_text << "\n"
               << "  -k " << k << "\n"
               << "  -j " << thread << "\n"
               << "  -t " << step_sizes_text << "\n"
@@ -162,12 +153,6 @@ public:
               << "  -x " << bf_off << "\n"
               << "  -v " << verbose << "\n";
   }
-
-  // std::string bfout = $base_name . ".bloom";
-  // $base_name = $assemblyfile . ".scaff_s-" . $fof_file . "_d" . $distances .
-  // "_k" . $k . "_e" . $insert_stdev . "_l" . $min_links . "_a" .
-  // $max_link_ratio . "_z" . $min_size . "_t" . $step . "_o" . $offset . "_r-"
-  // . $bf_file . "_p" . $fpr . "_x" . $bfoff . "_m" . $readlength;
 
   InputParser() = default;
 
@@ -202,7 +187,6 @@ public:
       case 't':
         step_sizes_text.assign(optarg);
         step_sizes = split_step_sizes_input(step_sizes_text);
-        // step = strtoul(optarg, &end, BASE_TEN);
         break;
       case 'j':
         thread = strtoul(optarg, &end, BASE_TEN);
