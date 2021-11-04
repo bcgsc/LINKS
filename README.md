@@ -59,7 +59,7 @@ To install LINKS in a specified directory:
 ### Running LINKS v2.0.0
 -------------------------------
 
-## Add `bin` folder to your path
+Add `bin` folder to your path
 ```
 export PATH=$(pwd)/bin:$PATH
 ```
@@ -72,8 +72,6 @@ LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
 * *LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and has different argument value assignment (such as d=xx t=yy instead of -d xx -t yy).
-
-### Adding executables to PATH
 
 ### What's new in v2.0.0 ?
 ---------------------
