@@ -35,6 +35,8 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 If cloning directly from the repository run:
 
 ```
+git clone git@github.com:bcgsc/LINKS.git
+cd LINKS
 git submodule init
 git submodule update
 ```
@@ -60,14 +62,14 @@ To install LINKS in a specified directory:
 ### Running LINKS v2.0.0
 -------------------------------
 
-Add `bin` folder to your path
+Add `bin` folder to your path when you are in the top level directory of the repo:
 ```
 export PATH=$(pwd)/bin:$PATH
 ```
 
 Users can run `LINKS` (shell script in bin folder) to run the whole pipeline smoothly with LINKS parameters (such as -d xx -t yy) as pre 2.0.0 versions.
 
-To run LINKS with default parameters with `LINKS`:
+To run LINKS with default parameters with `bin/LINKS`, assuming `bin` folder is in path:
 ```
 LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
