@@ -32,9 +32,11 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 
 ### Compilation:
 -------------------------------
-If cloning directly from the repository run:
+If compiling directly from within the repository you need also bundled copy of ./btllib so that `"btllib/bloom_filter.hpp"` can be found during compilation:
 
 ```
+git clone https://github.com/bcgsc/LINKS.git
+cd LINKS
 git submodule init
 git submodule update
 ```
@@ -57,10 +59,12 @@ To install LINKS in a specified directory:
 ```
 * *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz
 
+The `make install` does NOT install `./bin/LINKS-make` and `./bin/LINKS.pl` files nor `./tools/*.pl` files. It is just incomplete. Run LINKS from the compiled source tree directory until that is fixed.
+
 ### Running LINKS v2.0.0
 -------------------------------
 
-Add `bin` folder to your path
+Add `bin` folder of the unpacked and compiled source tree to your path
 ```
 export PATH=$(pwd)/bin:$PATH
 ```
