@@ -35,10 +35,8 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 If cloning directly from the repository run:
 
 ```
-git clone git@github.com:bcgsc/LINKS.git
+git clone --recursive https://github.com/bcgsc/LINKS.git
 cd LINKS
-git submodule init
-git submodule update
 ```
 
 Generate autotools scripts:
@@ -52,17 +50,14 @@ To compile LINKS run:
 ```
 ./configure && make
 ```
-To install LINKS in a specified directory:
+* Do not run `install` command to copy required executables to your path. Add the `bin` folder to your path as described in the next section. Support for `install` command is under development.
 
-```
-./configure --prefix=/LINKS/PATH && make install
-```
 * *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz
 
 ### Running LINKS v2.0.0
 -------------------------------
 
-Add `bin` folder to your path when you are in the top level directory of the repo:
+Add `bin` folder to your path when you are in the top level directory of the source tree:
 ```
 export PATH=$(pwd)/bin:$PATH
 ```
