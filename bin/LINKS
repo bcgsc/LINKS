@@ -9,10 +9,6 @@ usage() {
 		Usage:  LINKS v2.0.0  
                 -f  sequences to scaffold (Multi-FASTA format, required)
                 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
-                -m  MPET reads (default -m 1 = yes, default = no, optional)
-                     DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s
-                    Paired MPET reads in their original outward orientation <- -> must be separated by :
-                    >template_name\t  ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC
                 -d  distance between k-mer pairs (ie. target distances to re-scaffold on. default -d 4000, optional)
                     Multiple distances are separated by comma. eg. -d 500,1000,2000,3000
                 -k  k-mer value (default -k 15, optional)
