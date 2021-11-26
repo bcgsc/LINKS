@@ -334,7 +334,7 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
                         links_arg_parser->bf_file +
                         ") : " + std::to_string(time(0)) + "\n";
     std::cout << bfmsg;
-    assembly_BF->save(".bloom");
+    assembly_BF->save(links_arg_parser->bf_file + ".bloom");
     std::cout << "Done mybf, printing stats...\n";
   }
   return assembly_BF;
