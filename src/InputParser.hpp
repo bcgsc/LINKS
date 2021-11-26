@@ -56,7 +56,6 @@ private:
     std::string read_file;
     while (infile >> read_file) {
       long_reads.push(read_file);
-      std::cout << long_reads.back() << std::endl;
     }
 
     return long_reads;
@@ -77,6 +76,7 @@ public:
   uint64_t min_size = 500;
   float max_link_ratio = 0.3;
   // Added for MPET
+  bool MPET_data = false;
   uint64_t read_length;     // MPET
   float insert_stdev = 0.1; // MPET (Need to adjust to a wider-range of
                             // distances when dealing with MPET)
@@ -87,6 +87,7 @@ public:
   float fpr = 0.001;
   bool bf_off = false;
   uint thread = 3;
+  bool e_opt_override = false; // overrides MPET-induced changes if -e provided 
 
   static void print_usage() {
     std::cout
@@ -136,6 +137,7 @@ public:
            "  -v  Runs in verbose mode (-v 1 = yes, default = no, optional)\n";
   }
   void print_opts() {
+    std::cout << "\nLINKS running options:" << "\n";
     std::cout << "  -f " << assembly_file << "\n"
               << "  -s " << fof_file << "\n"
               << "  -m " << read_length << "\n"
@@ -176,7 +178,10 @@ public:
         break;
       case 'm':
         read_length = strtoul(optarg, &end, BASE_TEN);
-        insert_stdev = 0.5;
+        MPET_data = true;
+        if (!e_opt_override) {
+          insert_stdev = 0.5;
+        }
         break;
       case 'd':
         distances_text.assign(optarg);
@@ -200,6 +205,7 @@ public:
         break;
       case 'e':
         insert_stdev = strtof(optarg, &end);
+        e_opt_override = true;
         break;
       case 'l':
         min_links = strtoul(optarg, &end, BASE_TEN);
@@ -242,6 +248,9 @@ public:
     if (distances.size() < step_sizes.size()) {
       std::cerr << "\n Number of provided distances can't be lower than number "
                    "of step sizes provided.\n";
+    }
+    if (e_opt_override) {
+
     }
     if (base_name == "") {
       // copied from v1.8.7 -- add pid to basename
