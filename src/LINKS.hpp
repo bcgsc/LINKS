@@ -826,7 +826,7 @@ inline void LINKS::pair_contigs() {
   uint64_t ct_illogical = 0, ct_ok_contig = 0,
            ct_problem_pairs = 0, ct_iz_issues = 0, ct_single = 0,
            ct_multiple = 0, ct_both = 0, track_insert = 0;
-  std::unordered_map<uint64_t, uint64_t> ct_single_hash, ct_both_hash,
+  std::unordered_map<uint64_t, uint64_t> ct_both_hash,
       ct_illogical_hash, ct_ok_contig_hash, ct_ok_pairs_hash,
       ct_problem_pairs_hash, ct_iz_issues_hash;
   // Mapping of tiga_head -> insertSize -> tigb_head -> links & gaps
@@ -958,11 +958,32 @@ inline void LINKS::pair_contigs() {
                       << ") located on same contig " << tig_a << " ("
                       << tig_length[kmer1.tig] << " nt)\n";
           uint64_t pet_size = 0;
-          if (kmer1.start > kmer2.start && (kmer2.start  < kmer2.start ) &&
-              (kmer1.start > kmer1.end)) { // B --> <-- A
+          if(kmer1.orient == kmer2.orient) { // if kmer1 is forward
+            if(kmer1.start > kmer2.start) { // if kmer2 is forward
+                                // A-> B->
+              pet_size = kmer1.start - kmer2.start;
+              if (pet_size >= low_iz && pet_size <= up_iz) {
+                ct_ok_contig++;
+              } else {
+                ct_iz_issues++;
+              }
+            } else {
+              pet_size = kmer2.start - kmer1.start;
+              if (pet_size >= low_iz && pet_size <= up_iz) {
+                ct_ok_contig++;
+              } else {
+                ct_iz_issues++;
+              }
+            }
+          } else {
+            ct_illogical++;
+          }
+          /*
+          if (kmer1.start > kmer2.start && kmer2.end  < kmer2.end  &&
+              kmer1.start > kmer1.end) { // B --> <-- A
             std::cout << "here 11\n";
             pet_size = kmer1.start - kmer2.start;
-            //track_insert += pet_size;
+            // track_insert += pet_size;
             if (pet_size >= low_iz && pet_size <= up_iz) {
               std::cout << "here 12\n";
               ct_ok_contig++;
@@ -1035,22 +1056,17 @@ inline void LINKS::pair_contigs() {
                   ct_illogical_hash[insert_size] + 1;
             }
           }
+          */
         }
-      } else { // both pairs assembled
+      }
+    } else if(track_all_test.find(mate_pair_iterator->first.first) == track_all_test.end() ^ 
+    track_all_test.find(mate_pair_iterator->first.second) == track_all_test.end()// one of the kmers is not assembled
+     ) { // either one of the kmers is not assembled
         ct_single++;
-        if (ct_single_hash.find(insert_size) == ct_single_hash.end()) {
-          ct_single_hash[insert_size] = 1;
-        } else {
-          ct_single_hash[insert_size] = ct_single_hash[insert_size] + 1;
-        }
-      }
-    } else { // if unseen
-      if (mate_pair[std::make_pair(mate_pair_iterator->first.first,
-                                   mate_pair_iterator->first.second)]
-              .seen == false) {
-        ct_multiple++;
-      }
-    }
+    } else if(track_all_test.find(mate_pair_iterator->first.first) != track_all_test.end() &&
+          track_all_test.find(mate_pair_iterator->first.second) != track_all_test.end()) {
+            ct_multiple++;
+          }
   } // pairing read b
   // pairing read a
   issues_file.close();
@@ -1069,8 +1085,8 @@ inline void LINKS::pair_contigs() {
 
   
   std::cout << "\n===========PAIRED K-MER STATS===========\n";
-  std::cout << "At least one sequence/pair missing from contigs: " << ct_single
-            << "\n";
+    std::cout << "AAt least one sequence/pair missing from contigs: " //good
+            << ct_single << "\n";
   std::cout << "Ambiguous kmer pairs (both kmers are ambiguous): " //good
             << ct_multiple << "\n";
   std::cout << "Assembled pairs: " << ct_both << " (" << ct_both_reads
