@@ -245,12 +245,18 @@ public:
         step_sizes.push_back(last_step);
       }
     }
+    std::ifstream fof_file_file(fof_file);
+    if(fof_file_file.peek() == std::ifstream::traits_type::eof()) {
+        std:: cerr << "\n File of files for reads cannot be empty (-s)\n";
+        arguments_satisfied = false;
+    }
+    else {
+        std::cout << "here with: " << fof_file << std::endl;
+    }
     if (distances.size() < step_sizes.size()) {
       std::cerr << "\n Number of provided distances can't be lower than number "
                    "of step sizes provided.\n";
-    }
-    if (e_opt_override) {
-
+      arguments_satisfied = false;
     }
     if (base_name == "") {
       // copied from v1.8.7 -- add pid to basename
