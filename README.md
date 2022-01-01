@@ -10,7 +10,7 @@ Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg
 # LINKS
 
 ## Long Interval Nucleotide K-mer Scaffolder
-## LINKS v2.0.0 René L. Warren, Yaman Malkoc, T. Murathan Goktas 2014-2021
+## LINKS v2.0.0 René L. Warren, Yaman Malkoc, T. Murathan Goktas 2014-2022
 ## email: rwarren [at] bcgsc [dot] ca
 
 
