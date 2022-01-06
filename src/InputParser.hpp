@@ -148,7 +148,7 @@ public:
     this->argc = argc;
     static const struct option longopts[] = {{"help", no_argument, &help, 1},
                                              {nullptr, 0, nullptr, 0}};
-    while ((c = getopt_long(argc, argv, "f:s:m:d:k:t:j:o:e:l:a:z:b:r:p:x:v:",
+    while ((c = getopt_long(argc, argv, "f:s:d:k:t:j:o:e:l:a:z:b:r:p:x:v:",
                             longopts, &optindex)) != -1) {
       switch (c) {
       case 0:
