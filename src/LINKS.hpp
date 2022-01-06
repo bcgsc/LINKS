@@ -479,6 +479,7 @@ inline void LINKS::start_read_fasta() {
   
   std::cout << "Reading: " << read_file << std::endl;
   cur_file_read_count = get_read_count(read_file);
+  //cur_file_read_count = 10000000;
 
   extract_mate_pair_workers =
       std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
