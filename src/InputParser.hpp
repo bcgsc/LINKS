@@ -12,7 +12,7 @@
 // Globals
 #define BASE_TEN 10
 static const std::string progname = "LINKS";
-static const std::string version = "2.0.0";
+static const std::string version = "2.0.1";
 
 class InputParser {
 private:
@@ -75,34 +75,20 @@ public:
   uint64_t min_links = 5;
   uint64_t min_size = 500;
   float max_link_ratio = 0.3;
-  // Added for MPET
-  bool MPET_data = false;
-  uint64_t read_length;     // MPET
-  float insert_stdev = 0.1; // MPET (Need to adjust to a wider-range of
-                            // distances when dealing with MPET)
-  std::string base_name =
-      ""; // When set, this will override the MPET-induced changes on -e
+  float insert_stdev = 0.1;
+  std::string base_name = "";
   uint64_t offset = 0;
   std::string bf_file = "";
   float fpr = 0.001;
   bool bf_off = false;
   uint thread = 3;
-  bool e_opt_override = false; // overrides MPET-induced changes if -e provided 
 
   static void print_usage() {
     std::cout
         << "Usage:  " << progname << " " << version << "\n"
         << "  -f  sequences to scaffold (Multi-FASTA format, required)\n"
-           "  -s  file-of-filenames, full path to long sequence reads or MPET "
+           "  -s  file-of-filenames, full path to long sequence reads"
            "pairs [see below] (Multi-FASTA/fastq format, required)\n"
-           "  -m  MPET reads (default -m 1 = yes, default = no, optional)\n"
-           "  \t! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A "
-           "SPECIAL FORMAT UNDER -s\n"
-           "  \t! Paired MPET reads in their original outward orientation <- "
-           "-> must be separated by \":\"\n"
-           "  \t  >template_name\n\t  "
-           "ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:"
-           "ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC\n"
            "  -d  distance between k-mer pairs (ie. target distances to "
            "re-scaffold on. default -d 4000, optional)\n"
            "  \tMultiple distances are separated by comma. eg. -d "
@@ -140,7 +126,6 @@ public:
     std::cout << "\nLINKS running options:" << "\n";
     std::cout << "  -f " << assembly_file << "\n"
               << "  -s " << fof_file << "\n"
-              << "  -m " << read_length << "\n"
               << "  -d " << distances_text << "\n"
               << "  -k " << k << "\n"
               << "  -j " << thread << "\n"
@@ -176,13 +161,6 @@ public:
         fof_file.assign(optarg);
         long_reads = parse_fof_input(fof_file);
         break;
-      case 'm':
-        read_length = strtoul(optarg, &end, BASE_TEN);
-        MPET_data = true;
-        if (!e_opt_override) {
-          insert_stdev = 0.5;
-        }
-        break;
       case 'd':
         distances_text.assign(optarg);
         distances = split_distance_input(distances_text);
@@ -205,7 +183,6 @@ public:
         break;
       case 'e':
         insert_stdev = strtof(optarg, &end);
-        e_opt_override = true;
         break;
       case 'l':
         min_links = strtoul(optarg, &end, BASE_TEN);
@@ -266,8 +243,7 @@ public:
           std::to_string(min_links) + "_a" + std::to_string(max_link_ratio) +
           "_z" + std::to_string(min_size) + "_t" + step_sizes_text + "_o" +
           std::to_string(offset) + "_r-" + (bf_off ? "-" : bf_file) + "_p" +
-          std::to_string(fpr) + "_x" + std::to_string(bf_off) + "_m" +
-          std::to_string(read_length);
+          std::to_string(fpr) + "_x" + std::to_string(bf_off);
     }
     if (assembly_file == "" || fof_file == "") {
       print_usage();

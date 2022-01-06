@@ -47,13 +47,9 @@ public:
   uint64_t min_links = 5;
   uint64_t min_size = 500;
   float max_link_ratio = 0.3;
-  // Added for MPET
-  bool MPET_data = false;   // MPET
-  uint64_t read_length;     // MPET
-  float insert_stdev = 0.1; // MPET (Need to adjust to a wider-range of
-                            // distances when dealing with MPET)
+  float insert_stdev = 0.1;
   std::string
-      base_name; // When set, this will override the MPET-induced changes on -e
+      base_name;
   uint64_t offset = 0;
   std::string bf_file;
   float fpr = 0.001;
@@ -349,8 +345,6 @@ inline LINKS::LINKS(InputParser input_parser)
       long_reads(input_parser.long_reads), distances(input_parser.distances),
       k(input_parser.k), verbose(input_parser.verbose),
       min_size(input_parser.min_size), step_sizes(input_parser.step_sizes),
-      read_length(input_parser.read_length),
-      MPET_data(input_parser.read_length),
       insert_stdev(input_parser.insert_stdev),
       base_name(input_parser.base_name), offset(input_parser.offset),
       fpr(input_parser.fpr), bf_file(input_parser.bf_file),
