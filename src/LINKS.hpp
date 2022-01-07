@@ -17,9 +17,9 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <functional>
 #include <iostream>
-#include <fstream>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -48,8 +48,7 @@ public:
   uint64_t min_size = 500;
   float max_link_ratio = 0.3;
   float insert_stdev = 0.1;
-  std::string
-      base_name;
+  std::string base_name;
   uint64_t offset = 0;
   std::string bf_file;
   float fpr = 0.001;
@@ -257,7 +256,7 @@ private:
   uint get_read_count(std::string &data_file);
   void progress_bar(float progress);
   std::atomic<bool> fasta{false};
-  uint ct_ok_pairs = 0; // last stage verbose
+  uint ct_ok_pairs = 0;      // last stage verbose
   uint ct_problem_pairs = 0; // last stage verbose
 
   std::shared_ptr<btllib::KmerBloomFilter> bloom;
@@ -430,7 +429,7 @@ inline void LINKS::InputWorker::work() {
   links.progress_bar(0); // empty progress bar print
   std::cout << "\n";
 
-  for (auto record : (*(links.reader))) {    
+  for (auto record : (*(links.reader))) {
     block.data[block.count++] = Read(
         record.num, // read_c instead of record.num
         std::move(record.id), std::move(record.comment), std::move(record.seq));
@@ -440,7 +439,8 @@ inline void LINKS::InputWorker::work() {
       block.count = 0;
     }
     read_c++;
-    if (read_c - last_print >= 4 * one_percent_read_count || read_c == links.cur_file_read_count) {
+    if (read_c - last_print >= 4 * one_percent_read_count ||
+        read_c == links.cur_file_read_count) {
       last_print = read_c;
       links.progress_bar(float(read_c) / float(links.cur_file_read_count));
       std::cout << " " << read_c << " processed" << std::endl;
@@ -460,17 +460,17 @@ inline void LINKS::InputWorker::work() {
 }
 
 inline uint LINKS::get_read_count(std::string &read_file) {
-  std::ifstream inFile(read_file); 
-  uint line_count =  std::count(std::istreambuf_iterator<char>(inFile), 
-                    std::istreambuf_iterator<char>(), '>');
+  std::ifstream inFile(read_file);
+  uint line_count = std::count(std::istreambuf_iterator<char>(inFile),
+                               std::istreambuf_iterator<char>(), '>');
   return line_count;
 }
 inline void LINKS::start_read_fasta() {
   std::string read_file = long_reads.front();
-  long_reads.pop(); 
-  reader = std::shared_ptr<btllib::SeqReader>(new btllib::SeqReader(
-      read_file, btllib::SeqReader::Flag::LONG_MODE));
-  
+  long_reads.pop();
+  reader = std::shared_ptr<btllib::SeqReader>(
+      new btllib::SeqReader(read_file, btllib::SeqReader::Flag::LONG_MODE));
+
   std::cout << "Reading: " << read_file << std::endl;
   cur_file_read_count = get_read_count(read_file);
 
@@ -496,7 +496,7 @@ inline void LINKS::start_read_contig() {
       new btllib::SeqReader(assembly_file, btllib::SeqReader::Flag::LONG_MODE));
 
   std::cout << "Reading: " << assembly_file << std::endl;
-  cur_file_read_count = get_read_count(assembly_file); 
+  cur_file_read_count = get_read_count(assembly_file);
 
   input_worker.reset();
   input_worker = std::shared_ptr<InputWorker>(new InputWorker(*this));
@@ -789,9 +789,12 @@ inline void LINKS::progress_bar(float progress) {
   std::cout << "[";
   int pos = barWidth * progress;
   for (int i = 0; i < barWidth; ++i) {
-      if (i < pos) std::cout << "=";
-      else if (i == pos) std::cout << ">";
-      else std::cout << " ";
+    if (i < pos)
+      std::cout << "=";
+    else if (i == pos)
+      std::cout << ">";
+    else
+      std::cout << " ";
   }
   std::cout << "] " << int(progress * 100.0) << "%";
 }
@@ -817,12 +820,12 @@ inline void LINKS::pair_contigs() {
       ".simplepair_checkpoint.tsv"; // add a checkpoint file, prevent re-running
                                     // LINKS from scratch if cras
   uint64_t totalPairs = 0;
-  uint64_t ct_illogical = 0, ct_ok_contig = 0,
-           ct_problem_pairs = 0, ct_iz_issues = 0, ct_single = 0,
-           ct_multiple = 0, ct_both = 0, track_insert = 0;
-  std::unordered_map<uint64_t, uint64_t> ct_both_hash,
-      ct_illogical_hash, ct_ok_contig_hash, ct_ok_pairs_hash,
-      ct_problem_pairs_hash, ct_iz_issues_hash;
+  uint64_t ct_illogical = 0, ct_ok_contig = 0, ct_problem_pairs = 0,
+           ct_iz_issues = 0, ct_single = 0, ct_multiple = 0, ct_both = 0,
+           track_insert = 0;
+  std::unordered_map<uint64_t, uint64_t> ct_both_hash, ct_illogical_hash,
+      ct_ok_contig_hash, ct_ok_pairs_hash, ct_problem_pairs_hash,
+      ct_iz_issues_hash;
   // Mapping of tiga_head -> insertSize -> tigb_head -> links & gaps
   std::unordered_map<
       std::string, std::unordered_map<
@@ -842,7 +845,7 @@ inline void LINKS::pair_contigs() {
   int isz;
 
   std::string tig_a, tig_b, ftig_a, ftig_b, rtig_a, rtig_b;
-  //uint64_t A_length = 0, A_start = 0, A_end = 0, B_length = 0, B_start = 0,
+  // uint64_t A_length = 0, A_start = 0, A_end = 0, B_length = 0, B_start = 0,
   //         B_end = 0;
 
   KmerInfo kmer1, kmer2;
@@ -853,11 +856,11 @@ inline void LINKS::pair_contigs() {
   mate_pair_type::iterator mate_pair_iterator;
   for (mate_pair_iterator = mate_pair.begin();
        mate_pair_iterator != mate_pair.end(); mate_pair_iterator++) {
-    if (counter %  percent_size == 0) {
+    if (counter % percent_size == 0) {
       progress_bar(float(counter) / float(mate_pair.size()));
       std::cout << "\n";
     }
-    //if (counter % percent_size == 0) {
+    // if (counter % percent_size == 0) {
     //  std::cout << "Done: %" << uint(counter / percent_size) << std::endl;
     //}
     ++counter;
@@ -876,14 +879,14 @@ inline void LINKS::pair_contigs() {
       low_iz = insert_size + min_allowed;              // check int
       up_iz = insert_size - min_allowed;               // check int
 
-      //if (track_all_test[mate_pair_iterator->first.first].tig != "" &&
+      // if (track_all_test[mate_pair_iterator->first.first].tig != "" &&
       //    track_all_test[mate_pair_iterator->first.second].tig !=
       //        "") { // double check if tig names not null
-      if(track_all_test.find(mate_pair_iterator->first.first) !=
-          track_all_test.end() && // first mate is tracked
+      if (track_all_test.find(mate_pair_iterator->first.first) !=
+              track_all_test.end() && // first mate is tracked
           track_all_test.find(mate_pair_iterator->first.second) !=
-          track_all_test.end() // second mate is tracked
-          ) {
+              track_all_test.end() // second mate is tracked
+      ) {
         ct_both++;
         if (ct_both_hash.find(insert_size) == ct_both_hash.end()) {
           ct_both_hash[insert_size] = 1;
@@ -952,9 +955,9 @@ inline void LINKS::pair_contigs() {
                       << ") located on same contig " << tig_a << " ("
                       << tig_length[kmer1.tig] << " nt)\n";
           uint64_t pet_size = 0;
-          if(kmer1.orient == kmer2.orient) { // if kmer1 is forward
-            if(kmer1.start > kmer2.start) { // if kmer2 is forward
-                                // A-> B->
+          if (kmer1.orient == kmer2.orient) { // if kmer1 is forward
+            if (kmer1.start > kmer2.start) {  // if kmer2 is forward
+                                              // A-> B->
               pet_size = kmer1.start - kmer2.start;
               if (pet_size >= low_iz && pet_size <= up_iz) {
                 ct_ok_contig++;
@@ -974,14 +977,18 @@ inline void LINKS::pair_contigs() {
           }
         }
       }
-    } else if(track_all_test.find(mate_pair_iterator->first.first) == track_all_test.end() ^ 
-    track_all_test.find(mate_pair_iterator->first.second) == track_all_test.end()// one of the kmers is not assembled
-     ) { // either one of the kmers is not assembled
-        ct_single++;
-    } else if(track_all_test.find(mate_pair_iterator->first.first) != track_all_test.end() &&
-          track_all_test.find(mate_pair_iterator->first.second) != track_all_test.end()) {
-            ct_multiple++;
-          }
+    } else if (track_all_test.find(mate_pair_iterator->first.first) ==
+                   track_all_test.end() ^
+               track_all_test.find(mate_pair_iterator->first.second) ==
+                   track_all_test.end() // one of the kmers is not assembled
+    ) { // either one of the kmers is not assembled
+      ct_single++;
+    } else if (track_all_test.find(mate_pair_iterator->first.first) !=
+                   track_all_test.end() &&
+               track_all_test.find(mate_pair_iterator->first.second) !=
+                   track_all_test.end()) {
+      ct_multiple++;
+    }
   } // pairing read b
   // pairing read a
   issues_file.close();
@@ -998,11 +1005,10 @@ inline void LINKS::pair_contigs() {
   uint64_t unsatisfied = ct_problem_pairs + ct_iz_issues + ct_illogical;
   uint64_t ct_both_reads = ct_both * 2;
 
-  
   std::cout << "\n===========PAIRED K-MER STATS===========\n";
-    std::cout << "AAt least one sequence/pair missing from contigs: " //good
+  std::cout << "AAt least one sequence/pair missing from contigs: " // good
             << ct_single << "\n";
-  std::cout << "Ambiguous kmer pairs (both kmers are ambiguous): " //good
+  std::cout << "Ambiguous kmer pairs (both kmers are ambiguous): " // good
             << ct_multiple << "\n";
   std::cout << "Assembled pairs: " << ct_both << " (" << ct_both_reads
             << " sequences)\n";
@@ -1013,14 +1019,14 @@ inline void LINKS::pair_contigs() {
                "out-of-bounds): "
             << ct_iz_issues << "\n";
   std::cout << "\tUnsatisfied pairing logic within contigs (i.e. illogical "
-               "pairing ->->, <-<- or <-->): " //good
+               "pairing ->->, <-<- or <-->): " // good
             << ct_illogical << "\n";
   std::cout << "\t---\n";
   std::cout << "\tSatisfied in distance/logic within a given contig pair "
-               "(pre-scaffold): " //good
+               "(pre-scaffold): " // good
             << ct_ok_pairs << "\n";
   std::cout << "\tUnsatisfied in distance within a given contig pair (i.e. "
-               "calculated distances out-of-bounds): " //good
+               "calculated distances out-of-bounds): " // good
             << ct_problem_pairs << "\n";
   std::cout << "\t---\n";
   std::cout << "Total satisfied: " << satisfied

@@ -123,7 +123,8 @@ public:
            "  -v  Runs in verbose mode (-v 1 = yes, default = no, optional)\n";
   }
   void print_opts() {
-    std::cout << "\nLINKS running options:" << "\n";
+    std::cout << "\nLINKS running options:"
+              << "\n";
     std::cout << "  -f " << assembly_file << "\n"
               << "  -s " << fof_file << "\n"
               << "  -d " << distances_text << "\n"
@@ -223,12 +224,11 @@ public:
       }
     }
     std::ifstream fof_file_file(fof_file);
-    if(fof_file_file.peek() == std::ifstream::traits_type::eof()) {
-        std:: cerr << "\n File of files for reads cannot be empty (-s)\n";
-        arguments_satisfied = false;
-    }
-    else {
-        std::cout << "here with: " << fof_file << std::endl;
+    if (fof_file_file.peek() == std::ifstream::traits_type::eof()) {
+      std::cerr << "\n File of files for reads cannot be empty (-s)\n";
+      arguments_satisfied = false;
+    } else {
+      std::cout << "here with: " << fof_file << std::endl;
     }
     if (distances.size() < step_sizes.size()) {
       std::cerr << "\n Number of provided distances can't be lower than number "

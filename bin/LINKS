@@ -1,11 +1,18 @@
-#!/bin/sh
-# LINKS v.20 consist of two parts. First part, from reading long reads, up to pairing contigs and outputting tigpair_checkpoint is running in C++ 
-# and rest of the pipeline, which is reading tigpair_checkpoints and outputting scaffolds is still running PERL code(like v1.8.7 and before).
-# Whole pipeline can be run by LINKS-make script provided. However, Makefiles take arguments like 'd=4000' where LINKS always took arguments as '-d 4000'
-# We are providing this script to run makefile with LINKS inputs. So you can run whole LINKS pipeline with previuous argument nomenclature.
+#!/ bin / sh
+#LINKS v .20 consist of two parts.First part, from reading long reads,         \
+    up to pairing contigs and outputting tigpair_checkpoint is running in C++
+#and rest of the pipeline, which is reading tigpair_checkpoints and outputting \
+                               scaffolds is still running PERL                 \
+                               code(like v1 .8.7 and before)                   \
+                                   .
+#Whole pipeline can be run by LINKS - make script provided.However,            \
+    Makefiles take arguments like 'd=4000' where LINKS always took arguments   \
+        as '-d 4000'
+#We are providing this script to run makefile with LINKS inputs                \
+    .So you can run whole LINKS pipeline with previuous argument nomenclature.
 
 usage() {
-	echo -e "
+        echo -e "
 		Usage:  LINKS v2.0.0  
                 -f  sequences to scaffold (Multi-FASTA format, required)
                 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
@@ -29,11 +36,12 @@ usage() {
                 -x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)
                 -v  Runs in verbose mode (-v 1 = yes, default = no, optional)
 	";
-	}
+}
 
-SCRIPT_DIR=$(dirname $0)
+SCRIPT_DIR = $(dirname $0)
 
-while getopts "f:s:d:k:t:j:o:e:l:a:z:b:r:p:x:v:" args; do
+    while getopts "f:s:d:k:t:j:o:e:l:a:z:b:r:p:x:v:" args;
+do
     case $args in
         f)
             lf=${OPTARG}
@@ -106,13 +114,12 @@ while getopts "f:s:d:k:t:j:o:e:l:a:z:b:r:p:x:v:" args; do
 done
 shift $((OPTIND-1))
 
-# Check if draft genome and long read fof is provided
+#Check if draft genome and long read fof is provided
 if [ -z "${lf}" ] || [ -z "${ls}" ]; then
     usage
     exit 1
 fi
 
 echo "Running Command: LINKS-make LINKS $lf $ls $ld $lk $lt $lo $le $ll $la $lz $lb $lr $lp $lx $lv"
-# Running LINKS-make
+#Running LINKS - make
 LINKS-make LINKS $lf $ls $ld $lk $lt $lo $le $ll $la $lz $lb $lr $lp $lx $lv
-
