@@ -36,7 +36,7 @@ jobs:
     displayName: Run test on C++ binary
   - script: |
       export PATH=$(pwd)/src:$(pwd)/bin:$PATH
-      chmod +x $(pwd)/bin
+      chmod -R +x $(pwd)/bin
       cd CI_TEST
       LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -d 4000 -k 15 -t 2 -o 0 -e 0.1 -z 500 -p 0.001 -b CI_TEST_2 -v 1 -x 0
     displayName: Run test on Makefile wrapper shell script
