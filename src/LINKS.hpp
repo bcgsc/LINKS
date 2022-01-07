@@ -473,7 +473,6 @@ inline void LINKS::start_read_fasta() {
   
   std::cout << "Reading: " << read_file << std::endl;
   cur_file_read_count = get_read_count(read_file);
-  //cur_file_read_count = 10000000;
 
   extract_mate_pair_workers =
       std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
@@ -973,85 +972,6 @@ inline void LINKS::pair_contigs() {
           } else {
             ct_illogical++;
           }
-          /*
-          if (kmer1.start > kmer2.start && kmer2.end  < kmer2.end  &&
-              kmer1.start > kmer1.end) { // B --> <-- A
-            std::cout << "here 11\n";
-            pet_size = kmer1.start - kmer2.start;
-            // track_insert += pet_size;
-            if (pet_size >= low_iz && pet_size <= up_iz) {
-              std::cout << "here 12\n";
-              ct_ok_contig++;
-              if (ct_ok_contig_hash.find(insert_size) ==
-                  ct_ok_contig_hash.end()) {
-                ct_ok_contig_hash[insert_size] = 1;
-              } else {
-                ct_ok_contig_hash[insert_size] =
-                    ct_ok_contig_hash[insert_size] + 1;
-              }
-            } else {
-              std::cout << "here 13\n";
-              issues_file
-                  << "Pairs unsatisfied in distance within a contig.  Pair ("
-                  << mate_pair_iterator->first.first << " and "
-                  << mate_pair_iterator->first.second << ") on contig " << kmer1.tig
-                  << " (" << tig_length[kmer1.tig] << " nt) Astart:" << kmer1.start
-                  << " Aend:" << kmer1.end << " Bstart:" << kmer2.start
-                  << " Bend:" << kmer2.end
-                  << " CALCULATED DISTANCE APART: " << pet_size << "\n";
-              ct_iz_issues++;
-              if (ct_iz_issues_hash.find(insert_size) ==
-                  ct_iz_issues_hash.end()) {
-                ct_iz_issues_hash[insert_size] = 1;
-              } else {
-                ct_iz_issues_hash[insert_size] =
-                    ct_iz_issues_hash[insert_size] + 1;
-              }
-            }
-          } else if (kmer2.start  > kmer1.start && (kmer2.start  > kmer2.end) &&
-                     (kmer1.start < kmer1.end)) { // A --> <-- B
-            std::cout << "here 14\n";
-            pet_size = kmer2.start  - kmer1.start;
-            //track_insert += pet_size;
-            if (pet_size >= low_iz && pet_size <= up_iz) {
-              std::cout << "here 15\n";
-              ct_ok_contig++;
-              if (ct_ok_contig_hash.find(insert_size) ==
-                  ct_ok_contig_hash.end()) {
-                ct_ok_contig_hash[insert_size] = 1;
-              } else {
-                ct_ok_contig_hash[insert_size] =
-                    ct_ok_contig_hash[insert_size] + 1;
-              }
-            } else {
-              std::cout << "here 16\n";
-              issues_file
-                  << "Pairs unsatisfied in distance within a contig.  Pair ("
-                  << mate_pair_iterator->first.first << " and "
-                  << mate_pair_iterator->first.second << ") on contig " << tig_a
-                  << " (" << tig_length[kmer1.tig] << " nt) Astart:" << kmer1.start
-                  << " Aend:" << kmer1.end << " Bstart:" << kmer2.start 
-                  << " Bend:" << kmer2.end << "\n";
-              ct_iz_issues++;
-              if (ct_iz_issues_hash.find(insert_size) ==
-                  ct_iz_issues_hash.end()) {
-                ct_iz_issues_hash[insert_size] = 1;
-              } else {
-                ct_iz_issues_hash[insert_size] =
-                    ct_iz_issues_hash[insert_size] + 1;
-              }
-            }
-          } else {
-            ct_illogical++;
-            if (ct_illogical_hash.find(insert_size) ==
-                ct_illogical_hash.end()) {
-              ct_illogical_hash[insert_size] = 1;
-            } else {
-              ct_illogical_hash[insert_size] =
-                  ct_illogical_hash[insert_size] + 1;
-            }
-          }
-          */
         }
       }
     } else if(track_all_test.find(mate_pair_iterator->first.first) == track_all_test.end() ^ 
