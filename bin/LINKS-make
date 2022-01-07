@@ -1,4 +1,4 @@
-#!/ usr / bin / make - f
+#!/usr/bin/make -f
 #Pipeline for the LINKS program
 #Written by Murathan Goktas
 #Default Parameters
