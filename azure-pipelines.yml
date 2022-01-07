@@ -30,10 +30,10 @@ jobs:
       echo K12_full2dONT_longread.fa >> K12_F2D.fof
     displayName: Download test files
   - script: |
-      export LINKS_CPP=$(pwd)/src/LINKS_CPP
-      export LINKS-make=$(pwd)/bin/LINKS-make
-      export LINKS=$(pwd)/bin/LINKS
-      export LINKS.pl=$(pwd)/bin/LINKS.pl
+      export "LINKS_CPP"=$(pwd)/src/LINKS_CPP
+      export "LINKS-make"=$(pwd)/bin/LINKS-make
+      export "LINKS"=$(pwd)/bin/LINKS
+      export "LINKS.pl"=$(pwd)/bin/LINKS.pl
       echo $LINKS-make
     displayName: Export executable paths
   - script: |
