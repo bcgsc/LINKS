@@ -308,7 +308,7 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
               << std::to_string(((double)m / bf_elements) * log(2)) << "\n";
     unsigned hash_fct = floor(((double)m / bf_elements) * log(2));
     std::cout << "- Number of bfElements: " << bf_elements << "\n"
-              << "- Input file path: " << links_arg_parser.bf_file << "\n"
+              << "- Input file path: " << links_arg_parser.base_name << "\n"
               << "- Input file: " << links_arg_parser.assembly_file << "\n"
               << "- kmersize: " << links_arg_parser.k << "\n"
               << "- m: " << m << "\n"
@@ -330,10 +330,10 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
       assembly_BF->insert(record.seq);
     }
     std::string bfmsg = "\n\nWriting Bloom filter to disk (" +
-                        links_arg_parser.bf_file +
+                        links_arg_parser.base_name +
                         ") : " + std::to_string(time(0)) + "\n";
     std::cout << bfmsg;
-    assembly_BF->save(links_arg_parser.bf_file + ".bloom");
+    assembly_BF->save(links_arg_parser.base_name + ".bloom");
     std::cout << "Done mybf, printing stats...\n";
   }
   return assembly_BF;
@@ -426,8 +426,10 @@ inline void LINKS::InputWorker::work() {
   size_t read_c = 0;
   uint one_percent_read_count = links.cur_file_read_count / 100;
   uint last_print = 0;
-  links.progress_bar(0); // empty progress bar print
-  std::cout << "\n";
+  if(verbose) {
+  	links.progress_bar(0); // empty progress bar print
+  	std::cout << "\n";
+  }
 
   for (auto record : (*(links.reader))) {
     block.data[block.count++] = Read(
@@ -439,7 +441,7 @@ inline void LINKS::InputWorker::work() {
       block.count = 0;
     }
     read_c++;
-    if (read_c - last_print >= 4 * one_percent_read_count ||
+    if (verbose && read_c - last_print >= 4 * one_percent_read_count ||
         read_c == links.cur_file_read_count) {
       last_print = read_c;
       links.progress_bar(float(read_c) / float(links.cur_file_read_count));
@@ -462,8 +464,8 @@ inline void LINKS::InputWorker::work() {
 inline uint LINKS::get_read_count(std::string &read_file) {
   std::ifstream inFile(read_file);
   uint line_count = std::count(std::istreambuf_iterator<char>(inFile),
-                               std::istreambuf_iterator<char>(), '>');
-  return line_count;
+                               std::istreambuf_iterator<char>(), '\n');
+  return static_cast<uint>(static_cast<double>(line_count)/4);
 }
 inline void LINKS::start_read_fasta() {
   std::string read_file = long_reads.front();
@@ -472,8 +474,9 @@ inline void LINKS::start_read_fasta() {
       new btllib::SeqReader(read_file, btllib::SeqReader::Flag::LONG_MODE));
 
   std::cout << "Reading: " << read_file << std::endl;
-  cur_file_read_count = get_read_count(read_file);
-
+  if(verbose){
+  	cur_file_read_count = get_read_count(read_file);
+  }
   extract_mate_pair_workers =
       std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
 
@@ -856,7 +859,7 @@ inline void LINKS::pair_contigs() {
   mate_pair_type::iterator mate_pair_iterator;
   for (mate_pair_iterator = mate_pair.begin();
        mate_pair_iterator != mate_pair.end(); mate_pair_iterator++) {
-    if (counter % percent_size == 0) {
+    if (verbose && counter % percent_size == 0) {
       progress_bar(float(counter) / float(mate_pair.size()));
       std::cout << "\n";
     }
