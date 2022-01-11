@@ -426,7 +426,7 @@ inline void LINKS::InputWorker::work() {
   size_t read_c = 0;
   uint one_percent_read_count = links.cur_file_read_count / 100;
   uint last_print = 0;
-  if(verbose) {
+  if(links.verbose) {
   	links.progress_bar(0); // empty progress bar print
   	std::cout << "\n";
   }
@@ -441,7 +441,7 @@ inline void LINKS::InputWorker::work() {
       block.count = 0;
     }
     read_c++;
-    if (verbose && read_c - last_print >= 4 * one_percent_read_count ||
+    if (links.verbose && read_c - last_print >= 4 * one_percent_read_count ||
         read_c == links.cur_file_read_count) {
       last_print = read_c;
       links.progress_bar(float(read_c) / float(links.cur_file_read_count));
