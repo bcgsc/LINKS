@@ -1,16 +1,16 @@
 #!/bin/sh
-'
-LINKS v.2.0.1 consist of two parts.First part, from reading long reads, 
-	up to pairing contigs and outputting tigpair_checkpoint is running in C++
-	and rest of the pipeline, which is reading tigpair_checkpoints and outputting 
-	scaffolds is still running PERL code(like v1 .8.7 and before).
 
-Whole pipeline can be run by LINKS - make script provided. However,
-	Makefiles take arguments like "d=4000" where LINKS always took arguments as "-d 4000".
+#LINKS v.2.0.1 consist of two parts.First part, from reading long reads, 
+#	up to pairing contigs and outputting tigpair_checkpoint is running in C++
+#	and rest of the pipeline, which is reading tigpair_checkpoints and outputting 
+#	scaffolds is still running PERL code(like v1 .8.7 and before).
+#
+#Whole pipeline can be run by LINKS - make script provided. However,
+#	Makefiles take arguments like "d=4000" where LINKS always took arguments as "-d 4000".
+#
+#We are providing this script to run makefile with LINKS inputs.
+#	So you can run whole LINKS pipeline with previuous argument nomenclature.
 
-We are providing this script to run makefile with LINKS inputs.
-	So you can run whole LINKS pipeline with previuous argument nomenclature.
-'
 
 usage() {
         echo -e "
