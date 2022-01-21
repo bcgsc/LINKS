@@ -55,7 +55,7 @@ public:
   bool bf_off = false;
   unsigned threads = 3;
 
-  static const size_t PRINT_READ_COUNT_PERIOD = 1000000;
+  static const size_t PRINT_READ_COUNT_PERIOD = 100000;
 
   static const size_t MAX_SIMULTANEOUS_INDEXLRS = 128;
 
@@ -908,12 +908,6 @@ inline void LINKS::pair_contigs() {
           track_all_test.find(mate_pair_iterator->first.second) !=
               track_all_test.end() // second mate is tracked
       ) {
-        ct_both++;
-        if (ct_both_hash.find(insert_size) == ct_both_hash.end()) {
-          ct_both_hash[insert_size] = 1;
-        } else {
-          ct_both_hash[insert_size] = ct_both_hash[insert_size] + 1;
-        }
 
         kmer1 = track_all_test[mate_pair_iterator->first.first];
         kmer2 = track_all_test[mate_pair_iterator->first.second];
@@ -1027,7 +1021,7 @@ inline void LINKS::pair_contigs() {
   uint64_t ct_both_reads = ct_both * 2;
 
   std::cout << "\n===========PAIRED K-MER STATS===========\n";
-  std::cout << "AAt least one sequence/pair missing from contigs: " // good
+  std::cout << "At least one sequence/pair missing from contigs: " // good
             << ct_single << "\n";
   std::cout << "Ambiguous kmer pairs (both kmers are ambiguous): " // good
             << ct_multiple << "\n";
@@ -1054,13 +1048,6 @@ inline void LINKS::pair_contigs() {
             << "\tunsatisfied: " << unsatisfied
             << "\n\nBreakdown by distances (-d):\n";
 
-  std::cout << "ct_both: " << ct_both << std::endl;
-  std::unordered_map<uint64_t, uint64_t>::iterator itr_IS;
-  std::cout << "ct_both_hash map size: " << err.size() << "\n";
-  for (itr_IS = ct_both_hash.begin(); itr_IS != ct_both_hash.end(); itr_IS++) {
-    std::cout << "--------k-mers separated by " << itr_IS->first
-              << " bp (outer distance)--------\n";
-  }
   std::cout << "============================================\n";
   std::ofstream dist_file;
   dist_file.open("distfile.txt");
