@@ -116,7 +116,7 @@ if [ -z "${lf}" ] || [ -z "${ls}" ]; then
     exit 1
 fi
 
-echo "Running Command: $SCRIPT_DIR/LINKS-make LINKS $lf $ls $lm $ld $lk $lt $lo $le $ll $la $lz $lb $lr $lp $lx $lv"
+echo "Running Command: $SCRIPT_DIR/LINKS-make LINKS $lf $ls $lm $ld $lk $lt $lo $le $ll $la $lz $lb $lr $lp $lx $lv $lj"
 # Running LINKS-make
-$SCRIPT_DIR/LINKS-make LINKS $lf $ls $lm $ld $lk $lt $lo $le $ll $la $lz $lb $lr $lp $lx $lv
+$SCRIPT_DIR/LINKS-make LINKS $lf $ls $lm $ld $lk $lt $lo $le $ll $la $lz $lb $lr $lp $lx $lv $lj
 
