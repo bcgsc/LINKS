@@ -112,7 +112,7 @@ clean:
 	@echo "Clean Done"
 
 version:
-	@echo "links-make v2.0.0"
+	@echo "links-make v2.0.1"
 
 #Make an Empty fof File
 empty.fof:

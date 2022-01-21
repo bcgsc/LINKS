@@ -14,7 +14,7 @@
 
 usage() {
         echo -e "
-		Usage:  LINKS v2.0.0  
+		Usage:  LINKS v2.0.1 
                 -f  sequences to scaffold (Multi-FASTA format, required)
                 -s  file-of-filenames, full path to long sequence reads or MPET pairs [see below] (Multi-FASTA/fastq format, required)
                 -d  distance between k-mer pairs (ie. target distances to re-scaffold on. default -d 4000, optional)
