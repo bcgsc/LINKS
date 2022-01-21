@@ -443,8 +443,13 @@ inline void LINKS::InputWorker::work() {
       block.count = 0;
     }
     read_c++;
-    if(read_c & PRINT_READ_COUNT_PERIOD == 0){
-      std::cout << "Processed read count: " << read_c << std::endl;
+    if(read_c % PRINT_READ_COUNT_PERIOD == 0){
+      if(read_c == PRINT_READ_COUNT_PERIOD){
+        std::cout << "Processed read count: " << read_c << std::endl;
+      } else {
+        std::cout << " - " << read_c; // print an empty line later
+      }
+      
     }
     //if (links.verbose && read_c - last_print >= 4 * one_percent_read_count ||
     //    read_c == links.cur_file_read_count) {
@@ -464,6 +469,7 @@ inline void LINKS::InputWorker::work() {
     block.count = 0;
     links.input_queue->write(block);
   }
+  std::cout << " - " << read_c << std::endl; // final 'processed reads' print
 }
 
 /*
