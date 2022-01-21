@@ -55,6 +55,8 @@ public:
   bool bf_off = false;
   unsigned threads = 3;
 
+  static const size_t PRINT_READ_COUNT_PERIOD = 1000000;
+
   static const size_t MAX_SIMULTANEOUS_INDEXLRS = 128;
 
   struct BufferMatePairData {
@@ -217,7 +219,7 @@ private:
 
   std::string seq_file;
   std::queue<std::string> long_reads;
-  uint cur_file_read_count;
+  //uint cur_file_read_count;
 
   size_t read_buffer_size = 16;
   size_t read_block_size = 4;
@@ -253,8 +255,8 @@ private:
   // helper functions
   uint64_t get_file_size(std::string file_name);
   bool does_file_exist(std::string file_name);
-  uint get_read_count(std::string &data_file);
-  void progress_bar(float progress);
+  //uint get_read_count(std::string &data_file);
+  //void progress_bar(float progress);
   std::atomic<bool> fasta{false};
   uint ct_ok_pairs = 0;      // last stage verbose
   uint ct_problem_pairs = 0; // last stage verbose
@@ -424,12 +426,12 @@ inline void LINKS::InputWorker::work() {
 
   size_t counterx = 0;
   size_t read_c = 0;
-  uint one_percent_read_count = links.cur_file_read_count / 100;
-  uint last_print = 0;
-  if(links.verbose) {
-  	links.progress_bar(0); // empty progress bar print
-  	std::cout << "\n";
-  }
+  //uint one_percent_read_count = links.cur_file_read_count / 100;
+  //uint last_print = 0;
+  //if(links.verbose) {
+  //	links.progress_bar(0); // empty progress bar print
+  //	std::cout << "\n";
+  //}
 
   for (auto record : (*(links.reader))) {
     block.data[block.count++] = Read(
@@ -441,12 +443,15 @@ inline void LINKS::InputWorker::work() {
       block.count = 0;
     }
     read_c++;
-    if (links.verbose && read_c - last_print >= 4 * one_percent_read_count ||
-        read_c == links.cur_file_read_count) {
-      last_print = read_c;
-      links.progress_bar(float(read_c) / float(links.cur_file_read_count));
-      std::cout << " " << read_c << " processed" << std::endl;
+    if(read_c & PRINT_READ_COUNT_PERIOD == 0){
+      std::cout << "Processed read count: " << read_c << std::endl;
     }
+    //if (links.verbose && read_c - last_print >= 4 * one_percent_read_count ||
+    //    read_c == links.cur_file_read_count) {
+    //  last_print = read_c;
+      //links.progress_bar(float(read_c) / float(links.cur_file_read_count));
+    //  std::cout << " " << read_c << " processed" << std::endl;
+    //}
   }
 
   if (block.count > 0) {
@@ -461,12 +466,15 @@ inline void LINKS::InputWorker::work() {
   }
 }
 
+/*
 inline uint LINKS::get_read_count(std::string &read_file) {
   std::ifstream inFile(read_file);
   uint line_count = std::count(std::istreambuf_iterator<char>(inFile),
                                std::istreambuf_iterator<char>(), '\n');
   return static_cast<uint>(static_cast<double>(line_count)/4);
 }
+*/
+
 inline void LINKS::start_read_fasta() {
   std::string read_file = long_reads.front();
   long_reads.pop();
@@ -474,9 +482,11 @@ inline void LINKS::start_read_fasta() {
       new btllib::SeqReader(read_file, btllib::SeqReader::Flag::LONG_MODE));
 
   std::cout << "Reading: " << read_file << std::endl;
+  /*
   if(verbose){
   	cur_file_read_count = get_read_count(read_file);
   }
+  */
   extract_mate_pair_workers =
       std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
 
@@ -499,7 +509,7 @@ inline void LINKS::start_read_contig() {
       new btllib::SeqReader(assembly_file, btllib::SeqReader::Flag::LONG_MODE));
 
   std::cout << "Reading: " << assembly_file << std::endl;
-  cur_file_read_count = get_read_count(assembly_file);
+  //cur_file_read_count = get_read_count(assembly_file);
 
   input_worker.reset();
   input_worker = std::shared_ptr<InputWorker>(new InputWorker(*this));
@@ -786,6 +796,7 @@ inline int LINKS::get_distance_bin(int distance) {
                            : 10000;
 }
 
+/*
 inline void LINKS::progress_bar(float progress) {
   int barWidth = 70;
 
@@ -801,6 +812,7 @@ inline void LINKS::progress_bar(float progress) {
   }
   std::cout << "] " << int(progress * 100.0) << "%";
 }
+*/
 
 inline int LINKS::get_distance(uint64_t insert_size, uint64_t length_i,
                                uint64_t start_i, uint64_t start_j) {
@@ -855,14 +867,14 @@ inline void LINKS::pair_contigs() {
 
   size_t counter = 0;
   size_t percent_size = mate_pair.size() / 25;
-  cur_file_read_count = mate_pair.size(); // for progress bar
+  //cur_file_read_count = mate_pair.size(); // for progress bar
   mate_pair_type::iterator mate_pair_iterator;
   for (mate_pair_iterator = mate_pair.begin();
        mate_pair_iterator != mate_pair.end(); mate_pair_iterator++) {
-    if (verbose && counter % percent_size == 0) {
-      progress_bar(float(counter) / float(mate_pair.size()));
-      std::cout << "\n";
-    }
+    //if (verbose && counter % percent_size == 0) {
+    //  progress_bar(float(counter) / float(mate_pair.size()));
+    //  std::cout << "\n";
+    //}
     // if (counter % percent_size == 0) {
     //  std::cout << "Done: %" << uint(counter / percent_size) << std::endl;
     //}
