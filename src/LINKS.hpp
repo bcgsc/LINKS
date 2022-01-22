@@ -291,8 +291,7 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
   btllib::KmerBloomFilter *assembly_BF;
   if (links_arg_parser.bf_file != "") {
     std::cout << "A Bloom filter was supplied (" << links_arg_parser.bf_file
-              << ") and will be used instead of building a new one from -f "
-              << links_arg_parser.assembly_file << "\n";
+              << ") and will be used instead of building a new one\n";
     if (!does_file_exist(links_arg_parser.bf_file)) {
       std::cout << "\nInvalid file: " << links_arg_parser.bf_file
                 << " -- fatal\n";
@@ -421,7 +420,6 @@ inline void LINKS::InputWorker::work() {
   size_t current_block_num = 0;
   Read read;
 
-  size_t counterx = 0;
   size_t read_c = 0;
   //uint one_percent_read_count = links.cur_file_read_count / 100;
   //uint last_print = 0;
@@ -442,9 +440,9 @@ inline void LINKS::InputWorker::work() {
     read_c++;
     if(read_c % PRINT_READ_COUNT_PERIOD == 0){
       if(read_c == PRINT_READ_COUNT_PERIOD){
-        std::cout << "Processed read count: " << read_c << std::endl;
+        std::cout << "Processed read count: " << read_c;
       } else {
-        std::cout << " - " << read_c; // print an empty line later
+        std::cout << " - " << read_c << std::flush; // avoid buffering of stdout
       }
       
     }
