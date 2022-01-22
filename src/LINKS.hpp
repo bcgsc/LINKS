@@ -305,11 +305,9 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
                       (log(2) * log(2)));
 
     m = ((uint64_t)(m / 8) + 1) * 8;
-    std::cout << "HASHES CALC: " << std::to_string(((double)m / bf_elements))
-              << " second: "
-              << std::to_string(((double)m / bf_elements) * log(2)) << "\n";
+
     unsigned hash_fct = floor(((double)m / bf_elements) * log(2));
-    std::cout << "- Number of bfElements: " << bf_elements << "\n"
+    std::cout << "- Number of BF Elements: " << bf_elements << "\n"
               << "- Input file path: " << links_arg_parser.base_name << "\n"
               << "- Input file: " << links_arg_parser.assembly_file << "\n"
               << "- kmersize: " << links_arg_parser.k << "\n"
@@ -332,11 +330,10 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
       assembly_BF->insert(record.seq);
     }
     std::string bfmsg = "\n\nWriting Bloom filter to disk (" +
-                        links_arg_parser.base_name +
-                        ") : " + std::to_string(time(0)) + "\n";
+                        links_arg_parser.base_name + ".bloom" +
+                        ")\n";
     std::cout << bfmsg;
     assembly_BF->save(links_arg_parser.base_name + ".bloom");
-    std::cout << "Done mybf, printing stats...\n";
   }
   return assembly_BF;
 }
@@ -469,7 +466,11 @@ inline void LINKS::InputWorker::work() {
     block.count = 0;
     links.input_queue->write(block);
   }
-  std::cout << " - " << read_c << std::endl; // final 'processed reads' print
+  if(read_c < PRINT_READ_COUNT_PERIOD){
+    std::cout << "Processed read count: " << read_c << std::endl;
+  } else {
+    std::cout << " - " << read_c << std::endl; // final 'processed reads' print
+  }
 }
 
 /*
@@ -977,6 +978,11 @@ inline void LINKS::pair_contigs() {
               if (pet_size >= low_iz && pet_size <= up_iz) {
                 ct_ok_contig++;
               } else {
+                issues_file << "Pairs unsatisfied in distance within a contig.  Pairs on " 
+                << "contig id: " << kmer1.tig << " (length: " << tig_length[kmer1.tig] << ")\n"
+                << "kmer start: " << kmer1.start << " kmer end: " << kmer1.end << " orientation: " << kmer1.orient << "\n"
+                << "kmer start: " << kmer2.start << " kmer end: " << kmer2.end << " orientation: " << kmer2.orient << "\n"
+                << "Calculated distance apart on contig: " << pet_size << " - Distance on read: " << insert_size << "\n";
                 ct_iz_issues++;
               }
             } else {
@@ -984,6 +990,11 @@ inline void LINKS::pair_contigs() {
               if (pet_size >= low_iz && pet_size <= up_iz) {
                 ct_ok_contig++;
               } else {
+                issues_file << "Pairs unsatisfied in distance within a contig.  Pairs on " 
+                << "contig id: " << kmer1.tig << " (length: " << tig_length[kmer1.tig] << ")\n"
+                << "kmer start: " << kmer1.start << " kmer end: " << kmer1.end << " orientation: " << kmer1.orient << "\n"
+                << "kmer start: " << kmer2.start << " kmer end: " << kmer2.end << " orientation: " << kmer2.orient << "\n"
+                << "Calculated distance apart on contig: " << pet_size << " - Distance on read: " << insert_size << "\n";
                 ct_iz_issues++;
               }
             }
@@ -1006,6 +1017,7 @@ inline void LINKS::pair_contigs() {
     }
   } // pairing read b
   // pairing read a
+  std::cout << "All contig pairs traversed\n";
   issues_file.close();
 
   std::unordered_map<std::string, PairLinkInfo>::iterator err_itr;
@@ -1045,13 +1057,9 @@ inline void LINKS::pair_contigs() {
             << ct_problem_pairs << "\n";
   std::cout << "\t---\n";
   std::cout << "Total satisfied: " << satisfied
-            << "\tunsatisfied: " << unsatisfied
-            << "\n\nBreakdown by distances (-d):\n";
+            << "\tunsatisfied: " << unsatisfied;
 
-  std::cout << "============================================\n";
-  std::ofstream dist_file;
-  dist_file.open("distfile.txt");
-  dist_file.close();
+  std::cout << "\n============================================\n\n";
 
   // TIGPAIR CHECKPOINT
   std::ofstream tigpair_checkpoint_file;
