@@ -1,4 +1,4 @@
-AC_INIT([LINKS], [2.0.0], [rwarren@bcgsc.ca])
+AC_INIT([LINKS], [2.0.1], [rwarren@bcgsc.ca])
 AM_INIT_AUTOMAKE([foreign])
 
 AC_PROG_CXX
