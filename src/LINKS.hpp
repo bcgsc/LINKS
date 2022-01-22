@@ -40,7 +40,7 @@ public:
 
   std::string assembly_file;
   std::string fof_file;
-  std::vector<uint32_t> distances = {2000, 4000};
+  std::vector<uint32_t> distances = {4000};
   std::vector<uint16_t> step_sizes = {2};
   uint64_t k = 15;
   bool verbose = false;
