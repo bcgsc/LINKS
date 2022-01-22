@@ -11,7 +11,6 @@
 #We are providing this script to run makefile with LINKS inputs.
 #	So you can run whole LINKS pipeline with previuous argument nomenclature.
 
-
 usage() {
         echo -e "
 		Usage:  LINKS v2.0.1 
@@ -37,6 +36,7 @@ usage() {
                 -x  Turn off Bloom filter functionality (-x 1 = yes, default = no, optional)
                 -v  Runs in verbose mode (-v 1 = yes, default = no, optional)
 	";
+    exit 1
 }
 
     while getopts "f:s:d:k:t:j:o:e:l:a:z:b:r:p:x:v:" args;
