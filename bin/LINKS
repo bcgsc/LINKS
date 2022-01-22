@@ -66,7 +66,7 @@ do
             lj=${OPTARG}
 	    lj="j=${lj}"
             ;;
-	o)
+	    o)
             lo=${OPTARG}
 	    lo="o=${lo}"
             ;;
@@ -82,7 +82,7 @@ do
             la=${OPTARG}
 	    la="a=${la}"
             ;;
-	z)
+	    z)
             lz=${OPTARG}
 	    lz="z=${lz}"
             ;;
@@ -119,6 +119,6 @@ if [ -z "${lf}" ] || [ -z "${ls}" ]; then
     exit 1
 fi
 
-echo "Running Command: LINKS-make LINKS $lf $ls $ld $lk $lt $lo $le $ll $la $lz $lb $lr $lp $lx $lv"
+printf "\nRunning Command: LINKS-make LINKS $lf $ls $ld $lk $lt $lj $lo $le $ll $la $lz $lb $lr $lp $lx $lv \n"
 #Running LINKS - make
-LINKS-make LINKS $lf $ls $ld $lk $lt $lo $le $ll $la $lz $lb $lr $lp $lx $lv
+LINKS-make LINKS $lf $ls $ld $lk $lt $lj $lo $le $ll $la $lz $lb $lr $lp $lx $lv
