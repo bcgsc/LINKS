@@ -219,7 +219,6 @@ private:
 
   std::string seq_file;
   std::queue<std::string> long_reads;
-  //uint cur_file_read_count;
 
   size_t read_buffer_size = 16;
   size_t read_block_size = 4;
@@ -255,8 +254,6 @@ private:
   // helper functions
   uint64_t get_file_size(std::string file_name);
   bool does_file_exist(std::string file_name);
-  //uint get_read_count(std::string &data_file);
-  //void progress_bar(float progress);
   std::atomic<bool> fasta{false};
   uint ct_ok_pairs = 0;      // last stage verbose
   uint ct_problem_pairs = 0; // last stage verbose
@@ -329,8 +326,7 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
       assembly_BF->insert(record.seq);
     }
     std::string bfmsg = "\n\nWriting Bloom filter to disk (" +
-                        links_arg_parser.base_name + ".bloom" +
-                        ")\n";
+                        links_arg_parser.base_name + ".bloom" + ")\n";
     std::cout << bfmsg;
     assembly_BF->save(links_arg_parser.base_name + ".bloom");
   }
@@ -378,8 +374,7 @@ inline void LINKS::write_from_block_to_map() {
             mate_data.kmer_1_hash, mate_data.kmer_2_hash)) == mate_pair.end()) {
       mate_pair[std::make_pair(mate_data.kmer_1_hash, mate_data.kmer_2_hash)] =
           MatePairInfo(false, mate_data.distance);
-      mates.insert(
-          mate_data.kmer_1_hash); // with new data structure have to insert both
+      mates.insert(mate_data.kmer_1_hash);
       mates.insert(mate_data.kmer_2_hash);
     }
   }
@@ -421,37 +416,24 @@ inline void LINKS::InputWorker::work() {
   Read read;
 
   size_t read_c = 0;
-  //uint one_percent_read_count = links.cur_file_read_count / 100;
-  //uint last_print = 0;
-  //if(links.verbose) {
-  //	links.progress_bar(0); // empty progress bar print
-  //	std::cout << "\n";
-  //}
 
   for (auto record : (*(links.reader))) {
-    block.data[block.count++] = Read(
-        record.num, // read_c instead of record.num
-        std::move(record.id), std::move(record.comment), std::move(record.seq));
+    block.data[block.count++] =
+        Read(record.num, std::move(record.id), std::move(record.comment),
+             std::move(record.seq));
     if (block.count == links.read_block_size) {
       block.num = current_block_num++;
       links.input_queue->write(block);
       block.count = 0;
     }
     read_c++;
-    if(read_c % PRINT_READ_COUNT_PERIOD == 0){
-      if(read_c == PRINT_READ_COUNT_PERIOD){
+    if (read_c % PRINT_READ_COUNT_PERIOD == 0) {
+      if (read_c == PRINT_READ_COUNT_PERIOD) {
         std::cout << "Processed read count: " << read_c;
       } else {
         std::cout << " - " << read_c << std::flush; // avoid buffering of stdout
       }
-      
     }
-    //if (links.verbose && read_c - last_print >= 4 * one_percent_read_count ||
-    //    read_c == links.cur_file_read_count) {
-    //  last_print = read_c;
-      //links.progress_bar(float(read_c) / float(links.cur_file_read_count));
-    //  std::cout << " " << read_c << " processed" << std::endl;
-    //}
   }
 
   if (block.count > 0) {
@@ -464,21 +446,12 @@ inline void LINKS::InputWorker::work() {
     block.count = 0;
     links.input_queue->write(block);
   }
-  if(read_c < PRINT_READ_COUNT_PERIOD){
+  if (read_c < PRINT_READ_COUNT_PERIOD) {
     std::cout << "Processed read count: " << read_c << std::endl;
   } else {
     std::cout << " - " << read_c << std::endl; // final 'processed reads' print
   }
 }
-
-/*
-inline uint LINKS::get_read_count(std::string &read_file) {
-  std::ifstream inFile(read_file);
-  uint line_count = std::count(std::istreambuf_iterator<char>(inFile),
-                               std::istreambuf_iterator<char>(), '\n');
-  return static_cast<uint>(static_cast<double>(line_count)/4);
-}
-*/
 
 inline void LINKS::start_read_fasta() {
   std::string read_file = long_reads.front();
@@ -487,11 +460,6 @@ inline void LINKS::start_read_fasta() {
       new btllib::SeqReader(read_file, btllib::SeqReader::Flag::LONG_MODE));
 
   std::cout << "Reading: " << read_file << std::endl;
-  /*
-  if(verbose){
-  	cur_file_read_count = get_read_count(read_file);
-  }
-  */
   extract_mate_pair_workers =
       std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
 
@@ -514,7 +482,6 @@ inline void LINKS::start_read_contig() {
       new btllib::SeqReader(assembly_file, btllib::SeqReader::Flag::LONG_MODE));
 
   std::cout << "Reading: " << assembly_file << std::endl;
-  //cur_file_read_count = get_read_count(assembly_file);
 
   input_worker.reset();
   input_worker = std::shared_ptr<InputWorker>(new InputWorker(*this));
@@ -769,11 +736,9 @@ inline void LINKS::add_to_pair_map(
           pair[std::get<0>(first_pair)].end() ||
       pair[std::get<0>(first_pair)][isz].find(std::get<1>(first_pair)) ==
           pair[std::get<0>(first_pair)][isz].end()) {
-    // std::cout << "Checkpoint 7.1 adding to pair new GAPSLINKS\n";
     pair[std::get<0>(first_pair)][isz][std::get<1>(first_pair)] =
         PairLinkInfo(distance, 1);
   } else {
-    // std::cout << "Checkpoint 7.2 adding to pair existing gapslings\n";
     pair[std::get<0>(first_pair)][isz][std::get<1>(first_pair)].gaps +=
         distance;
     pair[std::get<0>(first_pair)][isz][std::get<1>(first_pair)].links += 1;
@@ -783,7 +748,6 @@ inline void LINKS::add_to_pair_map(
           pair[std::get<0>(second_pair)].end() ||
       pair[std::get<0>(second_pair)][isz].find(std::get<1>(second_pair)) ==
           pair[std::get<0>(second_pair)][isz].end()) {
-    // std::cout << "Checkpoint 7.3 adding to pair new GAPSLINKSs\n";
     pair[std::get<0>(second_pair)][isz][std::get<1>(second_pair)] =
         PairLinkInfo(distance, 1);
   } else {
@@ -800,24 +764,6 @@ inline int LINKS::get_distance_bin(int distance) {
          : distance < 5000 ? 5000
                            : 10000;
 }
-
-/*
-inline void LINKS::progress_bar(float progress) {
-  int barWidth = 70;
-
-  std::cout << "[";
-  int pos = barWidth * progress;
-  for (int i = 0; i < barWidth; ++i) {
-    if (i < pos)
-      std::cout << "=";
-    else if (i == pos)
-      std::cout << ">";
-    else
-      std::cout << " ";
-  }
-  std::cout << "] " << int(progress * 100.0) << "%";
-}
-*/
 
 inline int LINKS::get_distance(uint64_t insert_size, uint64_t length_i,
                                uint64_t start_i, uint64_t start_j) {
@@ -865,24 +811,14 @@ inline void LINKS::pair_contigs() {
   int isz;
 
   std::string tig_a, tig_b, ftig_a, ftig_b, rtig_a, rtig_b;
-  // uint64_t A_length = 0, A_start = 0, A_end = 0, B_length = 0, B_start = 0,
-  //         B_end = 0;
 
   KmerInfo kmer1, kmer2;
 
   size_t counter = 0;
   size_t percent_size = mate_pair.size() / 25;
-  //cur_file_read_count = mate_pair.size(); // for progress bar
   mate_pair_type::iterator mate_pair_iterator;
   for (mate_pair_iterator = mate_pair.begin();
        mate_pair_iterator != mate_pair.end(); mate_pair_iterator++) {
-    //if (verbose && counter % percent_size == 0) {
-    //  progress_bar(float(counter) / float(mate_pair.size()));
-    //  std::cout << "\n";
-    //}
-    // if (counter % percent_size == 0) {
-    //  std::cout << "Done: %" << uint(counter / percent_size) << std::endl;
-    //}
     ++counter;
     if (mate_pair_iterator->second.seen == false && // matepair is not seen
         track_all_test[mate_pair_iterator->first.first].multiple ==
@@ -899,9 +835,6 @@ inline void LINKS::pair_contigs() {
       low_iz = insert_size + min_allowed;              // check int
       up_iz = insert_size - min_allowed;               // check int
 
-      // if (track_all_test[mate_pair_iterator->first.first].tig != "" &&
-      //    track_all_test[mate_pair_iterator->first.second].tig !=
-      //        "") { // double check if tig names not null
       if (track_all_test.find(mate_pair_iterator->first.first) !=
               track_all_test.end() && // first mate is tracked
           track_all_test.find(mate_pair_iterator->first.second) !=
@@ -913,7 +846,6 @@ inline void LINKS::pair_contigs() {
 
         if (kmer1.tig != kmer2.tig) { // paired reads located on <> contigs
 
-          // MURATHAN DEBUG 11.5.21
           if (!kmer1.orient) {   // if kmer1 is forward
             if (!kmer2.orient) { // if kmer1 is forward
               // if kmer2 is forward
@@ -976,11 +908,19 @@ inline void LINKS::pair_contigs() {
               if (pet_size >= low_iz && pet_size <= up_iz) {
                 ct_ok_contig++;
               } else {
-                issues_file << "Pairs unsatisfied in distance within a contig.  Pairs on " 
-                << "contig id: " << kmer1.tig << " (length: " << tig_length[kmer1.tig] << ")\n"
-                << "kmer start: " << kmer1.start << " kmer end: " << kmer1.end << " orientation: " << kmer1.orient << "\n"
-                << "kmer start: " << kmer2.start << " kmer end: " << kmer2.end << " orientation: " << kmer2.orient << "\n"
-                << "Calculated distance apart on contig: " << pet_size << " - Distance on read: " << insert_size << "\n";
+                issues_file
+                    << "Pairs unsatisfied in distance within a contig.  Pairs "
+                       "on "
+                    << "contig id: " << kmer1.tig
+                    << " (length: " << tig_length[kmer1.tig] << ")\n"
+                    << "kmer start: " << kmer1.start
+                    << " kmer end: " << kmer1.end
+                    << " orientation: " << kmer1.orient << "\n"
+                    << "kmer start: " << kmer2.start
+                    << " kmer end: " << kmer2.end
+                    << " orientation: " << kmer2.orient << "\n"
+                    << "Calculated distance apart on contig: " << pet_size
+                    << " - Distance on read: " << insert_size << "\n";
                 ct_iz_issues++;
               }
             } else {
@@ -988,11 +928,19 @@ inline void LINKS::pair_contigs() {
               if (pet_size >= low_iz && pet_size <= up_iz) {
                 ct_ok_contig++;
               } else {
-                issues_file << "Pairs unsatisfied in distance within a contig.  Pairs on " 
-                << "contig id: " << kmer1.tig << " (length: " << tig_length[kmer1.tig] << ")\n"
-                << "kmer start: " << kmer1.start << " kmer end: " << kmer1.end << " orientation: " << kmer1.orient << "\n"
-                << "kmer start: " << kmer2.start << " kmer end: " << kmer2.end << " orientation: " << kmer2.orient << "\n"
-                << "Calculated distance apart on contig: " << pet_size << " - Distance on read: " << insert_size << "\n";
+                issues_file
+                    << "Pairs unsatisfied in distance within a contig.  Pairs "
+                       "on "
+                    << "contig id: " << kmer1.tig
+                    << " (length: " << tig_length[kmer1.tig] << ")\n"
+                    << "kmer start: " << kmer1.start
+                    << " kmer end: " << kmer1.end
+                    << " orientation: " << kmer1.orient << "\n"
+                    << "kmer start: " << kmer2.start
+                    << " kmer end: " << kmer2.end
+                    << " orientation: " << kmer2.orient << "\n"
+                    << "Calculated distance apart on contig: " << pet_size
+                    << " - Distance on read: " << insert_size << "\n";
                 ct_iz_issues++;
               }
             }
@@ -1031,9 +979,9 @@ inline void LINKS::pair_contigs() {
   uint64_t ct_both_reads = ct_both * 2;
 
   std::cout << "\n===========PAIRED K-MER STATS===========\n";
-  std::cout << "At least one sequence/pair missing from contigs: " // good
-            << ct_single << "\n";
-  std::cout << "Ambiguous kmer pairs (both kmers are ambiguous): " // good
+  std::cout << "At least one sequence/pair missing from contigs: " << ct_single
+            << "\n";
+  std::cout << "Ambiguous kmer pairs (both kmers are ambiguous): "
             << ct_multiple << "\n";
   std::cout << "Assembled pairs: " << ct_both << " (" << ct_both_reads
             << " sequences)\n";
@@ -1044,14 +992,14 @@ inline void LINKS::pair_contigs() {
                "out-of-bounds): "
             << ct_iz_issues << "\n";
   std::cout << "\tUnsatisfied pairing logic within contigs (i.e. illogical "
-               "pairing ->->, <-<- or <-->): " // good
+               "pairing ->->, <-<- or <-->): "
             << ct_illogical << "\n";
   std::cout << "\t---\n";
   std::cout << "\tSatisfied in distance/logic within a given contig pair "
-               "(pre-scaffold): " // good
+               "(pre-scaffold): "
             << ct_ok_pairs << "\n";
   std::cout << "\tUnsatisfied in distance within a given contig pair (i.e. "
-               "calculated distances out-of-bounds): " // good
+               "calculated distances out-of-bounds): "
             << ct_problem_pairs << "\n";
   std::cout << "\t---\n";
   std::cout << "Total satisfied: " << satisfied

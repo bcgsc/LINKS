@@ -225,7 +225,7 @@ public:
       std::cerr << "\n File of files for reads cannot be empty (-s)\n";
       arguments_satisfied = false;
     }
-    
+
     if (distances.size() < step_sizes.size()) {
       std::cerr << "\n Number of provided distances can't be lower than number "
                    "of step sizes provided.\n";
