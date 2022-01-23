@@ -457,7 +457,7 @@ Accurate scaffolding depends on many factors.  Number and nature of repeats in y
 NOTE: IT IS ADVISED TO RUN LINKS WITH SMALLER DISTANCES (-d) FIRST, ESPECIALLY WHEN ASSEMBLIES ARE VERY FRAGMENTED.
 
 
-### MPET INPUT
+### MPET INPUT (deprecated in v2.0.0+)
 ---------------------
 
 In v1.7, a new option (-m) instructs LINKS that the long-read source (-s) is MPET. The users should prepare their input as specified in:
@@ -486,7 +486,7 @@ When doing so, ensure that -t is set to extract at least ~5 kmer pairs/MPET pair
 As a rule of thumb, -l should be set to at least double that value (-l 10 in this case)
 
 
-### Preparing the MPET input
+### Preparing the MPET input (deprecated in v2.0.0+)
 ------------------------
 <pre>
 For each fastq MPET file, convert in fasta:
