@@ -67,7 +67,7 @@ To install LINKS in a specific directory:
 ./configure --prefix=/LINKS/PATH && make install
 ```
 
-* *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz
+*These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz
 
 ### Running LINKS v2.0.1
 -------------------------------
