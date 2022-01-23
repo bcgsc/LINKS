@@ -30,9 +30,20 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 - Perl (tested on v5.32.1)
 - Autotools (if cloning directly from repository)
 
-### Compilation:
+### Installation:
 -------------------------------
-If cloning directly from the repository run:
+#### Installing ntJoin using Brew
+LINKS can be installed using [Homebrew](https://brew.sh) on macOS or [Linuxbrew](http://linuxbrew.sh) on Linux:
+```sh
+brew install brewsci/bio/links-scaffolder
+```
+
+#### Installing LINKS using Conda
+```sh
+conda install -c bioconda -c conda-forge links
+```
+
+#### Installing LINKS from the source code
 
 ```
 git clone --recursive https://github.com/bcgsc/LINKS.git
