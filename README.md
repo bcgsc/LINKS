@@ -45,31 +45,34 @@ Generate autotools scripts:
 ./autogen.sh
 ```
 
-To compile LINKS run:
+To install LINKS:
 
 ```
-./configure && make
+./configure && make install
 ```
-* Do not run `install` command to copy required executables to your path. Add the `bin` folder to your path as described in the next section. Support for `install` command is under development.
+To install LINKS in a specific directory:
+
+```
+./configure --prefix=/LINKS/PATH && make install
+```
 
 * *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz
 
-### Running LINKS v2.0.0
+### Running LINKS v2.0.1
 -------------------------------
 
-Add `bin` folder to your path when you are in the top level directory of the source tree:
-```
-export PATH=$(pwd)/bin:$PATH
-```
+Users must have all executable files(`LINKS`,`LINKS-make`,`LINKS_CPP`,`LINKS.pl`) accesible in PATH directories.
 
-Users can run `LINKS` (shell script in bin folder) to run the whole pipeline smoothly with LINKS parameters (such as -d xx -t yy) as pre 2.0.0 versions.
-
-To run LINKS with default parameters with `bin/LINKS`, assuming `bin` folder is in path:
+To run LINKS with default parameters:
 ```
 LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
-* *LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and has different argument value assignment (such as d=xx t=yy instead of -d xx -t yy).
+* *LINKS v2.0.0+ is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and has different argument value assignment (such as d=xx t=yy instead of -d xx -t yy).
+
+### What's new in v2.0.1 ?
+---------------------
+* bug fixes
 
 ### What's new in v2.0.0 ?
 ---------------------
