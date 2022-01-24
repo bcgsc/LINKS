@@ -1,9 +1,9 @@
 #!/usr/bin/make -f
-#Pipeline for the LINKS program
-#Written by Murathan Goktas
+# Pipeline for the LINKS program
+# Written by Murathan Goktas
 #Default Parameters
 
-#parameters
+# parameters
 d=4000
 k=15
 t=2
@@ -32,12 +32,12 @@ SHELL=bash -e -o pipefail
 ifeq ($(shell zsh -e -o pipefail -c 'true' 2>/dev/null; echo $$?), 0)
 #Set pipefail to ensure that all commands of a pipe succeed.
 SHELL=zsh -e -o pipefail
-#Report run time and memory usage with zsh.
+# Report run time and memory usage with zsh.
 export REPORTTIME=1
 export TIMEFMT=time user=%U system=%S elapsed=%E cpu=%P memory=%M job=%J
 endif
 
-#Use pigz or bgzip for parallel compression if available.
+# Use pigz or bgzip for parallel compression if available.
 ifneq ($(shell command -v pigz),)
 gzip=pigz -p$t
 else
@@ -48,7 +48,7 @@ gzip=gzip
 endif
 endif
 
-#Record run time and memory usage in a file using GNU time.
+# Record run time and memory usage in a file using GNU time.
 ifdef time
 ifneq ($(shell command -v gtime),)
 gtime=command gtime -v -o $@.time
@@ -64,7 +64,7 @@ endif
 
 
 all: help
-#Help
+# Help
 help:
 	@echo ""
 	@echo "Usage: ./LINKS-make [COMMAND] [OPTION=VALUE]..."
@@ -114,7 +114,7 @@ clean:
 version:
 	@echo "links-make v2.0.1"
 
-#Make an Empty fof File
+# Make an Empty fof File
 empty.fof:
 	touch $@
 
@@ -124,5 +124,5 @@ $(b).tigpair_checkpoint.tsv : $(draft) $(readsFof)
 $(b).scaffold.fa : $(b).tigpair_checkpoint.tsv empty.fof
 	$(gtime) LINKS.pl -f $(draft) -s empty.fof -b $b -l $l -a $a -e $e -z $z -p $p -v $v
 
-#Run LINKS
+# Run LINKS
 LINKS: $(b).scaffold.fa
