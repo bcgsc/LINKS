@@ -36,8 +36,6 @@ public:
   void pair_contigs();
   ~LINKS();
 
-  InputParser input_parser;
-
   std::string assembly_file;
   std::string fof_file;
   std::vector<uint32_t> distances = {4000};
@@ -226,8 +224,7 @@ private:
   size_t mate_pair_buffer_size = 6;
   size_t mate_pair_block_size = 1000000;
 
-  btllib::KmerBloomFilter *make_bf(uint64_t bf_elements,
-                                   InputParser links_arg_parser);
+  btllib::KmerBloomFilter *make_bf(uint64_t bf_elements);
   void extract_mate_pair(
       const std::string &seq,
       btllib::OrderQueueSPMC<BufferMatePairData>::Block &mate_pair_block);
@@ -283,42 +280,41 @@ private:
   std::atomic<std::size_t> mate_threads_done_writing = {0};
 };
 
-inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
-                                               InputParser links_arg_parser) {
+inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements) {
   btllib::KmerBloomFilter *assembly_BF;
-  if (links_arg_parser.bf_file != "") {
-    std::cout << "A Bloom filter was supplied (" << links_arg_parser.bf_file
+  if (bf_file != "") {
+    std::cout << "A Bloom filter was supplied (" << bf_file
               << ") and will be used instead of building a new one\n";
-    if (!does_file_exist(links_arg_parser.bf_file)) {
-      std::cout << "\nInvalid file: " << links_arg_parser.bf_file
+    if (!does_file_exist(bf_file)) {
+      std::cout << "\nInvalid file: " << bf_file
                 << " -- fatal\n";
       exit(1);
     }
 
-    assembly_BF = new btllib::KmerBloomFilter(links_arg_parser.bf_file);
+    assembly_BF = new btllib::KmerBloomFilter(bf_file);
   } else {
-    uint64_t m = ceil((-1 * (double)bf_elements * log(links_arg_parser.fpr)) /
+    uint64_t m = ceil((-1 * (double)bf_elements * log(fpr)) /
                       (log(2) * log(2)));
 
     m = ((uint64_t)(m / 8) + 1) * 8;
 
     unsigned hash_fct = floor(((double)m / bf_elements) * log(2));
     std::cout << "- Number of BF Elements: " << bf_elements << "\n"
-              << "- Input file path: " << links_arg_parser.base_name << "\n"
-              << "- Input file: " << links_arg_parser.assembly_file << "\n"
-              << "- kmersize: " << links_arg_parser.k << "\n"
+              << "- Input file path: " << base_name << "\n"
+              << "- Input file: " << assembly_file << "\n"
+              << "- kmersize: " << k << "\n"
               << "- m: " << m << "\n"
-              << "- fpr: " << links_arg_parser.fpr << "\n"
+              << "- fpr: " << fpr << "\n"
               << "- hashFct: " << hash_fct << "\n";
 
     std::string reading_tigbloom_message =
         "\n\n=>Reading contig/sequence assembly file : " +
         std::to_string(time(0)) + "\n";
 
-    std::cout << "- Filter output file : " << links_arg_parser.k << "\n";
+    std::cout << "- Filter output file : " << k << "\n";
     assembly_BF =
-        new btllib::KmerBloomFilter(m / 8, hash_fct, links_arg_parser.k);
-    btllib::SeqReader assembly_reader(links_arg_parser.assembly_file, 8, 1);
+        new btllib::KmerBloomFilter(m / 8, hash_fct, k);
+    btllib::SeqReader assembly_reader(assembly_file, 8, 1);
     size_t builder = 0;
     for (btllib::SeqReader::Record record; (record = assembly_reader.read());) {
 
@@ -326,15 +322,15 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements,
       assembly_BF->insert(record.seq);
     }
     std::string bfmsg = "\n\nWriting Bloom filter to disk (" +
-                        links_arg_parser.base_name + ".bloom" + ")\n";
+                        base_name + ".bloom" + ")\n";
     std::cout << bfmsg;
-    assembly_BF->save(links_arg_parser.base_name + ".bloom");
+    assembly_BF->save(base_name + ".bloom");
   }
   return assembly_BF;
 }
 
 inline LINKS::LINKS(InputParser input_parser)
-    : input_parser(input_parser), assembly_file(input_parser.assembly_file),
+    : assembly_file(input_parser.assembly_file),
       long_reads(input_parser.long_reads), distances(input_parser.distances),
       k(input_parser.k), verbose(input_parser.verbose),
       min_size(input_parser.min_size), step_sizes(input_parser.step_sizes),
@@ -349,9 +345,9 @@ inline LINKS::LINKS(InputParser input_parser)
       input_worker(std::shared_ptr<InputWorker>(new InputWorker(*this))) {}
 
 inline void LINKS::init_bloom_filter() {
-  int64_t bf_elements = get_file_size(input_parser.assembly_file);
+  int64_t bf_elements = get_file_size(assembly_file);
   bloom = std::shared_ptr<btllib::KmerBloomFilter>(
-      make_bf(bf_elements, input_parser));
+      make_bf(bf_elements));
 }
 
 inline void LINKS::write_from_block_to_map() {
@@ -774,15 +770,15 @@ inline int LINKS::get_distance(uint64_t insert_size, uint64_t length_i,
   return gap_or_overlap;
 }
 inline void LINKS::pair_contigs() {
-  std::string issues = input_parser.base_name + ".pairing_issues";
+  std::string issues = base_name + ".pairing_issues";
   std::string distribution =
-      input_parser.base_name + ".pairing_distribution.csv";
+      base_name + ".pairing_distribution.csv";
   std::string tigpair_checkpoint =
-      input_parser.base_name +
+      base_name +
       ".tigpair_checkpoint.tsv"; // add a checkpoint file, prevent re-running
                                  // LINKS from scratch if crash
   std::string simplepair_checkpoint =
-      input_parser.base_name +
+      base_name +
       ".simplepair_checkpoint.tsv"; // add a checkpoint file, prevent re-running
                                     // LINKS from scratch if cras
   uint64_t totalPairs = 0;

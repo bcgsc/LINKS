@@ -64,19 +64,15 @@ private:
   }
 
 public:
+  // parameters read by LINKS.hpp
   std::string assembly_file = "";
-  std::string fof_file = "";
-  bool arguments_satisfied = true;
   std::queue<std::string> long_reads;
-  std::string distances_text = "";
   std::vector<uint32_t> distances = {4000};
   std::string step_sizes_text = "2";
   std::vector<uint16_t> step_sizes = {2};
   uint64_t k = 15;
   bool verbose = false;
-  uint64_t min_links = 5;
   uint64_t min_size = 500;
-  float max_link_ratio = 0.3;
   float insert_stdev = 0.1;
   std::string base_name = "";
   uint64_t offset = 0;
@@ -84,6 +80,15 @@ public:
   float fpr = 0.001;
   bool bf_off = false;
   uint thread = 3;
+
+  // parameters that doesnt have functionality in cpp
+  // code except base naming
+  uint64_t min_links = 5;
+  float max_link_ratio = 0.3;
+
+  std::string fof_file = "";
+  bool arguments_satisfied = true;
+  std::string distances_text = "";
 
   static void print_usage() {
     std::cout
