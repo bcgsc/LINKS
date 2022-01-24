@@ -8,11 +8,13 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "config.h"
+
 
 // Globals
 #define BASE_TEN 10
 static const std::string progname = "LINKS";
-static const std::string version = "2.0.1";
+static const std::string version = PACKAGE_VERSION;
 
 class InputParser {
 private:
