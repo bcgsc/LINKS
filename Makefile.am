@@ -6,4 +6,5 @@ EXTRA_DIST = 	autogen.sh \
 	   	btllib \
 		bin/LINKS-make \
 		bin/LINKS \
-		bin/LINKS.pl
+		bin/LINKS.pl \
+		tests
