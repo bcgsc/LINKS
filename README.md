@@ -69,7 +69,7 @@ To run LINKS with default parameters with `bin/LINKS`, assuming `bin` folder is 
 LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
-* *LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and has different argument value assignment (such as d=xx t=yy instead of -d xx -t yy).
+* *LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and has different argument value assignment (such as d=xx t=yy instead of -d xx -t yy). To avoid this, run `LINKS`(shell script) which is a wrapper for `LINKS-make` that accepts same argument value assignment used in previous LINKS versions(-d xx -t yy).
 
 ### What's new in v2.0.0 ?
 ---------------------
