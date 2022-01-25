@@ -32,7 +32,7 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 
 ### Installation:
 -------------------------------
-#### Installing ntJoin using Brew
+#### Installing LINKS using Brew
 LINKS can be installed using [Homebrew](https://brew.sh) on macOS or [Linuxbrew](http://linuxbrew.sh) on Linux:
 ```sh
 brew install brewsci/bio/links-scaffolder
