@@ -32,12 +32,6 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 
 ### Installation:
 -------------------------------
-#### Installing LINKS using Brew
-LINKS can be installed using [Homebrew](https://brew.sh) on macOS or [Linuxbrew](http://linuxbrew.sh) on Linux:
-```sh
-brew install brewsci/bio/links-scaffolder
-```
-
 #### Installing LINKS using Conda
 ```sh
 conda install -c bioconda -c conda-forge links
