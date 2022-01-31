@@ -3,9 +3,6 @@
 # Written by Murathan Goktas
 #Default Parameters
 
-
-
-
 # parameters
 d=4000
 k=15
@@ -16,8 +13,7 @@ z=500
 p=0.001
 x=0
 v=0
-j=2
-m=0
+j=3
 
 l=5
 a=0.3
@@ -67,7 +63,7 @@ endif
 .SECONDARY: 
 
 
-all: help 
+all: help
 # Help
 help:
 	@echo ""
@@ -88,11 +84,6 @@ help:
 	@echo ""
 	@echo "	LINKS Options:"
 	@echo ""
-	@echo "	m	MPET reads (default -m 1 = yes, default = no, optional"
-	@echo "			! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A SPECIAL FORMAT UNDER -s"
-	@echo "			! Paired MPET reads in their original outward orientation <- -> must be separated by ":""
-	@echo "			>template_name"
-	@echo "			ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC"
 	@echo "	d	distance between k-mer pairs (ie. target distances to re-scaffold on. default -d 4000, optional)"
 	@echo "			Multiple distances are separated by comma. eg. -d 500,1000,2000,3000"
 	@echo "	k	k-mer value (default -k 15, optional)"
@@ -121,18 +112,17 @@ clean:
 	@echo "Clean Done"
 
 version:
-	@echo "links-make v2.0.0"
+	@echo "links-make v2.0.1"
 
 # Make an Empty fof File
 empty.fof:
 	touch $@
 
 $(b).tigpair_checkpoint.tsv : $(draft) $(readsFof)
-	$(gtime) $(bin)/../src/LINKS_CPP -f $(draft) -s $(readsFof) $(r_conditional) $r -d $d -k $k -t $t -j $j -l $l -o $o -m $m -e $e -z $z -p $p -b $b -v $v -x $x
+	$(gtime) LINKS_CPP -f $(draft) -s $(readsFof) $(r_conditional) $r -d $d -k $k -t $t -j $j -l $l -o $o -e $e -z $z -p $p -b $b -v $v -x $x
 
 $(b).scaffold.fa : $(b).tigpair_checkpoint.tsv empty.fof
-	$(gtime) perl $(bin)/LINKS.pl -f $(draft) -s empty.fof -b $b -l $l -a $a -e $e -z $z -p $p -v $v
+	$(gtime) LINKS.pl -f $(draft) -s empty.fof -b $b -l $l -a $a -e $e -z $z -p $p -v $v
 
 # Run LINKS
 LINKS: $(b).scaffold.fa
-	

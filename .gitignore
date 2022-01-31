@@ -2,4 +2,14 @@ releases/links_v1.8.7/.LINKS.swp
 src/LINKS_CPP
 src/.deps
 .DS_Store
+
 *.o
+*.in
+*.m4
+*.cache/
+*.log
+*.status
+depcomp
+install-sh
+missing
+stamp-h1

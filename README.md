@@ -10,7 +10,7 @@ Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg
 # LINKS
 
 ## Long Interval Nucleotide K-mer Scaffolder
-## LINKS v2.0.0 René L. Warren, Yaman Malkoc, T. Murathan Goktas 2014-2022
+## LINKS v2.0.1 René L. Warren, Yaman Malkoc, T. Murathan Goktas 2014-2022
 ## email: rwarren [at] bcgsc [dot] ca
 
 
@@ -30,9 +30,14 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 - Perl (tested on v5.32.1)
 - Autotools (if cloning directly from repository)
 
-### Compilation:
+### Installation:
 -------------------------------
-If cloning directly from the repository run:
+#### Installing LINKS using Conda
+```sh
+conda install -c bioconda -c conda-forge links
+```
+
+#### Installing LINKS from the source code
 
 ```
 git clone --recursive https://github.com/bcgsc/LINKS.git
@@ -45,31 +50,34 @@ Generate autotools scripts:
 ./autogen.sh
 ```
 
-To compile LINKS run:
+To install LINKS:
 
 ```
-./configure && make
+./configure && make install
 ```
-* Do not run `install` command to copy required executables to your path. Add the `bin` folder to your path as described in the next section. Support for `install` command is under development.
+To install LINKS in a specific directory:
 
-* *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz
+```
+./configure --prefix=/LINKS/PATH && make install
+```
 
-### Running LINKS v2.0.0
+*These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz
+
+### Running LINKS v2.0.1
 -------------------------------
 
-Add `bin` folder to your path when you are in the top level directory of the source tree:
-```
-export PATH=$(pwd)/bin:$PATH
-```
+Users must have all executable files(`LINKS`,`LINKS-make`,`LINKS_CPP`,`LINKS.pl`) accesible in PATH directories.
 
-Users can run `LINKS` (shell script in bin folder) to run the whole pipeline smoothly with LINKS parameters (such as -d xx -t yy) as pre 2.0.0 versions.
-
-To run LINKS with default parameters with `bin/LINKS`, assuming `bin` folder is in path:
+To run LINKS with default parameters:
 ```
 LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 ```
 
-* *LINKS v2.0.0 is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and has different argument value assignment (such as d=xx t=yy instead of -d xx -t yy).
+* *LINKS v2.0.0+ is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and has different argument value assignment (such as d=xx t=yy instead of -d xx -t yy). To avoid this, run `LINKS`(shell script) which is a wrapper for `LINKS-make` that accepts same argument value assignment used in previous LINKS versions(-d xx -t yy).
+
+### What's new in v2.0.1 ?
+---------------------
+* bug fixes
 
 ### What's new in v2.0.0 ?
 ---------------------
@@ -454,7 +462,7 @@ Accurate scaffolding depends on many factors.  Number and nature of repeats in y
 NOTE: IT IS ADVISED TO RUN LINKS WITH SMALLER DISTANCES (-d) FIRST, ESPECIALLY WHEN ASSEMBLIES ARE VERY FRAGMENTED.
 
 
-### MPET INPUT
+### MPET INPUT (deprecated in v2.0.0+)
 ---------------------
 
 In v1.7, a new option (-m) instructs LINKS that the long-read source (-s) is MPET. The users should prepare their input as specified in:
@@ -483,7 +491,7 @@ When doing so, ensure that -t is set to extract at least ~5 kmer pairs/MPET pair
 As a rule of thumb, -l should be set to at least double that value (-l 10 in this case)
 
 
-### Preparing the MPET input
+### Preparing the MPET input (deprecated in v2.0.0+)
 ------------------------
 <pre>
 For each fastq MPET file, convert in fasta:

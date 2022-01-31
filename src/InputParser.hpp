@@ -8,11 +8,13 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "config.h"
+
 
 // Globals
 #define BASE_TEN 10
 static const std::string progname = "LINKS";
-static const std::string version = "2.0.0";
+static const std::string version = PACKAGE_VERSION;
 
 class InputParser {
 private:
@@ -56,52 +58,44 @@ private:
     std::string read_file;
     while (infile >> read_file) {
       long_reads.push(read_file);
-      std::cout << long_reads.back() << std::endl;
     }
 
     return long_reads;
   }
 
 public:
+  // parameters read by LINKS.hpp
   std::string assembly_file = "";
-  std::string fof_file = "";
-  bool arguments_satisfied = true;
   std::queue<std::string> long_reads;
-  std::string distances_text = "";
   std::vector<uint32_t> distances = {4000};
   std::string step_sizes_text = "2";
   std::vector<uint16_t> step_sizes = {2};
   uint64_t k = 15;
   bool verbose = false;
-  uint64_t min_links = 5;
   uint64_t min_size = 500;
-  float max_link_ratio = 0.3;
-  // Added for MPET
-  uint64_t read_length;     // MPET
-  float insert_stdev = 0.1; // MPET (Need to adjust to a wider-range of
-                            // distances when dealing with MPET)
-  std::string base_name =
-      ""; // When set, this will override the MPET-induced changes on -e
+  float insert_stdev = 0.1;
+  std::string base_name = "";
   uint64_t offset = 0;
   std::string bf_file = "";
   float fpr = 0.001;
   bool bf_off = false;
   uint thread = 3;
 
+  // parameters that doesnt have functionality in cpp
+  // code except base naming
+  uint64_t min_links = 5;
+  float max_link_ratio = 0.3;
+
+  std::string fof_file = "";
+  bool arguments_satisfied = true;
+  std::string distances_text = "";
+
   static void print_usage() {
     std::cout
         << "Usage:  " << progname << " " << version << "\n"
         << "  -f  sequences to scaffold (Multi-FASTA format, required)\n"
-           "  -s  file-of-filenames, full path to long sequence reads or MPET "
+           "  -s  file-of-filenames, full path to long sequence reads"
            "pairs [see below] (Multi-FASTA/fastq format, required)\n"
-           "  -m  MPET reads (default -m 1 = yes, default = no, optional)\n"
-           "  \t! DO NOT SET IF NOT USING MPET. WHEN SET, LINKS WILL EXPECT A "
-           "SPECIAL FORMAT UNDER -s\n"
-           "  \t! Paired MPET reads in their original outward orientation <- "
-           "-> must be separated by \":\"\n"
-           "  \t  >template_name\n\t  "
-           "ACGACACTATGCATAAGCAGACGAGCAGCGACGCAGCACG:"
-           "ATATATAGCGCACGACGCAGCACAGCAGCAGACGAC\n"
            "  -d  distance between k-mer pairs (ie. target distances to "
            "re-scaffold on. default -d 4000, optional)\n"
            "  \tMultiple distances are separated by comma. eg. -d "
@@ -136,9 +130,10 @@ public:
            "  -v  Runs in verbose mode (-v 1 = yes, default = no, optional)\n";
   }
   void print_opts() {
+    std::cout << "\nLINKS running options:"
+              << "\n";
     std::cout << "  -f " << assembly_file << "\n"
               << "  -s " << fof_file << "\n"
-              << "  -m " << read_length << "\n"
               << "  -d " << distances_text << "\n"
               << "  -k " << k << "\n"
               << "  -j " << thread << "\n"
@@ -161,7 +156,7 @@ public:
     this->argc = argc;
     static const struct option longopts[] = {{"help", no_argument, &help, 1},
                                              {nullptr, 0, nullptr, 0}};
-    while ((c = getopt_long(argc, argv, "f:s:m:d:k:t:j:o:e:l:a:z:b:r:p:x:v:",
+    while ((c = getopt_long(argc, argv, "f:s:d:k:t:j:o:e:l:a:z:b:r:p:x:v:",
                             longopts, &optindex)) != -1) {
       switch (c) {
       case 0:
@@ -173,10 +168,6 @@ public:
         // full path for fof
         fof_file.assign(optarg);
         long_reads = parse_fof_input(fof_file);
-        break;
-      case 'm':
-        read_length = strtoul(optarg, &end, BASE_TEN);
-        insert_stdev = 0.5;
         break;
       case 'd':
         distances_text.assign(optarg);
@@ -191,9 +182,6 @@ public:
         break;
       case 'j':
         thread = strtoul(optarg, &end, BASE_TEN);
-        thread = thread > 1 ? thread - 1
-                            : thread; // thread variable is used as producer
-                                      // thread count, one will be
         break;
       case 'o':
         offset = strtoul(optarg, &end, BASE_TEN);
@@ -239,9 +227,16 @@ public:
         step_sizes.push_back(last_step);
       }
     }
+    std::ifstream fof_file_file(fof_file);
+    if (fof_file_file.peek() == std::ifstream::traits_type::eof()) {
+      std::cerr << "\n File of files for reads cannot be empty (-s)\n";
+      arguments_satisfied = false;
+    }
+
     if (distances.size() < step_sizes.size()) {
       std::cerr << "\n Number of provided distances can't be lower than number "
                    "of step sizes provided.\n";
+      arguments_satisfied = false;
     }
     if (base_name == "") {
       // copied from v1.8.7 -- add pid to basename
@@ -251,8 +246,7 @@ public:
           std::to_string(min_links) + "_a" + std::to_string(max_link_ratio) +
           "_z" + std::to_string(min_size) + "_t" + step_sizes_text + "_o" +
           std::to_string(offset) + "_r-" + (bf_off ? "-" : bf_file) + "_p" +
-          std::to_string(fpr) + "_x" + std::to_string(bf_off) + "_m" +
-          std::to_string(read_length);
+          std::to_string(fpr) + "_x" + std::to_string(bf_off);
     }
     if (assembly_file == "" || fof_file == "") {
       print_usage();
