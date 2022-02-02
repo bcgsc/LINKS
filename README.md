@@ -1,5 +1,5 @@
 [![Release](https://img.shields.io/github/release/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/releases)
-[![Downloads](https://img.shields.io/github/downloads/bcgsc/LINKS/total?logo=github)](https://github.com/bcgsc/LINKS/releases/download/v1.8.7/links_v1-8-7.tar.gz)
+[![Downloads](https://img.shields.io/github/downloads/bcgsc/LINKS/total?logo=github)](https://github.com/bcgsc/LINKS/releases/download/v2.0.1/links-v2.0.1.tar.gz)
 [![Conda](https://img.shields.io/conda/dn/bioconda/links?label=Conda)](https://anaconda.org/bioconda/LINKS)
 [![Issues](https://img.shields.io/github/issues/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/issues)
 [![link](https://img.shields.io/badge/LINKS-manuscript-brightgreen)](https://gigascience.biomedcentral.com/articles/10.1186/s13742-015-0076-3)
