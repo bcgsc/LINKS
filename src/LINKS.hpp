@@ -217,6 +217,7 @@ private:
 
   std::string seq_file;
   std::queue<std::string> long_reads;
+  bool reading_contig = false;
 
   size_t read_buffer_size = 16;
   size_t read_block_size = 4;
@@ -401,34 +402,52 @@ inline void LINKS::write_from_block_to_set() {
 }
 
 inline void LINKS::InputWorker::work() {
-  if (links.reader->get_format() == btllib::SeqReader::Format::FASTA) {
-    links.fasta = true;
-  } else {
-    links.fasta = false;
-  }
   btllib::OrderQueueSPMC<Read>::Block block(links.read_block_size);
-
   size_t current_block_num = 0;
-  Read read;
-
   size_t read_c = 0;
+  std::string read_file;
+  Read read;
+  bool done = false;
 
-  for (auto record : (*(links.reader))) {
-    block.data[block.count++] =
-        Read(record.num, std::move(record.id), std::move(record.comment),
-             std::move(record.seq));
-    if (block.count == links.read_block_size) {
-      block.num = current_block_num++;
-      links.input_queue->write(block);
-      block.count = 0;
+  while(links.reading_contig || links.long_reads.size() > 0) {
+    if(!links.reading_contig){
+      read_file = links.long_reads.front();
+      links.long_reads.pop();
+      links.reader = std::shared_ptr<btllib::SeqReader>(
+        new btllib::SeqReader(read_file, btllib::SeqReader::Flag::LONG_MODE));
+    } else {
+        links.reader = std::shared_ptr<btllib::SeqReader>(
+            new btllib::SeqReader(links.assembly_file, btllib::SeqReader::Flag::LONG_MODE));
     }
-    read_c++;
-    if (read_c % PRINT_READ_COUNT_PERIOD == 0) {
-      if (read_c == PRINT_READ_COUNT_PERIOD) {
-        std::cout << "Processed read count: " << read_c;
-      } else {
-        std::cout << " - " << read_c << std::flush; // avoid buffering of stdout
+
+    if (links.reader->get_format() == btllib::SeqReader::Format::FASTA) {
+      links.fasta = true;
+    } else {
+      links.fasta = false;
+    }
+
+    std::cout << "Reading: " << read_file << std::endl;
+
+    for (auto record : (*(links.reader))) {
+      block.data[block.count++] =
+          Read(record.num, std::move(record.id), std::move(record.comment),
+               std::move(record.seq));
+      if (block.count == links.read_block_size) {
+        block.num = current_block_num++;
+        links.input_queue->write(block);
+        block.count = 0;
       }
+      read_c++;
+      if (read_c % PRINT_READ_COUNT_PERIOD == 0) {
+        if (read_c == PRINT_READ_COUNT_PERIOD) {
+          std::cout << "Processed read count: " << read_c;
+        } else {
+          std::cout << " - " << read_c << std::flush; // avoid buffering of stdout
+        }
+      }
+    }
+    if(links.reading_contig){
+      links.reading_contig = false;
     }
   }
 
@@ -450,12 +469,6 @@ inline void LINKS::InputWorker::work() {
 }
 
 inline void LINKS::start_read_fasta() {
-  std::string read_file = long_reads.front();
-  long_reads.pop();
-  reader = std::shared_ptr<btllib::SeqReader>(
-      new btllib::SeqReader(read_file, btllib::SeqReader::Flag::LONG_MODE));
-
-  std::cout << "Reading: " << read_file << std::endl;
   extract_mate_pair_workers =
       std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
 
@@ -473,11 +486,7 @@ inline void LINKS::start_read_fasta() {
   input_worker->join();
 }
 inline void LINKS::start_read_contig() {
-  reader.reset();
-  reader = std::shared_ptr<btllib::SeqReader>(
-      new btllib::SeqReader(assembly_file, btllib::SeqReader::Flag::LONG_MODE));
-
-  std::cout << "Reading: " << assembly_file << std::endl;
+  reading_contig = true;
 
   input_worker.reset();
   input_worker = std::shared_ptr<InputWorker>(new InputWorker(*this));
