@@ -407,7 +407,6 @@ inline void LINKS::InputWorker::work() {
   size_t read_c = 0;
   std::string read_file;
   Read read;
-  bool done = false;
 
   while(links.reading_contig || links.long_reads.size() > 0) {
     if(!links.reading_contig){
