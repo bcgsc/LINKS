@@ -227,6 +227,10 @@ public:
         exit(EXIT_FAILURE);
       }
     }
+    if(threads > 4){
+      std::cout << "LINKS can't scale up to more than 4 threads. Thread count set to 4." << std::endl;
+      threads = 4;
+    }
     if (distances.size() > step_sizes.size()) {
       uint last_step = step_sizes.back();
       for (int i = step_sizes.size(); i < distances.size(); i++) {
