@@ -29,37 +29,16 @@
 
 class LINKS {
 public:
+  /* ------------------- main functions ------------------- */
   LINKS(InputParser input_parser);
   void init_bloom_filter();
   void start_read_fasta();
   void start_read_contig();
   void pair_contigs();
   ~LINKS();
-
-/*
-  std::string assembly_file;
-  std::string fof_file;
-  std::vector<uint32_t> distances = {4000};
-  std::vector<uint16_t> step_sizes = {2};
-  uint64_t k = 15;
-  bool verbose = false;
-  uint64_t min_links = 5;
-  uint64_t min_size = 500;
-  float max_link_ratio = 0.3;
-  float insert_stdev = 0.1;
-  std::string base_name;
-  uint64_t offset = 0;
-  std::string bf_file;
-  float fpr = 0.001;
-  bool bf_off = false;
-  unsigned threads = 3;
-*/
-  InputParser input_parser;
-
-  static const size_t PRINT_READ_COUNT_PERIOD = 100000;
-
-  static const size_t MAX_SIMULTANEOUS_INDEXLRS = 128;
-
+  /* ------------------- main functions ------------------- */
+private:
+  /* ------------------- structs ------------------- */
   struct BufferMatePairData {
     BufferMatePairData() {}
 
@@ -137,7 +116,9 @@ public:
     uint64_t multiple = 1;
     bool orient = 0;
   };
+  /* ------------------- structs ------------------- */
 
+  /* xor operation overrides default hash function of map */
   struct pair_hash {
     template <class T1, class T2>
     std::size_t operator()(const std::pair<T1, T2> &p) const {
@@ -145,11 +126,7 @@ public:
     }
   };
 
-  typedef std::unordered_map<std::pair<uint64_t, uint64_t>, MatePairInfo,
-                             pair_hash>
-      mate_pair_type;
-
-private:
+  /* ------------------- worker classes ------------------- */
   class Worker {
   public:
     void start() { t = std::thread(do_work, this); }
@@ -217,17 +194,9 @@ private:
 
     void work() override;
   };
+  /* ------------------- worker classes ------------------- */
 
-  std::string seq_file;
-  std::queue<std::string> long_reads;
-  bool reading_contig = false;
-
-  size_t read_buffer_size = 16;
-  size_t read_block_size = 4;
-
-  size_t mate_pair_buffer_size = 6;
-  size_t mate_pair_block_size = 1000000;
-
+  /* ------------------- helper functions ------------------- */
   btllib::KmerBloomFilter *make_bf(uint64_t bf_elements);
   void extract_mate_pair(
       const std::string &seq,
@@ -235,10 +204,6 @@ private:
   void
   populate_mate_info(const std::string &seq, const std::string contig_rank,
                      btllib::OrderQueueSPMC<BufferMateData>::Block &mate_block);
-
-  int get_distance_bin(int distance);
-  int get_distance(uint64_t insert_size, uint64_t length_i, uint64_t start_i,
-                   uint64_t start_j);
   void add_to_pair_map(
       int isz,
       std::unordered_map<
@@ -247,41 +212,66 @@ private:
               int64_t, std::unordered_map<std::string, PairLinkInfo>>> &pair,
       int distance, std::string kmer1_name, std::string kmer2_name,
       unsigned orient_enum);
-  void merge_mate_pair_map(mate_pair_type &own_new_mate_pair);
-  void merge_mates_set(std::unordered_set<uint64_t> &own_mates);
-  void merge_track_all(std::unordered_map<uint64_t, KmerInfo> &own_track_all);
   void write_from_block_to_map();
   void write_from_block_to_set();
-  // helper functions
+
+  int get_distance_bin(int distance);
+  int get_distance(uint64_t insert_size, uint64_t length_i, uint64_t start_i,
+                   uint64_t start_j);
   uint64_t get_file_size(std::string file_name);
   bool does_file_exist(std::string file_name);
-  std::atomic<bool> fasta{false};
-  uint ct_ok_pairs = 0;      // last stage verbose
-  uint ct_problem_pairs = 0; // last stage verbose
+  /* ------------------- helper functions ------------------- */
 
+  /* ------------------- constants ------------------- */
+  static const size_t PRINT_READ_COUNT_PERIOD = 100000;
+  static const size_t READ_BUFFER_SIZE = 16;
+  static const size_t READ_BLOCK_SIZE = 4;
+  static const size_t MATE_PAIR_BUFFER_SIZE = 6;
+  static const size_t MATE_PAIR_BLOCK_SIZE = 1000000;
+  /* ------------------- constants ------------------- */
+
+  /* ------------------- main fields called from various functions ------------------- */
+  InputParser input_parser;
+  
   std::shared_ptr<btllib::KmerBloomFilter> bloom;
   std::shared_ptr<btllib::SeqReader> reader;
-  std::shared_ptr<btllib::OrderQueueSPMC<Read>> input_queue;
 
+  std::shared_ptr<InputWorker> input_worker;
+  std::shared_ptr<btllib::OrderQueueSPMC<Read>> input_queue;
   btllib::OrderQueueSPMC<BufferMatePairData> mate_pair_input_queue;
   btllib::OrderQueueSPMC<BufferMateData> mate_input_queue;
-  std::shared_ptr<InputWorker> input_worker;
+  
   std::vector<ExtractMatePairWorker> extract_mate_pair_workers;
   std::vector<PopulateMateInfoWorker> populate_mate_info_workers;
 
-  std::mutex tig_length_mutex;
-
+  typedef std::unordered_map<std::pair<uint64_t, uint64_t>, MatePairInfo,
+                          pair_hash>
+  mate_pair_type;
   mate_pair_type mate_pair;
+  // stage coordination variable. false when reading reads(stage 1), true when reading contigs(stage 2)
+  bool reading_contig = false;
+  std::atomic<bool> fasta{false};
 
-  std::unordered_map<uint64_t, KmerInfo> track_all_test;
+  // track information of kmers
+  std::unordered_map<uint64_t, KmerInfo> track_all;
+  // contig length map
   std::unordered_map<std::string, uint64_t> tig_length;
   // store second mates in a set
   std::unordered_set<uint64_t> mates;
+  /* ------------------- main fields called from various functions ------------------- */
 
+  /* ------------------- thread coordination variables ------------------- */
+  std::mutex tig_length_mutex;
   std::atomic<std::size_t> mate_pair_current_block_num = {0};
   std::atomic<std::size_t> mate_pair_threads_done_writing = {0};
   std::atomic<std::size_t> mate_current_block_num = {0};
   std::atomic<std::size_t> mate_threads_done_writing = {0};
+  /* ------------------- thread coordination variables ------------------- */
+
+  /* ------------------- verbose counters ------------------- */
+  uint ct_ok_pairs = 0;      // last stage verbose
+  uint ct_problem_pairs = 0; // last stage verbose
+  /* ------------------- verbose counters ------------------- */
 };
 
 inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements) {
@@ -308,7 +298,7 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements) {
               << "- Input file: " << input_parser.assembly_file << "\n"
               << "- K: " << input_parser.k << "\n"
               << "- Fpr: " << input_parser.fpr << "\n"
-              << "- #Hash function: " << hash_fct << "\n";
+              << "- #Hash functions: " << hash_fct << "\n";
 
     std::string reading_tigbloom_message =
         "\n\n=>Reading contig/sequence assembly file : " +
@@ -335,27 +325,10 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements) {
 inline LINKS::LINKS(InputParser input_parser)
     : input_parser(input_parser),
       input_queue(std::shared_ptr<btllib::OrderQueueSPMC<Read>>(
-          new btllib::OrderQueueSPMC<Read>(read_buffer_size, read_block_size))),
-      mate_pair_input_queue(mate_pair_buffer_size, mate_pair_block_size),
-      mate_input_queue(mate_pair_buffer_size, mate_pair_block_size),
+          new btllib::OrderQueueSPMC<Read>(READ_BUFFER_SIZE, READ_BLOCK_SIZE))),
+      mate_pair_input_queue(MATE_PAIR_BUFFER_SIZE, MATE_PAIR_BLOCK_SIZE),
+      mate_input_queue(MATE_PAIR_BUFFER_SIZE, MATE_PAIR_BLOCK_SIZE),
       input_worker(std::shared_ptr<InputWorker>(new InputWorker(*this))) {}
-
-/*
-inline LINKS::LINKS(InputParser input_parser)
-    : assembly_file(input_parser.assembly_file),
-      long_reads(input_parser.long_reads), distances(input_parser.distances),
-      k(input_parser.k), verbose(input_parser.verbose),
-      min_size(input_parser.min_size), step_sizes(input_parser.step_sizes),
-      insert_stdev(input_parser.insert_stdev),
-      base_name(input_parser.base_name), offset(input_parser.offset),
-      fpr(input_parser.fpr), bf_file(input_parser.bf_file),
-      bf_off(input_parser.bf_off), threads(input_parser.thread),
-      input_queue(std::shared_ptr<btllib::OrderQueueSPMC<Read>>(
-          new btllib::OrderQueueSPMC<Read>(read_buffer_size, read_block_size))),
-      mate_pair_input_queue(mate_pair_buffer_size, mate_pair_block_size),
-      mate_input_queue(mate_pair_buffer_size, mate_pair_block_size),
-      input_worker(std::shared_ptr<InputWorker>(new InputWorker(*this))) {}
-*/
 
 inline void LINKS::init_bloom_filter() {
   int64_t bf_elements = get_file_size(input_parser.assembly_file);
@@ -365,7 +338,7 @@ inline void LINKS::init_bloom_filter() {
 
 inline void LINKS::write_from_block_to_map() {
   btllib::OrderQueueSPMC<BufferMatePairData>::Block mate_pair_block(
-      mate_pair_block_size);
+      MATE_PAIR_BLOCK_SIZE);
 
   for (;;) {
     if (mate_pair_block.current == mate_pair_block.count) {
@@ -390,7 +363,7 @@ inline void LINKS::write_from_block_to_map() {
 }
 inline void LINKS::write_from_block_to_set() {
   btllib::OrderQueueSPMC<BufferMateData>::Block mate_block(
-      mate_pair_block_size);
+      MATE_PAIR_BLOCK_SIZE);
 
   for (;;) {
     if (mate_block.current == mate_block.count) {
@@ -403,20 +376,20 @@ inline void LINKS::write_from_block_to_set() {
 
     BufferMateData &mate_data = mate_block.data[mate_block.current++];
 
-    if (track_all_test.find(mate_data.hash) == track_all_test.end()) {
-      track_all_test[mate_data.hash] =
+    if (track_all.find(mate_data.hash) == track_all.end()) {
+      track_all[mate_data.hash] =
           KmerInfo(mate_data.tig, mate_data.start, mate_data.end,
                    mate_data.multiple, mate_data.orient);
     } else {
-      track_all_test[mate_data.hash].multiple += 1;
+      track_all[mate_data.hash].multiple += 1;
     }
   }
 }
 
 inline void LINKS::InputWorker::work() {
-  btllib::OrderQueueSPMC<Read>::Block block(links.read_block_size);
+  btllib::OrderQueueSPMC<Read>::Block block(links.READ_BLOCK_SIZE);
   size_t current_block_num = 0;
-  size_t read_c = 0;
+  size_t read_counter = 0;
   std::string read_file;
   Read read;
 
@@ -443,17 +416,17 @@ inline void LINKS::InputWorker::work() {
       block.data[block.count++] =
           Read(record.num, std::move(record.id), std::move(record.comment),
                std::move(record.seq));
-      if (block.count == links.read_block_size) {
+      if (block.count == links.READ_BLOCK_SIZE) {
         block.num = current_block_num++;
         links.input_queue->write(block);
         block.count = 0;
       }
-      read_c++;
-      if (read_c % PRINT_READ_COUNT_PERIOD == 0) {
-        if (read_c == PRINT_READ_COUNT_PERIOD) {
-          std::cout << "Processed read count: " << read_c;
+      read_counter++;
+      if (read_counter % PRINT_READ_COUNT_PERIOD == 0) {
+        if (read_counter == PRINT_READ_COUNT_PERIOD) {
+          std::cout << "Processed read count: " << read_counter;
         } else {
-          std::cout << " - " << read_c << std::flush; // avoid buffering of stdout
+          std::cout << " - " << read_counter << std::flush; // avoid buffering of stdout
         }
       }
     }
@@ -472,10 +445,10 @@ inline void LINKS::InputWorker::work() {
     block.count = 0;
     links.input_queue->write(block);
   }
-  if (read_c < PRINT_READ_COUNT_PERIOD) {
-    std::cout << "Processed read count: " << read_c << std::endl;
+  if (read_counter < PRINT_READ_COUNT_PERIOD) {
+    std::cout << "Processed read count: " << read_counter << std::endl;
   } else {
-    std::cout << " - " << read_c << std::endl; // final 'processed reads' print
+    std::cout << " - " << read_counter << std::endl; // final 'processed reads' print
   }
 }
 
@@ -504,7 +477,7 @@ inline void LINKS::start_read_contig() {
 
   input_queue.reset();
   input_queue = std::shared_ptr<btllib::OrderQueueSPMC<Read>>(
-      new btllib::OrderQueueSPMC<Read>(read_buffer_size, read_block_size));
+      new btllib::OrderQueueSPMC<Read>(READ_BUFFER_SIZE, READ_BLOCK_SIZE));
 
   input_worker->start();
 
@@ -568,7 +541,7 @@ inline void LINKS::extract_mate_pair(
                                                    // forward reverse hashes
         mate_pair_block.data[mate_pair_block.count++] =
             BufferMatePairData(hash_a, hash_b, delta);
-        if (mate_pair_block.count == mate_pair_block_size) {
+        if (mate_pair_block.count == MATE_PAIR_BLOCK_SIZE) {
           mate_pair_block.num = mate_pair_current_block_num++;
           mate_pair_input_queue.write(mate_pair_block);
           mate_pair_block.count = 0;
@@ -592,7 +565,7 @@ inline void LINKS::populate_mate_info(
     if (mates.find(ntHash_contig.get_forward_hash()) != mates.end()) {
       mate_info_block.data[mate_info_block.count++] = BufferMateData(
           ntHash_contig.get_forward_hash(), contig_rank, i, i + input_parser.k, 1, false);
-      if (mate_info_block.count == mate_pair_block_size) {
+      if (mate_info_block.count == MATE_PAIR_BLOCK_SIZE) {
         mate_info_block.num = mate_current_block_num++;
         mate_input_queue.write(mate_info_block);
         mate_info_block.count = 0;
@@ -603,7 +576,7 @@ inline void LINKS::populate_mate_info(
     if (mates.find(ntHash_contig.get_reverse_hash()) != mates.end()) {
       mate_info_block.data[mate_info_block.count++] = BufferMateData(
           ntHash_contig.get_reverse_hash(), contig_rank, i, i + input_parser.k, 1, true);
-      if (mate_info_block.count == mate_pair_block_size) {
+      if (mate_info_block.count == MATE_PAIR_BLOCK_SIZE) {
         mate_info_block.num = mate_current_block_num++;
         mate_input_queue.write(mate_info_block);
         mate_info_block.count = 0;
@@ -612,10 +585,10 @@ inline void LINKS::populate_mate_info(
   }
 }
 inline void LINKS::ExtractMatePairWorker::work() {
-  btllib::OrderQueueSPMC<Read>::Block input_block(links.read_block_size);
+  btllib::OrderQueueSPMC<Read>::Block input_block(links.READ_BLOCK_SIZE);
 
   btllib::OrderQueueSPMC<BufferMatePairData>::Block mate_pair_block(
-      links.mate_pair_block_size);
+      links.MATE_PAIR_BLOCK_SIZE);
 
   for (;;) {
     if (input_block.current == input_block.count) {
@@ -650,9 +623,9 @@ inline void LINKS::ExtractMatePairWorker::work() {
 }
 
 inline void LINKS::PopulateMateInfoWorker::work() {
-  btllib::OrderQueueSPMC<Read>::Block input_block(links.read_block_size);
+  btllib::OrderQueueSPMC<Read>::Block input_block(links.READ_BLOCK_SIZE);
   btllib::OrderQueueSPMC<BufferMateData>::Block mate_block(
-      links.mate_pair_block_size);
+      links.MATE_PAIR_BLOCK_SIZE);
   std::unordered_map<uint64_t, KmerInfo> own_track_all;
 
   for (;;) {
@@ -837,9 +810,9 @@ inline void LINKS::pair_contigs() {
        mate_pair_iterator != mate_pair.end(); mate_pair_iterator++) {
     ++counter;
     if (mate_pair_iterator->second.seen == false && // matepair is not seen
-        track_all_test[mate_pair_iterator->first.first].multiple ==
+        track_all[mate_pair_iterator->first.first].multiple ==
             1 && // first mate seen once
-        track_all_test[mate_pair_iterator->first.second].multiple == 1) {
+        track_all[mate_pair_iterator->first.second].multiple == 1) {
 
       mate_pair_iterator->second.seen = true;
 
@@ -851,14 +824,14 @@ inline void LINKS::pair_contigs() {
       low_iz = insert_size + min_allowed;              // check int
       up_iz = insert_size - min_allowed;               // check int
 
-      if (track_all_test.find(mate_pair_iterator->first.first) !=
-              track_all_test.end() && // first mate is tracked
-          track_all_test.find(mate_pair_iterator->first.second) !=
-              track_all_test.end() // second mate is tracked
+      if (track_all.find(mate_pair_iterator->first.first) !=
+              track_all.end() && // first mate is tracked
+          track_all.find(mate_pair_iterator->first.second) !=
+              track_all.end() // second mate is tracked
       ) {
 
-        kmer1 = track_all_test[mate_pair_iterator->first.first];
-        kmer2 = track_all_test[mate_pair_iterator->first.second];
+        kmer1 = track_all[mate_pair_iterator->first.first];
+        kmer2 = track_all[mate_pair_iterator->first.second];
 
         if (kmer1.tig != kmer2.tig) { // paired reads located on <> contigs
 
@@ -965,16 +938,16 @@ inline void LINKS::pair_contigs() {
           }
         }
       }
-    } else if (track_all_test.find(mate_pair_iterator->first.first) ==
-                   track_all_test.end() ^
-               track_all_test.find(mate_pair_iterator->first.second) ==
-                   track_all_test.end() // one of the kmers is not assembled
+    } else if (track_all.find(mate_pair_iterator->first.first) ==
+                   track_all.end() ^
+               track_all.find(mate_pair_iterator->first.second) ==
+                   track_all.end() // one of the kmers is not assembled
     ) { // either one of the kmers is not assembled
       ct_single++;
-    } else if (track_all_test.find(mate_pair_iterator->first.first) !=
-                   track_all_test.end() &&
-               track_all_test.find(mate_pair_iterator->first.second) !=
-                   track_all_test.end()) {
+    } else if (track_all.find(mate_pair_iterator->first.first) !=
+                   track_all.end() &&
+               track_all.find(mate_pair_iterator->first.second) !=
+                   track_all.end()) {
       ct_multiple++;
     }
   } // pairing read b
