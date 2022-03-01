@@ -157,7 +157,7 @@ public:
     static const struct option longopts[] = {{"help", no_argument, &help, 1},
                                              {nullptr, 0, nullptr, 0}};
     while ((c = getopt_long(argc, argv, "f:s:d:k:t:j:o:e:l:a:z:b:r:p:x:v:",
-                            longopts, &optindex)) != -1) {
+                            longopts, &optindex)) != -1 && arguments_satisfied) {
       switch (c) {
       case 0:
         break;
@@ -172,6 +172,9 @@ public:
       case 'd':
         distances_text.assign(optarg);
         distances = split_distance_input(distances_text);
+        if(distances.size() == 0){
+          arguments_satisfied = false;
+        }
         break;
       case 'k':
         k = strtoul(optarg, &end, BASE_TEN);
@@ -179,6 +182,9 @@ public:
       case 't':
         step_sizes_text.assign(optarg);
         step_sizes = split_step_sizes_input(step_sizes_text);
+        if(step_sizes.size() == 0){
+          arguments_satisfied = false;
+        }
         break;
       case 'j':
         threads = strtoul(optarg, &end, BASE_TEN);
