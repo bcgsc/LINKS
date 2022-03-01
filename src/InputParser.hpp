@@ -79,7 +79,7 @@ public:
   std::string bf_file = "";
   float fpr = 0.001;
   bool bf_off = false;
-  uint thread = 3;
+  uint threads = 3;
 
   // parameters that doesnt have functionality in cpp
   // code except base naming
@@ -136,7 +136,7 @@ public:
               << "  -s " << fof_file << "\n"
               << "  -d " << distances_text << "\n"
               << "  -k " << k << "\n"
-              << "  -j " << thread << "\n"
+              << "  -j " << threads << "\n"
               << "  -t " << step_sizes_text << "\n"
               << "  -o " << offset << "\n"
               << "  -e " << insert_stdev << "\n"
@@ -181,7 +181,7 @@ public:
         step_sizes = split_step_sizes_input(step_sizes_text);
         break;
       case 'j':
-        thread = strtoul(optarg, &end, BASE_TEN);
+        threads = strtoul(optarg, &end, BASE_TEN);
         break;
       case 'o':
         offset = strtoul(optarg, &end, BASE_TEN);

@@ -36,6 +36,7 @@ public:
   void pair_contigs();
   ~LINKS();
 
+/*
   std::string assembly_file;
   std::string fof_file;
   std::vector<uint32_t> distances = {4000};
@@ -52,6 +53,8 @@ public:
   float fpr = 0.001;
   bool bf_off = false;
   unsigned threads = 3;
+*/
+  InputParser input_parser;
 
   static const size_t PRINT_READ_COUNT_PERIOD = 100000;
 
@@ -283,39 +286,38 @@ private:
 
 inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements) {
   btllib::KmerBloomFilter *assembly_BF;
-  if (bf_file != "") {
-    std::cout << "A Bloom filter was supplied (" << bf_file
+  if (input_parser.bf_file != "") {
+    std::cout << "A Bloom filter was supplied (" << input_parser.bf_file
               << ") and will be used instead of building a new one\n";
-    if (!does_file_exist(bf_file)) {
-      std::cout << "\nInvalid file: " << bf_file
+    if (!does_file_exist(input_parser.bf_file)) {
+      std::cout << "\nInvalid file: " << input_parser.bf_file
                 << " -- fatal\n";
       exit(1);
     }
 
-    assembly_BF = new btllib::KmerBloomFilter(bf_file);
+    assembly_BF = new btllib::KmerBloomFilter(input_parser.bf_file);
   } else {
-    uint64_t m = ceil((-1 * (double)bf_elements * log(fpr)) /
+    uint64_t m = ceil((-1 * (double)bf_elements * log(input_parser.fpr)) /
                       (log(2) * log(2)));
 
     m = ((uint64_t)(m / 8) + 1) * 8;
 
     unsigned hash_fct = floor(((double)m / bf_elements) * log(2));
     std::cout << "- Number of BF Elements: " << bf_elements << "\n"
-              << "- Input file path: " << base_name << "\n"
-              << "- Input file: " << assembly_file << "\n"
-              << "- kmersize: " << k << "\n"
-              << "- m: " << m << "\n"
-              << "- fpr: " << fpr << "\n"
-              << "- hashFct: " << hash_fct << "\n";
+              << "- Input file path: " << input_parser.base_name << "\n"
+              << "- Input file: " << input_parser.assembly_file << "\n"
+              << "- K: " << input_parser.k << "\n"
+              << "- Fpr: " << input_parser.fpr << "\n"
+              << "- #Hash function: " << hash_fct << "\n";
 
     std::string reading_tigbloom_message =
         "\n\n=>Reading contig/sequence assembly file : " +
         std::to_string(time(0)) + "\n";
 
-    std::cout << "- Filter output file : " << k << "\n";
+    std::cout << "- Filter output file : " << input_parser.k << "\n";
     assembly_BF =
-        new btllib::KmerBloomFilter(m / 8, hash_fct, k);
-    btllib::SeqReader assembly_reader(assembly_file, 8, 1);
+        new btllib::KmerBloomFilter(m / 8, hash_fct, input_parser.k);
+    btllib::SeqReader assembly_reader(input_parser.assembly_file, 8, 1);
     size_t builder = 0;
     for (btllib::SeqReader::Record record; (record = assembly_reader.read());) {
 
@@ -323,13 +325,22 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements) {
       assembly_BF->insert(record.seq);
     }
     std::string bfmsg = "\n\nWriting Bloom filter to disk (" +
-                        base_name + ".bloom" + ")\n";
+                        input_parser.base_name + ".bloom" + ")\n";
     std::cout << bfmsg;
-    assembly_BF->save(base_name + ".bloom");
+    assembly_BF->save(input_parser.base_name + ".bloom");
   }
   return assembly_BF;
 }
 
+inline LINKS::LINKS(InputParser input_parser)
+    : input_parser(input_parser),
+      input_queue(std::shared_ptr<btllib::OrderQueueSPMC<Read>>(
+          new btllib::OrderQueueSPMC<Read>(read_buffer_size, read_block_size))),
+      mate_pair_input_queue(mate_pair_buffer_size, mate_pair_block_size),
+      mate_input_queue(mate_pair_buffer_size, mate_pair_block_size),
+      input_worker(std::shared_ptr<InputWorker>(new InputWorker(*this))) {}
+
+/*
 inline LINKS::LINKS(InputParser input_parser)
     : assembly_file(input_parser.assembly_file),
       long_reads(input_parser.long_reads), distances(input_parser.distances),
@@ -344,9 +355,10 @@ inline LINKS::LINKS(InputParser input_parser)
       mate_pair_input_queue(mate_pair_buffer_size, mate_pair_block_size),
       mate_input_queue(mate_pair_buffer_size, mate_pair_block_size),
       input_worker(std::shared_ptr<InputWorker>(new InputWorker(*this))) {}
+*/
 
 inline void LINKS::init_bloom_filter() {
-  int64_t bf_elements = get_file_size(assembly_file);
+  int64_t bf_elements = get_file_size(input_parser.assembly_file);
   bloom = std::shared_ptr<btllib::KmerBloomFilter>(
       make_bf(bf_elements));
 }
@@ -408,15 +420,15 @@ inline void LINKS::InputWorker::work() {
   std::string read_file;
   Read read;
 
-  while(links.reading_contig || links.long_reads.size() > 0) {
+  while(links.reading_contig || links.input_parser.long_reads.size() > 0) {
     if(!links.reading_contig){
-      read_file = links.long_reads.front();
-      links.long_reads.pop();
+      read_file = links.input_parser.long_reads.front();
+      links.input_parser.long_reads.pop();
       links.reader = std::shared_ptr<btllib::SeqReader>(
         new btllib::SeqReader(read_file, btllib::SeqReader::Flag::LONG_MODE));
     } else {
         links.reader = std::shared_ptr<btllib::SeqReader>(
-            new btllib::SeqReader(links.assembly_file, btllib::SeqReader::Flag::LONG_MODE));
+            new btllib::SeqReader(links.input_parser.assembly_file, btllib::SeqReader::Flag::LONG_MODE));
     }
 
     if (links.reader->get_format() == btllib::SeqReader::Format::FASTA) {
@@ -454,7 +466,7 @@ inline void LINKS::InputWorker::work() {
     block.num = current_block_num++;
     links.input_queue->write(block);
   }
-  for (unsigned i = 0; i < links.threads; i++) {
+  for (unsigned i = 0; i < links.input_parser.threads; i++) {
     block.num = current_block_num++;
     block.current = 0;
     block.count = 0;
@@ -469,7 +481,7 @@ inline void LINKS::InputWorker::work() {
 
 inline void LINKS::start_read_fasta() {
   extract_mate_pair_workers =
-      std::vector<ExtractMatePairWorker>(threads, ExtractMatePairWorker(*this));
+      std::vector<ExtractMatePairWorker>(input_parser.threads, ExtractMatePairWorker(*this));
 
   input_worker->start();
   std::thread writer_thread(&LINKS::write_from_block_to_map, this);
@@ -499,7 +511,7 @@ inline void LINKS::start_read_contig() {
   std::thread writer_thread(&LINKS::write_from_block_to_set, this);
 
   populate_mate_info_workers = std::vector<PopulateMateInfoWorker>(
-      threads, PopulateMateInfoWorker(*this));
+      input_parser.threads, PopulateMateInfoWorker(*this));
 
   for (auto &worker : populate_mate_info_workers) {
     worker.start();
@@ -516,14 +528,14 @@ inline void LINKS::extract_mate_pair(
     const std::string &seq,
     btllib::OrderQueueSPMC<BufferMatePairData>::Block &mate_pair_block) {
   uint step_index = 0;
-  for (auto distance : distances) {
-    uint cur_step_size = step_sizes[step_index];
+  for (auto distance : input_parser.distances) {
+    uint cur_step_size = input_parser.step_sizes[step_index];
     step_index++;
     uint64_t delta = distance;
     int break_flag = 0;
     bool reverse_exists = false;
-    btllib::NtHash ntHash(seq, bloom->get_hash_num(), k, offset);
-    btllib::NtHash ntHash_lead(seq, bloom->get_hash_num(), k, delta + offset);
+    btllib::NtHash ntHash(seq, bloom->get_hash_num(), input_parser.k, input_parser.offset);
+    btllib::NtHash ntHash_lead(seq, bloom->get_hash_num(), input_parser.k, delta + input_parser.offset);
 
     uint64_t hash_a, hash_b;
 
@@ -571,7 +583,7 @@ inline void LINKS::populate_mate_info(
     btllib::OrderQueueSPMC<BufferMateData>::Block &mate_info_block) {
 
   btllib::NtHash ntHash_contig(seq, bloom->get_hash_num(),
-                               k); // hashFunc can be 1 after first step
+                               input_parser.k); // hashFunc can be 1 after first step
 
   int breakFlag = 0;
   for (size_t i = 0; ntHash_contig.roll(); i += 1) {
@@ -579,7 +591,7 @@ inline void LINKS::populate_mate_info(
     i = ntHash_contig.get_pos();
     if (mates.find(ntHash_contig.get_forward_hash()) != mates.end()) {
       mate_info_block.data[mate_info_block.count++] = BufferMateData(
-          ntHash_contig.get_forward_hash(), contig_rank, i, i + k, 1, false);
+          ntHash_contig.get_forward_hash(), contig_rank, i, i + input_parser.k, 1, false);
       if (mate_info_block.count == mate_pair_block_size) {
         mate_info_block.num = mate_current_block_num++;
         mate_input_queue.write(mate_info_block);
@@ -590,7 +602,7 @@ inline void LINKS::populate_mate_info(
     // Reverse part
     if (mates.find(ntHash_contig.get_reverse_hash()) != mates.end()) {
       mate_info_block.data[mate_info_block.count++] = BufferMateData(
-          ntHash_contig.get_reverse_hash(), contig_rank, i, i + k, 1, true);
+          ntHash_contig.get_reverse_hash(), contig_rank, i, i + input_parser.k, 1, true);
       if (mate_info_block.count == mate_pair_block_size) {
         mate_info_block.num = mate_current_block_num++;
         mate_input_queue.write(mate_info_block);
@@ -616,7 +628,7 @@ inline void LINKS::ExtractMatePairWorker::work() {
 
     Read &read = input_block.data[input_block.current++];
 
-    if (links.k <= read.seq.size()) {
+    if (links.input_parser.k <= read.seq.size()) {
       links.extract_mate_pair(read.seq, mate_pair_block);
     } else {
       continue; // nothing
@@ -627,8 +639,8 @@ inline void LINKS::ExtractMatePairWorker::work() {
     links.mate_pair_input_queue.write(mate_pair_block);
   }
   links.mate_pair_threads_done_writing++;
-  if (links.mate_pair_threads_done_writing == links.threads) {
-    for (size_t i = 0; i < links.threads; i++) {
+  if (links.mate_pair_threads_done_writing == links.input_parser.threads) {
+    for (size_t i = 0; i < links.input_parser.threads; i++) {
       mate_pair_block.num = links.mate_pair_current_block_num++;
       mate_pair_block.current = 0;
       mate_pair_block.count = 0;
@@ -652,7 +664,7 @@ inline void LINKS::PopulateMateInfoWorker::work() {
     }
     Read &read = input_block.data[input_block.current++];
 
-    if (links.k <= read.seq.size()) {
+    if (links.input_parser.k <= read.seq.size()) {
       links.tig_length_mutex.lock();
       links.tig_length[std::to_string(read.num + 1)] = read.seq.size();
       links.tig_length_mutex.unlock();
@@ -668,9 +680,9 @@ inline void LINKS::PopulateMateInfoWorker::work() {
     links.mate_input_queue.write(mate_block);
   }
   links.mate_threads_done_writing++;
-  if (links.mate_threads_done_writing == links.threads) {
+  if (links.mate_threads_done_writing == links.input_parser.threads) {
 
-    for (size_t i = 0; i < links.threads; i++) {
+    for (size_t i = 0; i < links.input_parser.threads; i++) {
       mate_block.num = links.mate_current_block_num++;
       mate_block.current = 0;
       mate_block.count = 0;
@@ -778,15 +790,15 @@ inline int LINKS::get_distance(uint64_t insert_size, uint64_t length_i,
   return gap_or_overlap;
 }
 inline void LINKS::pair_contigs() {
-  std::string issues = base_name + ".pairing_issues";
+  std::string issues = input_parser.base_name + ".pairing_issues";
   std::string distribution =
-      base_name + ".pairing_distribution.csv";
+      input_parser.base_name + ".pairing_distribution.csv";
   std::string tigpair_checkpoint =
-      base_name +
+      input_parser.base_name +
       ".tigpair_checkpoint.tsv"; // add a checkpoint file, prevent re-running
                                  // LINKS from scratch if crash
   std::string simplepair_checkpoint =
-      base_name +
+      input_parser.base_name +
       ".simplepair_checkpoint.tsv"; // add a checkpoint file, prevent re-running
                                     // LINKS from scratch if cras
   uint64_t totalPairs = 0;
@@ -803,7 +815,7 @@ inline void LINKS::pair_contigs() {
       pair;
   std::unordered_map<std::string, PairLinkInfo> err;
 
-  if (verbose)
+  if (input_parser.verbose)
     std::cout << "Pairing contigs...\n";
   std::ofstream issues_file;
   issues_file.open(issues);
@@ -835,7 +847,7 @@ inline void LINKS::pair_contigs() {
                                              mate_pair_iterator->first.second)]
                         .insert_size;
 
-      min_allowed = -1 * (insert_stdev * insert_size); // check int
+      min_allowed = -1 * (input_parser.insert_stdev * insert_size); // check int
       low_iz = insert_size + min_allowed;              // check int
       up_iz = insert_size - min_allowed;               // check int
 
@@ -899,7 +911,7 @@ inline void LINKS::pair_contigs() {
           }
         } else { // Clone, paired reads located on the same contig -- could be
                  // used to investigate misassemblies
-          if (verbose)
+          if (input_parser.verbose)
             std::cout << "Pair (" << mate_pair_iterator->first.first << " and "
                       << mate_pair_iterator->first.second
                       << ") located on same contig " << tig_a << " ("
