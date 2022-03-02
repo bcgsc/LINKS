@@ -310,7 +310,9 @@ inline btllib::KmerBloomFilter *LINKS::make_bf(uint64_t bf_elements) {
     btllib::SeqReader assembly_reader(input_parser.assembly_file, 8, 1);
     size_t builder = 0;
     for (btllib::SeqReader::Record record; (record = assembly_reader.read());) {
-
+      if(record.seq.length() < input_parser.min_size){
+        continue;
+      }
       builder++;
       assembly_BF->insert(record.seq);
     }
