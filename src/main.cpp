@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
   std::cout << std::endl;
   LINKS links(linksArgParser);
 
-  std::cout << "STAGE: Bloom filter construction/read\n";
+  std::cout << "STAGE: Bloom filter constructing/reading" << std::flush;
   auto start = std::chrono::high_resolution_clock::now();
   links.init_bloom_filter();
   auto finish = std::chrono::high_resolution_clock::now();
@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
   std::cout << "Bloom filter generated or loaded in: "
             << format_duration(milliseconds) << "\n\n";
 
-  std::cout << "STAGE: Reading sequence reads\n";
+  std::cout << "STAGE: Reading sequence reads" << std::flush;;
   start = std::chrono::high_resolution_clock::now();
   links.start_read_fasta();
   finish = std::chrono::high_resolution_clock::now();
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
   std::cout << "Read fasta stage completed in: "
             << format_duration(milliseconds) << "\n\n";
 
-  std::cout << "STAGE: Reading contigs\n";
+  std::cout << "STAGE: Reading contigs" << std::flush;;
   start = std::chrono::high_resolution_clock::now();
   links.start_read_contig();
   finish = std::chrono::high_resolution_clock::now();
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
   std::cout << "Read contig stage completed in: "
             << format_duration(milliseconds) << "\n\n";
 
-  std::cout << "STAGE: Pairing contigs\n";
+  std::cout << "STAGE: Pairing contigs" << std::flush;;
   start = std::chrono::high_resolution_clock::now();
   links.pair_contigs();
   finish = std::chrono::high_resolution_clock::now();
