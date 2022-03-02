@@ -413,6 +413,9 @@ inline void LINKS::InputWorker::work() {
     std::cout << "Reading: " << read_file << std::endl;
 
     for (auto record : (*(links.reader))) {
+      if(links.reading_contig && record.seq.length() < links.input_parser.min_size){
+        continue;
+      }
       block.data[block.count++] =
           Read(record.num, std::move(record.id), std::move(record.comment),
                std::move(record.seq));
@@ -1021,7 +1024,6 @@ inline void LINKS::pair_contigs() {
       }
     }
   }
-
   tigpair_checkpoint_file.close();
 }
 
