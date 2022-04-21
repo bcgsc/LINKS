@@ -23,6 +23,10 @@ It can be used to scaffold high-quality draft genome assemblies with any long
 sequences (eg. ONT reads, PacBio reads, other draft genomes, etc).
 It is also used to scaffold contig pairs linked by ARCS/ARKS.
 
+```diff
+! NOTE: LINKS will throw an error when threads (-j) exceed 4. Please adjust accordingly while we look for a fix
+```
+
 ### Dependencies
 -------------------------------
 
