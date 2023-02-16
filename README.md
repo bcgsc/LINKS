@@ -10,11 +10,29 @@ Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg
 # LINKS
 
 ## Long Interval Nucleotide K-mer Scaffolder
-## LINKS v2.0.1  T. Murathan Goktas, Yaman Malkoc, René L. Warren 2014-2023
-## email: rwarren [at] bcgsc [dot] ca
+### LINKS v2.0.1  T. Murathan Goktas, Yaman Malkoc, René L. Warren 2014-2023
+### email: rwarren [at] bcgsc [dot] ca
+
+## CONTENTS
+
+1. [Description](#description)
+2. [Dependencies](#dependencies)
+3. [Installation](#install)
+4. [Running LINKS v2.0.1](#run)
+5. [What's new?](#new)
+6. [Documentation](#docs)
+7. [Citing ntEdit](#cite)
+8. [Credits](#credits)
+9. [Command and options](#options)
+10. [Tips](#tips)
+11. [Test data](#test)
+12. [Testing the Bloom filters](#bloom)
+13. [Algorithm](#algo)
+14. [Output files](#output)
+15. [License](#license)
 
 
-### Description
+### Description <a name=description></a>
 -----------
 
 LINKS is a genomics application for scaffolding genome assemblies with long
@@ -27,14 +45,14 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 ! NOTE: LINKS will throw an error when threads (-j) exceed 4. Please adjust accordingly while we look for a fix
 ```
 
-### Dependencies
+### Dependencies <a name=dependencies></a>
 -------------------------------
 
 - GCC (tested on v7.2.0)
 - Perl (tested on v5.32.1)
 - Autotools (if cloning directly from repository)
 
-### Installation:
+### Installation <a name=install></a>
 -------------------------------
 #### Installing LINKS using Conda
 ```sh
@@ -67,7 +85,7 @@ To install LINKS in a specific directory:
 
 *These steps worked on a CentOS 7 system with 128 CPU Intel(R) Xeon(R) CPU E7-8867 v3 @ 2.50GHz
 
-### Running LINKS v2.0.1
+### Running LINKS v2.0.1 <a name=run2></a>
 -------------------------------
 
 Users must have all executable files(`LINKS`,`LINKS-make`,`LINKS_CPP`,`LINKS.pl`) accesible in PATH directories.
@@ -79,7 +97,8 @@ LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 
 * *LINKS v2.0.0+ is implemented in C++ and perl. The C++ executable is `src/LINKS_CPP` and PERL executable is `src/LINKS.pl`. To run the full LINKS pipeline smoothly you can run `LINKS-make`. However `LINKS-make` is a Makefile and has different argument value assignment (such as d=xx t=yy instead of -d xx -t yy). To avoid this, run `LINKS`(shell script) which is a wrapper for `LINKS-make` that accepts same argument value assignment used in previous LINKS versions(-d xx -t yy).
 
-### What's new in v2.0.1 ?
+
+### What's new in v2.0.1 ? <a name=new></a>
 ---------------------
 * bug fixes
 
@@ -217,7 +236,7 @@ Included offset option (-o option) - Enables LINKS to explore a wider k-mer spac
 Minor fixes: IUPAC codes are now preserved
 
 
-### Documentation
+### Documentation <a name=docs></a>
 -------------
 
 Refer to the LINKS-readme.txt/LINKS-readme.pdf file on how to run LINKS and the LINKS web site for information about the software and its performance 
@@ -227,7 +246,7 @@ Questions or comments?  We would love to hear from you!
 rwarren at bcgsc.ca
 
 
-### Citing LINKS
+### Citing LINKS <a name=cite></a>
 ------------
 
 Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg)](https://github.com/bcgsc/LINKS/stargazers) and for using, developing and promoting this free software!
@@ -240,7 +259,7 @@ Gigascience. 2015 Aug 4;4:35. doi: 10.1186/s13742-015-0076-3. eCollection 2015.
 [![link](https://img.shields.io/badge/LINKS-github-yellow)](https://github.com/warrenlr/LINKS)
 
 
-### Credits
+### Credits <a name=credits></a>
 -------
 
 LINKS:
@@ -251,7 +270,7 @@ SWIG/BloomFilter.pm: Sarah Yeo, Justin Chu
 https://github.com/bcgsc/bloomfilter: Justin Chu, Ben Vandervalk, Hamid Mohamadi (ntHash), Sarah Yeo
 
 
-### Running LINKS
+### Command and options <a name=options></a>
 -------------
 <pre>
 e.g. ./LINKS -f ecoliK12_abyss_illumina_contig_baseline.fa -s K12_F2D.fof -b ecoliK12-ONT_linksSingleIterationTIG
@@ -296,7 +315,7 @@ This may be useful for large genome assembly drafts and when long reads are extr
 </pre>
 
 
-### Tips to minimize memory usage and additional notes
+### Tips to minimize memory usage and additional notes <a name=tips></a>
 --------------------------------------------------
 
 The most important parameters for decreasing RAM usage are -t and -d.
@@ -338,7 +357,7 @@ Specifying many distances will require large amount of RAM, especially with
 low -t values.
 
 
-### Test data
+### Test data <a name=test></a>
 ---------
 <pre>
 Go to ./test
@@ -404,7 +423,7 @@ LINKSrecipe_athaliana_raw.sh
 are provided to show the re-scaffolding of the A. thaliana high-quality genome draft using ECTools-corrected or raw Pacific Biosciences reads.
 
 
-### Testing the Bloom filters
+### Testing the Bloom filters <a name=bloom></a>
 -------------------------
 <pre>
 # To test insertions:
@@ -424,7 +443,8 @@ Usage: ./testBloom.pl
 -r  Bloom filter file
 </pre>
 
-### How it works
+
+### Algorithm <a name=algo></a>
 ------------
 
 Process: nanopore/long reads are supplied as input (-s option, fasta/fastq format) and k-mer pairs are extracted using user-defined k-mer length (-k) and distance between the 5’-end of each pairs (-d) over a sliding window (-t). Unique k-mer pairs at set distance are hashed. Fasta sequences to scaffold are sup-plied as input (-f), and are shredded to k-mers on both strands, tracking the [contig] sequence of origin, k-mer positions and frequencies of observation. 
@@ -518,7 +538,7 @@ echo mpet4k_1.fa_paired.fa > mpet.fof
 echo trimmedmpet4k_1.fa_paired.fa > trimmedmpet.fof
 </pre>
 
-### OUTPUT FILES
+### Output files <a name=output></a>
 ------------------------
 
 |Output files|                    Description|
@@ -578,7 +598,7 @@ means: contig f127 (strand=f/+), size (z) 7068 (Z if contig was used as the seed
 Negative m values imply that there's a possible overlap between the contigs.  But since the pairing distance distribution usually follows a Normal/Gaussian distribution, some distances are expected to be larger than the median size expected/observed.  In reality, if the exact size was known between each paired-reads, we wouldn't expect much negative m values unless a break occurred during the contig extension (likely due to base errors/SNPs). 
 
 
-### License
+### License <a name=license></a>
 -------
 
 LINKS Copyright (c) 2014-2023 British Columbia Cancer Agency Branch.  All rights reserved.
