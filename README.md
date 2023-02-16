@@ -13,7 +13,7 @@ Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg
 ### LINKS v2.0.1  T. Murathan Goktas, Yaman Malkoc, René L. Warren 2014-2023
 ### email: rwarren [at] bcgsc [dot] ca
 
-## CONTENTS
+### Contents
 
 1. [Description](#description)
 2. [Dependencies](#dependencies)
