@@ -11,7 +11,7 @@ Thank you for your [![Stars](https://img.shields.io/github/stars/bcgsc/LINKS.svg
 
 ## Long Interval Nucleotide K-mer Scaffolder
 ### LINKS v2.0.1  T. Murathan Goktas, Yaman Malkoc, René L. Warren 2014-2023
-### email: rwarren [at] bcgsc [dot] ca
+
 
 ### Contents
 
@@ -241,9 +241,6 @@ Minor fixes: IUPAC codes are now preserved
 
 Refer to the LINKS-readme.txt/LINKS-readme.pdf file on how to run LINKS and the LINKS web site for information about the software and its performance 
 www.bcgsc.ca/bioinfo/software/links
-
-Questions or comments?  We would love to hear from you!
-rwarren at bcgsc.ca
 
 
 ### Citing LINKS <a name=cite></a>
