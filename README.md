@@ -59,6 +59,12 @@ It is also used to scaffold contig pairs linked by ARCS/ARKS.
 conda install -c bioconda -c conda-forge links
 ```
 
+You may also run one of the following (Conda install):
+<pre>
+conda install -c bioconda links
+conda install -c "bioconda/label/cf201901" links
+</pre>pre>
+
 #### Installing LINKS from the source code
 
 ```
