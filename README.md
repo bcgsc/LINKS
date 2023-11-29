@@ -110,12 +110,12 @@ LINKS -f NA1281_draft.fa -s NA1281_reads.fof
 
 ### What's new in v2.0.0 ?
 ---------------------
-
-* ~5x less memory usage
-* ~3x faster run time
+* C++ LINKS (re)implementation
+* ~5x less memory usage (vs. PERL implementation)
+* ~3x faster run time (vs. PERL implementation)
 * no need for compiling SWIG Bloom filter wrappers 
 * drastically lower memory requirements enables extracting more information from reads using smaller step sizes (`-t`) and more distances (`-d`) in a single LINKS run 
-* does not support MPET reads
+* No longer supports MPET reads
 
 
 ### What's new in v1.8.7 ?
